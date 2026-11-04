@@ -1,0 +1,3 @@
+- insert:
+    - id: praxis
+      name: '@local/dsh-praxis'
