@@ -63,7 +63,9 @@ conversation.composer.dock: activity, usage, context-diet, praxis(active:true, o
 
 三处 occupant 均 active，说明 Client half 已装配到当前页面。Host half 由同一 bundle 提供，且独立实例（3081）已验证 `/praxis/api/state` 200 与持久化恢复。
 
-未验证：3080 的 `/praxis/api/state` 未直接 curl（需要该实例的一次性 token）；以 3081 的等价证据替代。
+Host 侧同样已在 3080 进程内注册：Host `Tool.listTools` 返回 `rsi_run`，参数枚举含全部 20 个动作（start/prereg_freeze/discussion/pin_persona/experiment/review/stage4/eval_report/eval_read/memory_propose/memory_commit/map_claim/map_edge/decision/promote/set_knobs/gate/map/snapshot/activate）。
+
+未验证：3080 的 `/praxis/api/state` 未直接 curl（需要该实例的一次性 token）；以 3081 的等价 HTTP 证据替代。
 - 真实科研数据训练（Q19/BENGI）不在本插件验收范围；插件只提供契约与门禁，不内置数据。
 - 真实 subagent 派工（discussion/experiment 由独立 worker Session 执行）尚未接入；当前面板提供 actor 派工面，工具与 UI 共用同一 Host 命令。
 
