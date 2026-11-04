@@ -1,6 +1,6 @@
 {
   "name": "@local/dsh-praxis",
-  "version": "0.1.8",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "Praxis Observatory: a governed research-playbook engine with a cognitive map, frozen contracts, independent evaluation, and anti-mean-reversion checks.",
@@ -13,6 +13,8 @@
   "files": [
     "index.js",
     "client.js",
+    "build-client.mjs",
+    "client/*.js",
     "src/*.js",
     "cordis.patch.yml",
     "locale/*.json",
@@ -30,5 +32,10 @@
         "@deepseek-ai/dsh-client-ui-conversation"
       ]
     }
+  },
+  "scripts": {
+    "build:client": "node build-client.mjs",
+    "check:client": "node build-client.mjs --check",
+    "test": "node --test ../../test/praxis/*.test.js"
   }
 }

@@ -88,6 +88,17 @@ test('integration: one run walks the frozen loop to DECISION without shortcuts',
   assert.equal(closedGate.gate.allow, false);
   assert.ok(closedGate.gate.missing.includes('prereg.frozen'));
 
+  // v2 T1.1/T1.2：冻结前必须在 INTAKE 提交 question。
+  const asked = command(12, 'question', user, {
+    question: {
+      text: '未知结构能否从声明语料中被主动提取？',
+      hypothesis: '冻结基线上存在可分离的新结构',
+      unknowns: ['噪声上限'],
+    },
+  }, runId);
+  assert.equal(asked.status, 'committed');
+  assert.equal(host.engine.runView(runId).state, 'QUESTION');
+
   // 2. PREREG_FROZEN.
   const frozen = command(2, 'prereg_freeze', user, { prereg: PREREG }, runId);
   assert.equal(frozen.status, 'committed');

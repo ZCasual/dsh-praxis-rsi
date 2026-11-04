@@ -4,3 +4,6 @@ docs/rsi-learning/
 .internal/
 *.log
 .DS_Store
+
+# local skills workspace (not part of the plugin)
+skills/

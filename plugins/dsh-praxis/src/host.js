@@ -1,7 +1,7 @@
 import { createEngine, DEFAULT_KNOBS, PLAYBOOKS } from './engine.js';
 
 const ACTIONS = [
-  'start', 'prereg_freeze', 'discussion', 'pin_persona', 'experiment', 'review',
+  'start', 'question', 'prereg_freeze', 'discussion', 'pin_persona', 'experiment', 'review',
   'stage4', 'eval_report', 'eval_read', 'memory_propose', 'memory_commit',
   'map_claim', 'map_edge', 'decision', 'promote', 'set_knobs', 'gate', 'map', 'snapshot', 'activate',
   'graph', 'graph_save', 'layout_save',
@@ -60,6 +60,16 @@ export function createHost(options = {}) {
     if (action === 'graph_save' || action === 'layout_save') {
       const actor = input.actor ?? actorFor(source);
       const payload = input.payload ?? {};
+      if (action === 'graph_save' && payload.expectedRevision != null) {
+        const currentGraph = safeRawGraph(payload.playbookId);
+        const live = currentGraph?.revision ?? 0;
+        if (live !== payload.expectedRevision) {
+          return {
+            status: 'rejected', reasonCode: 'CONFLICT', retry: 'manual',
+            graph: graphProjection(payload.playbookId), expectedRevision: payload.expectedRevision, liveRevision: live,
+          };
+        }
+      }
       const result = action === 'graph_save'
         ? engine.saveGraph(payload.playbookId, payload.graph, actor.kind)
         : engine.saveLayout(payload.playbookId, payload.positions, actor.kind);
@@ -100,16 +110,40 @@ export function createHost(options = {}) {
     return null;
   }
 
-  function safeGraph(runId) {
+  function safeRawGraph(playbookId) {
     try {
-      return engine.graphView(runId);
+      return engine.getGraph(playbookId) ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  function graphProjection(runId, playbookId) {
+    let viewValue = null;
+    try {
+      viewValue = engine.graphView(runId, playbookId);
     } catch {
       try {
-        return engine.graphView(undefined, snapshotPlaybookId());
+        viewValue = engine.graphView(undefined, playbookId ?? snapshotPlaybookId());
       } catch {
-        return null;
+        viewValue = null;
       }
     }
+    const graph = viewValue?.graph ?? viewValue ?? null;
+    if (!graph) return null;
+    return {
+      id: graph.id,
+      playbookId: graph.playbookId,
+      revision: viewValue?.revision ?? graph.revision ?? 0,
+      layoutVersion: graph.layoutVersion ?? 1,
+      name: graph.name ?? '',
+      nodes: graph.nodes ?? [],
+      edges: graph.edges ?? [],
+      states: viewValue?.states ?? {},
+      current: viewValue?.current ?? null,
+      progress: viewValue?.progress ?? { done: 0, total: (graph.nodes ?? []).length, index: 0 },
+      audit: viewValue?.audit ?? { ok: true, violations: [] },
+    };
   }
 
   function snapshotPlaybookId() {
@@ -125,14 +159,41 @@ export function createHost(options = {}) {
     }
   }
 
+  function catalog() {
+    return buildCatalog();
+  }
+
+  function evidence(runId) {
+    const snapshot = engine.snapshot();
+    const runs = (snapshot.runs ?? []).map((run) => ({
+      id: run.id,
+      title: run.title,
+      state: run.state,
+      version: run.version,
+      parentId: run.parentId ?? null,
+      events: (run.events ?? []).slice(-20),
+      receipts: typeof engine.receiptsFor === 'function' ? engine.receiptsFor(run.id) : [],
+    }));
+    const target = runId ?? current.runId ?? runs.at(-1)?.id ?? null;
+    const projection = target ? graphProjection(target) : null;
+    return {
+      runs,
+      activeRunId: target,
+      graph: projection,
+      audit: projection?.audit ?? { ok: true, violations: [] },
+    };
+  }
+
   function view() {
     const snapshot = engine.snapshot();
     const activeId = current.runId ?? snapshot.runs.at(-1)?.id ?? null;
     const active = activeId ? runView(activeId) : null;
     return {
       product: 'Praxis',
-      wireVersion: 1,
+      wireVersion: 2,
       design: 'Observatory',
+      serverTime: new Date().toISOString(),
+      revision: active?.version ?? 0,
       activeRunId: activeId,
       active,
       runs: snapshot.runs,
@@ -140,8 +201,9 @@ export function createHost(options = {}) {
       knobs: active?.knobs ?? engine.knobs ?? snapshot.knobs,
       defaults: snapshot.defaults ?? DEFAULT_KNOBS,
       knobFields: snapshot.knobFields ?? knobFields(),
+      catalog: catalog(),
       map: activeId ? mapView(activeId) : null,
-      graph: activeId ? safeGraph(activeId) : (snapshot.playbooks?.[0] ? safeGraph(snapshot.playbooks[0].id) : null),
+      graph: graphProjection(activeId ?? undefined) ?? (snapshot.playbooks?.[0] ? graphProjection(undefined, snapshot.playbooks[0].id) : null),
       durability: !store || store.durability === 'memory' ? 'memory' : 'durable',
     };
   }
@@ -163,7 +225,7 @@ export function createHost(options = {}) {
     }
   }
 
-  return { execute, view, engine, store, map: mapView, runView, flush, load };
+  return { execute, view, engine, store, map: mapView, runView, flush, load, evidence, catalog, graph: graphProjection };
 }
 
 export function knobFields() {
@@ -204,4 +266,146 @@ export function commandText(result) {
 
 export function playbookIds() {
   return Object.keys(PLAYBOOKS);
+}
+
+/** UI catalog: the single source of human labels. Client must not invent its own map. */
+export function buildCatalog() {
+  return {
+    states: [
+      { id: 'INTAKE', label: '立项', index: 0 },
+      { id: 'QUESTION', label: '研究问题', index: 1 },
+      { id: 'PREREG_FROZEN', label: '预注册已冻结', index: 2 },
+      { id: 'DISCUSSION', label: '讨论', index: 3 },
+      { id: 'EXECUTING', label: '执行实验', index: 4 },
+      { id: 'REVIEW', label: '复核', index: 5 },
+      { id: 'STAGE4', label: '阶段四', index: 6 },
+      { id: 'EVAL', label: '独立评估', index: 7 },
+      { id: 'MEMORY', label: '记忆', index: 8 },
+      { id: 'DECISION', label: '决策', index: 9 },
+    ],
+    terminalStates: [
+      { id: 'CLOSED', label: '已关闭' },
+      { id: 'DRIFT_DETECTED', label: '漂移' },
+    ],
+    stateActions: {
+      INTAKE: 'question',
+      QUESTION: 'prereg_freeze',
+      PREREG_FROZEN: 'discussion',
+      DISCUSSION: 'experiment',
+      EXECUTING: 'review',
+      REVIEW: 'stage4',
+      STAGE4: 'eval_report',
+      EVAL: 'eval_read',
+      MEMORY: 'memory_propose',
+      DECISION: 'decision',
+    },
+    nodeExecution: [
+      { id: 'pending', label: '等待', tone: 'idle' },
+      { id: 'active', label: '进行中', tone: 'active' },
+      { id: 'done', label: '已完成', tone: 'ok' },
+      { id: 'blocked', label: '被阻断', tone: 'warn' },
+      { id: 'failed', label: '需核对', tone: 'bad' },
+    ],
+    nodeLabels: {
+      start: '开始', end: '结束',
+      n_intake: '立项', n_question: '研究问题', g_prereg: '预注册门禁', n_prereg: '预注册',
+      n_discussion: '讨论', g_experiment: '执行门禁', n_experiment: '实验', n_review: '复核',
+      n_stage4: '阶段四', g_eval: '评估门禁', n_eval: '独立评估', n_memory: '记忆', n_decision: '决策',
+    },
+    nodeCondition: [
+      { id: 'missing', label: '缺失', tone: 'warn' },
+      { id: 'satisfied', label: '已满足', tone: 'ok' },
+      { id: 'stale', label: '继承待确认', tone: 'bad' },
+      { id: 'unknown', label: '未知', tone: 'idle' },
+    ],
+    actions: [
+      { id: 'start', label: '新建研究运行', scope: 'run', primary: true },
+      { id: 'activate', label: '切换运行', scope: 'run', primary: false },
+      { id: 'question', label: '记录研究问题', scope: 'run', primary: true },
+      { id: 'prereg_freeze', label: '冻结预注册', scope: 'run', primary: true },
+      { id: 'discussion', label: '提交讨论', scope: 'run', primary: true },
+      { id: 'pin_persona', label: '固定人格', scope: 'run', primary: false },
+      { id: 'experiment', label: '执行实验', scope: 'run', primary: true },
+      { id: 'review', label: '提交复核', scope: 'run', primary: true },
+      { id: 'stage4', label: '阶段四', scope: 'run', primary: true, payload: 'none' },
+      { id: 'eval_report', label: '提交独立评估', scope: 'run', primary: true },
+      { id: 'eval_read', label: '读取独立评估', scope: 'run', primary: true, payload: 'none' },
+      { id: 'memory_propose', label: '提议记忆', scope: 'run', primary: true },
+      { id: 'memory_commit', label: '提交记忆', scope: 'run', primary: false },
+      { id: 'decision', label: '记录决策', scope: 'run', primary: true },
+      { id: 'map_claim', label: '登记主张', scope: 'graph', primary: false },
+      { id: 'map_edge', label: '连接主张', scope: 'graph', primary: false },
+      { id: 'promote', label: '晋升候选', scope: 'any', primary: false },
+      { id: 'set_knobs', label: '修改超参数（fork）', scope: 'run', primary: false },
+      { id: 'graph_save', label: '保存蓝图', scope: 'graph', primary: true },
+      { id: 'layout_save', label: '保存布局', scope: 'graph', primary: false },
+    ],
+    blockerLabels: {
+      'prereg.frozen': '需要冻结预注册',
+      'prereg.contract': '预注册契约不全',
+      'question': '需要记录研究问题',
+      'discussion': '需要提交讨论',
+      'experiment': '需要执行实验',
+      'review': '需要提交复核',
+      'stage4': '需要完成阶段四',
+      'eval.report': '需要提交独立评估',
+      'eval.read': '需要读取独立评估',
+      'memory': '需要提交记忆',
+      'decision': '需要记录决策',
+      'audit': '状态一致性检查未通过',
+    },
+    eventLabels: {
+      'run.started': '运行开始',
+      'run.forked': '派生新运行',
+      'question.recorded': '记录研究问题',
+      'prereg.frozen': '冻结预注册',
+      'prereg.violation': '冻结后修改契约',
+      'discussion.recorded': '记录讨论',
+      'persona.pinned': '固定人格',
+      'experiment.recorded': '记录实验',
+      'review.recorded': '记录复核',
+      'eval.reported': '提交独立评估',
+      'eval.read': '读取独立评估',
+      'memory.proposed': '提议记忆',
+      'memory.committed': '提交记忆',
+      'decision.recorded': '记录决策',
+      'map.claim': '登记主张',
+      'map.edge': '连接主张',
+      'gap.recorded': '登记缺口',
+      'drift.detected': '检测到漂移',
+      'unknown.fear': '登记未知恐惧',
+      'gate.denied': '门禁拒绝',
+      'transition.denied': '状态转移被拒绝',
+      'boundary.denied': '边界编辑被拒绝',
+      'candidate.promoted': '晋升候选',
+      'corruption.detected': '检测到投机信号',
+      'migration.reconciled': '数据迁移已对账',
+      'stage4.recorded': '记录阶段四',
+      'eval.read.skipped': '跳过评估读取',
+    },
+    reasons: {
+      PREREG_INCOMPLETE: '预注册缺少必填项',
+      PREREG_REQUIRED: '需要先冻结预注册',
+      PREREG_VIOLATION: '冻结后不能修改契约，请新建 Run',
+      QUESTION_REQUIRED: '需要先记录研究问题',
+      QUESTION_INCOMPLETE: '研究问题与假设都必须填写',
+      INVALID_TRANSITION: '当前状态不允许这个动作',
+      CONFLICT: '数据已被其他操作更新，请重试',
+      FORBIDDEN_ACTOR: '该角色没有执行权限',
+      NO_RUN: '没有选中的运行',
+      UNKNOWN_PLAYBOOK: '未知剧本',
+      UNKNOWN_ACTION: '未知动作',
+      PERSONA_DECORATIVE: '人格缺少可证伪的立场绑定',
+      DRIFT_DETECTED: '检测到目标漂移',
+      EVAL_NOT_READ: '还没有读取独立评估',
+      PROTECTED_NODE: '受保护节点不可删除',
+      BAD_COMMAND: '命令格式不正确',
+      BAD_PACKAGES: '讨论包格式不正确',
+      L2_CLOSED: '代码修改层未开启',
+      L3_CLOSED: '元层修改未开启',
+      FORBIDDEN_BOUNDARY_EDIT: '禁止修改内核边界',
+      USER_ONLY: '只有用户可以执行该动作',
+      ENGINE_ERROR: '引擎内部错误',
+    },
+  };
 }

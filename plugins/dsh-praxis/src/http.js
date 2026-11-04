@@ -54,28 +54,49 @@ export async function handleApi(host, { method, pathname, search = '', body = {}
     return { status: 200, value: { ...view, view } };
   }
   if (route === 'health' && method === 'GET') {
-    return { status: 200, value: { ok: true, product: 'Praxis', wireVersion: 1, durability: host.view().durability } };
+    return { status: 200, value: { ok: true, product: 'Praxis', wireVersion: 2, durability: host.view().durability } };
   }
   if (route === 'graph' && method === 'GET') {
     const params = new URLSearchParams(search);
     try {
-      return { status: 200, value: host.engine.graphView(params.get('runId') ?? undefined, params.get('playbookId') ?? 'scientific-loop') };
+      const graph = host.graph(params.get('runId') ?? undefined, params.get('playbookId') ?? undefined);
+      if (!graph) return { status: 404, value: { error: 'no graph', code: 'NO_GRAPH' } };
+      return { status: 200, value: graph };
     } catch (error) {
       return { status: 400, value: { error: error.message, code: 'UNKNOWN_PLAYBOOK' } };
     }
   }
+  if (route === 'evidence' && method === 'GET') {
+    const params = new URLSearchParams(search);
+    try {
+      return { status: 200, value: { evidence: host.evidence(params.get('runId') ?? undefined) } };
+    } catch (error) {
+      return { status: 500, value: { error: error.message, code: 'EVIDENCE_FAILED' } };
+    }
+  }
   if (route === 'graph' && method === 'POST') {
+    if (body?.expectedRevision == null) {
+      return { status: 428, value: { error: 'expectedRevision is required', code: 'REVISION_REQUIRED' } };
+    }
     const receipt = host.execute({
       action: 'graph_save',
-      commandId: `graph-${Date.now()}`,
+      commandId: body?.commandId ?? `graph-${Date.now()}`,
       actor: body?.actor,
-      payload: { playbookId: body?.playbookId, graph: body?.graph },
+      payload: { playbookId: body?.playbookId, graph: body?.graph, expectedRevision: body?.expectedRevision },
     }, 'ui');
     await host.flush();
     if (receipt.status === 'rejected') {
-      return { status: 400, value: { error: receipt.reasonCode, code: receipt.reasonCode, errors: receipt.errors ?? [] } };
+      const conflict = receipt.reasonCode === 'CONFLICT';
+      return {
+        status: conflict ? 409 : 422,
+        value: {
+          error: receipt.reasonCode, code: receipt.reasonCode, receipt,
+          errors: receipt.errors ?? [],
+          graph: conflict ? (receipt.graph ?? host.graph(body?.runId, body?.playbookId)) : undefined,
+        },
+      };
     }
-    return { status: 200, value: { graph: receipt.graph, receipt } };
+    return { status: 200, value: { graph: receipt.graph ?? host.graph(undefined, body?.playbookId), receipt } };
   }
   if (route === 'layout' && method === 'POST') {
     const receipt = host.execute({
@@ -107,12 +128,14 @@ export async function handleApi(host, { method, pathname, search = '', body = {}
     await host.flush();
     const view = host.view();
     if (receipt.status === 'rejected') {
+      const conflict = receipt.reasonCode === 'CONFLICT';
       return {
-        status: 409,
+        status: conflict ? 409 : 422,
         value: {
           error: receipt.reasonCode ?? 'command rejected',
           code: receipt.reasonCode ?? 'REJECTED',
           blockers: receipt.blockers ?? [],
+          nextAction: receipt.nextAction ?? '',
           receipt,
           view,
         },

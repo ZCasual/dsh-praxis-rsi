@@ -1,5 +1,13 @@
 import { createHash } from 'node:crypto';
-import { buildDefaultGraph, validateGraph, graphStates, cloneGraph } from './graph.js';
+import {
+  STATE_ORDER as GRAPH_STATE_ORDER, buildDefaultGraph, validateGraph, graphStates,
+  cloneGraph, migrateLayout, protectedNodeIds, stateIndex, LAYOUT_VERSION,
+} from './graph.js';
+
+/** Contract §1.1: the run state machine has exactly one definition (graph.js);
+ *  engine.js is its public home. */
+export const STATE_ORDER = GRAPH_STATE_ORDER;
+
 
 export const KERNEL_PATHS = [
   'evaluator', 'stop', 'permissions', 'approval', 'data-boundary',
@@ -24,10 +32,8 @@ export const DEFAULT_KNOBS = Object.freeze({
   secondaryModel: 'secondary',
 });
 
-export const STATE_PIPELINE = Object.freeze([
-  'INTAKE', 'QUESTION', 'PREREG_FROZEN', 'DISCUSSION', 'SYNTHESIS', 'EXEC_READY',
-  'EXECUTING', 'REVIEW', 'STAGE4', 'EVAL', 'MEMORY', 'DECISION', 'CLOSED',
-]);
+/** @deprecated alias kept for the v1 wire surface; STATE_ORDER is authoritative. */
+export const STATE_PIPELINE = STATE_ORDER;
 
 export const PLAYBOOKS = {
   'scientific-loop': {
@@ -69,15 +75,39 @@ export const PLAYBOOKS = {
 };
 
 const ALLOWED = {
-  user: ['start', 'prereg_freeze', 'discussion', 'pin_persona', 'experiment', 'review', 'stage4',
+  user: ['start', 'question', 'prereg_freeze', 'discussion', 'pin_persona', 'experiment', 'review', 'stage4',
     'eval_read', 'memory_commit', 'map_claim', 'map_edge', 'decision', 'promote', 'set_knobs'],
-  root: ['start', 'prereg_freeze', 'discussion', 'pin_persona', 'experiment', 'review', 'stage4',
+  root: ['start', 'question', 'prereg_freeze', 'discussion', 'pin_persona', 'experiment', 'review', 'stage4',
     'eval_read', 'memory_propose', 'memory_commit', 'map_claim', 'map_edge', 'decision', 'promote', 'set_knobs'],
   coding: ['experiment'],
   worker: ['experiment'],
   reviewer: ['review'],
   evaluator: ['eval_report'],
 };
+
+/**
+ * §1.1 legal entry states. An action may only run when the run's state index is
+ * at or past its entry state (question/prereg_freeze are exact: their later
+ * states are covered by T1.3 and rule 2). Actions absent here (map_claim,
+ * map_edge, promote, set_knobs, start) are unrestricted.
+ */
+const LEGAL_START = Object.freeze({
+  question: stateIndex('INTAKE'),
+  prereg_freeze: stateIndex('QUESTION'),
+  discussion: stateIndex('PREREG_FROZEN'),
+  experiment: stateIndex('DISCUSSION'),
+  review: stateIndex('EXECUTING'),
+  stage4: stateIndex('REVIEW'),
+  eval_report: stateIndex('STAGE4'),
+  eval_read: stateIndex('EVAL'),
+  memory_propose: stateIndex('MEMORY'),
+  memory_commit: stateIndex('MEMORY'),
+  decision: stateIndex('MEMORY'),
+  pin_persona: stateIndex('PREREG_FROZEN'),
+});
+
+/** Actions that are only legal in exactly one state. */
+const EXACT_START = new Set(['question', 'prereg_freeze']);
 
 const KNOB_FIELDS = [
   { key: 'heterogeneityFloor', label: '异质度地板', unit: '0–1', min: 0.2, max: 0.8, step: 0.05, scope: 'discussion' },
@@ -207,6 +237,27 @@ function advance(run, target) {
   if (indexOfState(target) > indexOfState(run.state)) run.state = target;
 }
 
+const INHERITED_ARTIFACTS = [
+  'question', 'claims', 'edges', 'personas', 'discussion', 'experiments',
+  'reviews', 'stage4', 'eval', 'memory', 'decision',
+];
+
+function hasInheritableArtifact(value) {
+  if (value == null) return false;
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value !== 'object') return false;
+  if (Array.isArray(value.packages)) return value.packages.length > 0 || (value.rounds ?? 0) > 0;
+  if ('proposals' in value) return (value.proposals ?? []).length > 0 || (value.commits ?? []).length > 0;
+  if ('reportHash' in value) return Boolean(value.reportHash || value.readAt);
+  return true;
+}
+
+function markInherited(value) {
+  if (Array.isArray(value)) return value.map((item) => (item && typeof item === 'object' ? { ...item, inherited: true } : item));
+  if (value && typeof value === 'object') return { ...value, inherited: true };
+  return value;
+}
+
 export function createEngine(options = {}) {
   const knobs = { ...DEFAULT_KNOBS, ...(options.knobs ?? {}) };
   const runs = new Map();
@@ -226,16 +277,57 @@ export function createEngine(options = {}) {
     return run;
   }
 
-  function append(run, type, data = {}) {
+  function append(run, type, data = {}, options = {}) {
     seq += 1;
-    run.version += 1;
+    if (options.bumpVersion !== false) run.version += 1;
     run.updatedAt = nowIso();
-    run.events.push({ seq, type, at: run.updatedAt, data });
+    run.events.push({ seq, type, at: run.updatedAt, data, ...(options.extra ?? {}) });
+  }
+
+  /** T1.3: a denied transition is recorded but must not move state or version. */
+  function denyTransition(run, action, detail = {}) {
+    const { nextAction = run.nextAction ?? null, ...data } = detail;
+    append(run, 'transition.denied', { action, from: run.state, ...data }, { bumpVersion: false });
+    return receipt({
+      reasonCode: 'INVALID_TRANSITION', runId: run.id, state: run.state,
+      nextAction, retry: 'none',
+    });
+  }
+
+  /**
+   * §1.1 transition guard. Advancing actions may not walk backwards; question
+   * must precede prereg_freeze. T1.2/T1.3.
+   */
+  function checkTransition(run, action) {
+    const cursor = stateIndex(run.state);
+    // T1.2 keeps its own code for the classic "freeze before question" mistake.
+    if (action === 'prereg_freeze' && cursor === stateIndex('INTAKE')) {
+      return receipt({
+        reasonCode: 'QUESTION_REQUIRED', runId: run.id, state: run.state,
+        nextAction: 'question', blockers: ['question'], retry: 'none',
+      });
+    }
+    const start = LEGAL_START[action];
+    if (start === undefined) return null;
+    if (cursor < 0) return null; // DRIFT_DETECTED: recovery actions stay available
+    const wrongState = EXACT_START.has(action) ? cursor !== start : cursor < start;
+    if (!wrongState) return null;
+    if (action === 'prereg_freeze') {
+      // Re-freezing after the door closed is a manual fork request (rule 2 / T1.3).
+      return denyTransition(run, action, { nextAction: 'new-run' });
+    }
+    return denyTransition(run, action, { required: STATE_ORDER[start] });
   }
 
   function remember(command, result) {
     const key = `${command.runId ?? '*'}:${command.commandId}`;
-    receipts.set(key, { ...result, commandId: command.commandId });
+    receipts.set(key, {
+      ...result,
+      commandId: command.commandId,
+      action: command.action,
+      runId: result.runId ?? (command.runId && command.runId !== '*' ? command.runId : null),
+      at: nowIso(),
+    });
     return result;
   }
 
@@ -263,6 +355,8 @@ export function createEngine(options = {}) {
     if (command.expectedDomainVersion != null && command.expectedDomainVersion !== run.version) {
       return remember(command, receipt({ reasonCode: 'CONFLICT', runId: run.id, retry: 'manual' }));
     }
+    const denied = checkTransition(run, command.action);
+    if (denied) return remember(command, denied);
     return remember(command, dispatch(run, command));
   }
 
@@ -284,7 +378,7 @@ export function createEngine(options = {}) {
       knobs: { ...knobs },
       models: { judge: knobs.primaryModel, evaluator: knobs.secondaryModel, reviewer: knobs.secondaryModel },
       prereg: null,
-      preregHash: null,
+      inheritedArtifacts: [],
       personas: [],
       claims: [],
       edges: [],
@@ -298,8 +392,8 @@ export function createEngine(options = {}) {
       memory: { proposals: [], commits: [] },
       decision: null,
       ambition: null,
-      nextAction: 'prereg_freeze',
-      blockers: ['prereg.frozen'],
+      nextAction: 'question',
+      blockers: ['question'],
       events: [],
     };
     runs.set(id, run);
@@ -309,6 +403,7 @@ export function createEngine(options = {}) {
 
   function dispatch(run, command) {
     switch (command.action) {
+      case 'question': return question(run, command);
       case 'prereg_freeze': return freeze(run, command);
       case 'discussion': return discussion(run, command);
       case 'pin_persona': return pinPersona(run, command);
@@ -326,6 +421,31 @@ export function createEngine(options = {}) {
       case 'set_knobs': return setKnobs(run, command);
       default: return receipt({ reasonCode: 'UNKNOWN_ACTION', runId: run.id });
     }
+  }
+
+  function question(run, command) {
+    const payload = command.payload?.question ?? {};
+    const text = typeof payload.text === 'string' ? payload.text.trim() : '';
+    const hypothesis = typeof payload.hypothesis === 'string' ? payload.hypothesis.trim() : '';
+    const unknowns = Array.isArray(payload.unknowns)
+      ? payload.unknowns.filter((item) => typeof item === 'string' && item.trim()).map((item) => item.trim())
+      : [];
+    if (text.length < 4 || hypothesis.length < 4) {
+      return receipt({
+        reasonCode: 'QUESTION_INCOMPLETE', runId: run.id,
+        nextAction: 'question', blockers: ['question'], retry: 'none',
+      });
+    }
+    run.question = { text, hypothesis, unknowns };
+    advance(run, 'QUESTION');
+    run.nextAction = 'prereg_freeze';
+    run.blockers = ['prereg.frozen'];
+    append(run, 'question.recorded', { textLength: text.length, hypothesisLength: hypothesis.length, unknowns: unknowns.length });
+    return {
+      status: 'committed', runId: run.id, state: run.state, version: run.version,
+      nextAction: 'prereg_freeze', blockers: ['prereg.frozen'], retry: 'none',
+      data: { question: run.question },
+    };
   }
 
   function freeze(run, command) {
@@ -442,6 +562,9 @@ export function createEngine(options = {}) {
   function evalRead(run, command) {
     run.eval.readAt = nowIso();
     run.eval.readBy = command.actor?.id ?? null;
+    advance(run, 'MEMORY');
+    run.nextAction = 'memory_propose';
+    run.blockers = [];
     append(run, 'eval.read', { actor: command.actor?.id ?? null, reportHash: command.payload?.reportHash ?? run.eval.reportHash });
     return { status: 'committed', runId: run.id, state: run.state, version: run.version, retry: 'none' };
   }
@@ -536,6 +659,14 @@ export function createEngine(options = {}) {
     };
     run.decisions.push(entry);
     run.decision = entry;
+    run.claims.push({
+      id: `claim_${run.claims.length + 1}`,
+      label: entry.conclusion,
+      claim: entry.conclusion,
+      evidenceRefs,
+      status: 'decided',
+      at: entry.at,
+    });
     const derivedDimensions = {
       O: run.claims.length ? 0.75 : (run.experiments.length ? 0.6 : 0.4),
       R: run.preregHash ? 0.8 : 0.3,
@@ -588,6 +719,9 @@ export function createEngine(options = {}) {
     const next = { ...run.knobs, ...(command.payload?.knobs ?? {}) };
     runCounter += 1;
     const id = `run_${hashJson({ parent: run.id, knobs: next, n: runCounter }).slice(0, 8)}`;
+    // T4.1: a fork is a pure intake. It inherits artifacts for inspection but no
+    // frozen contract — only a fresh prereg_freeze can open the experiment gate.
+    const inheritedArtifacts = INHERITED_ARTIFACTS.filter((key) => hasInheritableArtifact(run[key]));
     const forked = {
       ...structuredClone(run),
       id,
@@ -596,16 +730,25 @@ export function createEngine(options = {}) {
       state: 'INTAKE',
       knobs: next,
       knobHash: hashJson(next),
+      preregHash: null,
+      prereg: run.prereg?.contract
+        ? { hash: null, frozen: false, inheritedFrom: run.id, contract: structuredClone(run.prereg.contract) }
+        : null,
+      inheritedArtifacts,
       events: [],
       createdAt: nowIso(),
       updatedAt: nowIso(),
-      nextAction: 'prereg_freeze',
-      blockers: ['prereg.frozen'],
+      nextAction: 'question',
+      blockers: ['question'],
     };
+    for (const key of inheritedArtifacts) forked[key] = markInherited(forked[key]);
     runs.set(id, forked);
     if (!children.has(run.id)) children.set(run.id, []);
     children.get(run.id).push(id);
-    append(forked, 'run.forked', { parentId: run.id, reason: 'knob-change' });
+    append(forked, 'run.forked', { parentId: run.id, reason: 'knob-change' }, {
+      bumpVersion: false,
+      extra: { inheritedArtifacts },
+    });
     return {
       status: 'committed', runId: id, parentId: run.id, forked: true,
       state: forked.state, version: forked.version, retry: 'none',
@@ -647,6 +790,8 @@ export function createEngine(options = {}) {
       models: run.models,
       prereg: run.prereg ?? { hash: null, frozen: false, contract: null },
       preregHash: run.preregHash,
+      question: run.question,
+      inheritedArtifacts: run.inheritedArtifacts ?? [],
       stage: run.state,
       nextAction: run.nextAction ?? null,
       blockers: gateExperiment.allow ? [] : gateExperiment.missing,
@@ -705,27 +850,54 @@ export function createEngine(options = {}) {
     const playbook = PLAYBOOKS[playbookId];
     if (!playbook) return null;
     const stored = graphs.get(playbookId);
-    return stored ? cloneGraph(stored) : buildDefaultGraph(playbook);
+    if (!stored) return buildDefaultGraph(playbook);
+    let graph = cloneGraph(stored);
+    if (graph.layoutVersion !== LAYOUT_VERSION) {
+      // T5.2: a persisted v1 layout is re-laid out on read and written back.
+      graph = migrateLayout(graph, playbook);
+      graph.layoutVersion = LAYOUT_VERSION;
+      graph.revision = graph.revision ?? graph.version ?? 1;
+      if (!graph.contentHash) graph.contentHash = hashJson(graph);
+      graphs.set(playbookId, cloneGraph(graph));
+    }
+    if (graph.revision === undefined) graph.revision = graph.version ?? 1;
+    return graph;
+  }
+
+  /** T6.1: protected nodes (start/end/playbook stages and gates) cannot be deleted. */
+  function protectedDeletionErrors(playbookId, playbook, candidate) {
+    const previous = graphs.get(playbookId) ?? buildDefaultGraph(playbook);
+    const present = new Set((candidate?.nodes ?? []).map((item) => item?.id));
+    const missing = [];
+    for (const id of protectedNodeIds(playbook)) {
+      if ((previous.nodes ?? []).some((item) => item.id === id) && !present.has(id)) missing.push(id);
+    }
+    return missing.map((id) => ({ code: 'V10', nodeId: id, message: `protected node ${id} cannot be deleted` }));
   }
 
   function saveGraph(playbookId, graph, actorKind = 'user') {
     if (actorKind !== 'user') return receipt({ reasonCode: 'USER_ONLY' });
     const playbook = PLAYBOOKS[playbookId];
     if (!playbook) return receipt({ reasonCode: 'UNKNOWN_PLAYBOOK' });
+    const deletions = protectedDeletionErrors(playbookId, playbook, graph);
+    if (deletions.length) return receipt({ reasonCode: 'PROTECTED_NODE', errors: deletions });
     const validation = validateGraph(graph, playbook);
     if (!validation.ok) return receipt({ reasonCode: 'INVALID_GRAPH', errors: validation.errors });
-    const previous = graphs.get(playbookId);
+    const previous = graphs.get(playbookId) ?? buildDefaultGraph(playbook);
     const version = (previous?.version ?? 0) + 1;
+    const revision = (previous?.revision ?? previous?.version ?? 0) + 1;
     const next = {
       ...cloneGraph(graph),
       id: `${playbookId}:v${version}`,
       playbookId,
       version,
+      revision,
+      layoutVersion: graph.layoutVersion ?? previous?.layoutVersion ?? LAYOUT_VERSION,
       updatedAt: nowIso(),
       contentHash: hashJson(graph),
     };
     graphs.set(playbookId, next);
-    return { status: 'committed', graph: cloneGraph(next), version };
+    return { status: 'committed', graph: cloneGraph(next), version, revision };
   }
 
   function saveLayout(playbookId, positions, actorKind = 'user') {
@@ -742,32 +914,57 @@ export function createEngine(options = {}) {
     }
     const validation = validateGraph(next, playbook);
     if (!validation.ok) return receipt({ reasonCode: 'INVALID_GRAPH', errors: validation.errors });
+    next.layoutVersion = LAYOUT_VERSION;
+    next.revision = (current?.revision ?? current?.version ?? 0) + 1;
     next.updatedAt = nowIso();
     next.contentHash = hashJson(next);
     graphs.set(playbookId, next);
-    return { status: 'committed', graph: cloneGraph(next) };
+    return { status: 'committed', graph: cloneGraph(next), revision: next.revision };
   }
 
   function graphView(runId, playbookId) {
     const run = runId ? runs.get(runId) : null;
-    const target = playbookId ?? run?.playbookId;
+    // T7.1: without a run the caller may omit the playbook; fall back to the
+    // first catalog entry so the blueprint view always has a graph to draw.
+    const target = playbookId ?? run?.playbookId ?? Object.keys(PLAYBOOKS)[0];
     const graph = target ? getGraph(target) : null;
     if (!graph) {
       const error = new Error(`unknown playbook ${target}`);
       error.code = 'UNKNOWN_PLAYBOOK';
       throw error;
     }
-    const overlay = run ? graphStates(run, graph) : { states: {}, current: null };
+    const overlay = run ? graphStates(run, graph, { receipts: receiptsFor(run.id) }) : null;
     return {
       graph,
-      states: overlay.states,
-      current: overlay.current,
+      states: overlay?.states ?? {},
+      current: overlay?.current ?? null,
+      progress: overlay?.progress ?? { done: 0, total: 0, index: 0 },
+      audit: overlay?.audit ?? { ok: true, violations: [] },
+      revision: graph.revision ?? graph.version ?? 1,
       runId: run?.id ?? null,
       version: run?.version ?? 0,
       availableCommands: graph.nodes
         .filter((item) => item.config?.action)
         .map((item) => ({ nodeId: item.id, action: item.config.action })),
     };
+  }
+
+  /** T8.7 evidence ledger: receipts of one run, oldest first. */
+  function receiptsFor(runId) {
+    const target = runId ?? null;
+    const entries = [];
+    for (const value of receipts.values()) {
+      if (!value) continue;
+      if (target !== null && value.runId !== target) continue;
+      entries.push({
+        commandId: value.commandId ?? null,
+        action: value.action ?? null,
+        status: value.status ?? null,
+        reasonCode: value.reasonCode ?? null,
+        at: value.at ?? null,
+      });
+    }
+    return entries;
   }
 
   function snapshot() {
@@ -796,6 +993,26 @@ export function createEngine(options = {}) {
     };
   }
 
+  /** T4.3: legacy runs that entered INTAKE holding a frozen hash are reconciled. */
+  function migrateRunOnLoad(run) {
+    if (run.state === 'INTAKE' && run.preregHash != null) {
+      const inheritedHash = run.prereg?.inheritedHash ?? run.preregHash;
+      run.preregHash = null;
+      run.prereg = {
+        hash: null,
+        frozen: false,
+        inheritedFrom: run.prereg?.inheritedFrom ?? run.parentId ?? null,
+        inheritedHash,
+        contract: run.prereg?.contract ?? null,
+      };
+      if (!run.events.some((event) => event.type === 'migration.reconciled')) {
+        append(run, 'migration.reconciled', { inheritedHash });
+      }
+    }
+    if (!Array.isArray(run.inheritedArtifacts)) run.inheritedArtifacts = [];
+    return run;
+  }
+
   function load(dumpValue) {
     if (!dumpValue || dumpValue.v !== 1) throw new Error('unsupported dump');
     runs.clear();
@@ -809,7 +1026,14 @@ export function createEngine(options = {}) {
       }
     }
     for (const entry of dumpValue.receipts ?? []) receipts.set(entry.key, entry.value);
-    for (const [playbookId, graph] of Object.entries(dumpValue.graphs ?? {})) graphs.set(playbookId, graph);
+    for (const run of runs.values()) migrateRunOnLoad(run);
+    for (const [playbookId, graph] of Object.entries(dumpValue.graphs ?? {})) {
+      const migrated = migrateLayout(graph, PLAYBOOKS[playbookId] ?? null);
+      migrated.layoutVersion = LAYOUT_VERSION;
+      migrated.revision = migrated.revision ?? migrated.version ?? 1;
+      if (!migrated.contentHash) migrated.contentHash = hashJson(migrated);
+      graphs.set(playbookId, migrated);
+    }
     let maxSeq = 0;
     for (const run of runs.values()) {
       const last = run.events?.at?.(-1)?.seq ?? 0;
@@ -823,7 +1047,7 @@ export function createEngine(options = {}) {
 
   return {
     execute, gate, getRun, snapshot, runView, map, cognitiveMap: map,
-    dump, load, knobs, lineageChildren,
+    dump, load, knobs, lineageChildren, receiptsFor,
     getGraph, saveGraph, saveLayout, graphView,
   };
 }

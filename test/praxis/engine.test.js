@@ -7,6 +7,7 @@ import {
   scoreHeterogeneity,
   DEFAULT_KNOBS,
   PLAYBOOKS,
+  STATE_ORDER,
 } from '../../plugins/dsh-praxis/src/engine.js';
 
 function prereg(extra = {}) {
@@ -71,9 +72,15 @@ test('experiment without freeze is denied and recorded', () => {
     payload: { command: 'train' },
   });
   assert.equal(denied.status, 'rejected');
-  assert.equal(denied.reasonCode, 'PREREG_REQUIRED');
-  assert.ok(denied.blockers.includes('prereg.frozen'));
-  assert.equal(engine.snapshot().runs[0].events.at(-1).type, 'gate.denied');
+  // v2 T1.3: experiment from INTAKE is an out-of-order transition; the frozen
+  // prereg prerequisite is still surfaced by gate() instead of a business code.
+  assert.equal(denied.reasonCode, 'INVALID_TRANSITION');
+  const gate = engine.gate(runId, 'experiment');
+  assert.equal(gate.allow, false);
+  assert.ok(gate.missing.includes('prereg.frozen'));
+  const run = engine.getRun(runId);
+  assert.equal(run.state, 'INTAKE');
+  assert.equal(run.events.at(-1).type, 'transition.denied');
 });
 
 test('freeze then experiment is allowed; post-result contract change forks', () => {
@@ -82,12 +89,23 @@ test('freeze then experiment is allowed; post-result contract change forks', () 
     commandId: 'c1', actor: { kind: 'root', id: 'root' },
     action: 'start', payload: { playbookId: 'scientific-loop', title: 'x' },
   });
+  const asked = engine.execute({
+    commandId: 'c1q', actor: { kind: 'root', id: 'root' },
+    action: 'question', runId,
+    payload: { question: { text: '未知结构能否被主动提取？', hypothesis: '存在可分离结构', unknowns: [] } },
+  });
+  assert.equal(asked.status, 'committed');
   const frozen = engine.execute({
     commandId: 'c2', actor: { kind: 'root', id: 'root' },
     action: 'prereg_freeze', runId, payload: { prereg: prereg() },
   });
   assert.equal(frozen.status, 'committed');
   assert.equal(engine.getRun(runId).state, 'PREREG_FROZEN');
+  const discussed = engine.execute({
+    commandId: 'c2d', actor: { kind: 'root', id: 'root' },
+    action: 'discussion', runId, payload: { round: 1, packages: discussionPackages() },
+  });
+  assert.equal(discussed.status, 'committed');
   const exp = engine.execute({
     commandId: 'c3', actor: { kind: 'coding', id: 'w' },
     action: 'experiment', runId, payload: { command: 'probe', artifactHash: 'abc' },
@@ -98,7 +116,8 @@ test('freeze then experiment is allowed; post-result contract change forks', () 
     action: 'prereg_freeze', runId, payload: { prereg: prereg({ acceptance: '放宽到任意正数' }) },
   });
   assert.equal(mutated.status, 'rejected');
-  assert.equal(mutated.reasonCode, 'PREREG_VIOLATION');
+  // v2 T1.3：非当前状态的 prereg_freeze 属于非法转移。
+  assert.equal(mutated.reasonCode, 'INVALID_TRANSITION');
   assert.notEqual(engine.getRun(runId).preregHash, hashJson(prereg({ acceptance: '放宽到任意正数' })));
 });
 
@@ -135,14 +154,8 @@ test('expected version mismatch is a conflict', () => {
 
 test('mean-reversion and unknown-fear are hard signals', () => {
   const engine = createEngine();
-  const { runId } = engine.execute({
-    commandId: 'c1', actor: { kind: 'root', id: 'root' },
-    action: 'start', payload: { playbookId: 'scientific-loop', title: 'x' },
-  });
-  engine.execute({
-    commandId: 'c2', actor: { kind: 'root', id: 'root' },
-    action: 'prereg_freeze', runId, payload: { prereg: prereg() },
-  });
+  // v2 §1.1: decision is a MEMORY/DECISION action; walk the real lifecycle.
+  const runId = memoryRun(engine, 'drift-early');
   const first = engine.execute({
     commandId: 'c3', actor: { kind: 'root', id: 'root' },
     action: 'decision', runId,
@@ -199,10 +212,8 @@ test('promote without eval.read is denied; kernel edit is denied', () => {
 
 test('user-only memory commit cannot be done by an agent', () => {
   const engine = createEngine();
-  const { runId } = engine.execute({
-    commandId: 'c1', actor: { kind: 'root', id: 'root' },
-    action: 'start', payload: { playbookId: 'scientific-loop', title: 'x' },
-  });
+  // v2 §1.1: memory actions live in MEMORY; reach it through the real lifecycle.
+  const runId = evalReadRun(engine, 'memory-sep');
   const proposal = engine.execute({
     commandId: 'c2', actor: { kind: 'root', id: 'root' },
     action: 'memory_propose', runId,
@@ -270,10 +281,8 @@ test('ambition inflation flags self-report without artifacts', () => {
 
 test('persona without topic binding is rejected', () => {
   const engine = createEngine();
-  const { runId } = engine.execute({
-    commandId: 'c1', actor: { kind: 'root', id: 'root' },
-    action: 'start', payload: { playbookId: 'scientific-loop', title: 'x' },
-  });
+  // v2: pin_persona belongs to PREREG_FROZEN and later.
+  const runId = frozenRun(engine, 'persona');
   const bad = engine.execute({
     commandId: 'c2', actor: { kind: 'root', id: 'root' },
     action: 'pin_persona', runId,
@@ -351,10 +360,8 @@ test('L2 and L3 are closed by default knobs', () => {
 // contract implementation lands; see test/praxis/README.md.
 // ===========================================================================
 
-const STATE_PIPELINE = [
-  'INTAKE', 'QUESTION', 'PREREG_FROZEN', 'DISCUSSION', 'SYNTHESIS', 'EXEC_READY',
-  'EXECUTING', 'REVIEW', 'STAGE4', 'EVAL', 'MEMORY', 'DECISION', 'CLOSED',
-];
+/** v2 §1.1: the frozen 10-state machine, exported by the engine as the single source. */
+const STATE_PIPELINE = STATE_ORDER;
 
 function startRun(engine, title = 'contract run', playbookId = 'scientific-loop') {
   const receipt = engine.execute({
@@ -410,8 +417,95 @@ function homogeneousPackages() {
 
 function frozenRun(engine, title = 'frozen') {
   const runId = startRun(engine, title);
+  // v2 T1.1/T1.2：冻结前必须先在 INTAKE 提交 question（fixture 迁移，不动断言强度）
+  const asked = doCommand(engine, runId, `question-${title}`, 'root', 'question', {
+    question: {
+      text: '未知结构能否被主动提取？',
+      hypothesis: '冻结基线上存在可分离结构',
+      unknowns: ['噪声上限'],
+    },
+  });
+  assert.equal(asked.status, 'committed');
   const freeze = doCommand(engine, runId, `freeze-${title}`, 'root', 'prereg_freeze', { prereg: prereg() });
   assert.equal(freeze.status, 'committed');
+  return runId;
+}
+
+/**
+ * v2 §1.1: one step per state transition. Fixtures below reuse it so every
+ * "later state" test walks the real lifecycle instead of jumping the cursor.
+ */
+const NEXT_STEP = {
+  QUESTION: (engine, runId, tag) => doCommand(engine, runId, `${tag}-question`, 'root', 'question', {
+    question: {
+      text: '未知结构能否被主动提取？',
+      hypothesis: '冻结基线上存在可分离结构',
+      unknowns: ['噪声上限'],
+    },
+  }),
+  PREREG_FROZEN: (engine, runId, tag) => doCommand(engine, runId, `${tag}-freeze`, 'root', 'prereg_freeze', {
+    prereg: prereg(),
+  }),
+  DISCUSSION: (engine, runId, tag) => doCommand(engine, runId, `${tag}-discussion`, 'root', 'discussion', {
+    round: 1,
+    packages: discussionPackages(),
+  }),
+  EXECUTING: (engine, runId, tag) => doCommand(engine, runId, `${tag}-experiment`, 'coding', 'experiment', {
+    command: 'probe',
+    artifactHash: 'artifact-1',
+  }),
+  REVIEW: (engine, runId, tag) => doCommand(engine, runId, `${tag}-review`, 'reviewer', 'review', {
+    verdict: 'pass',
+    items: ['对照被破坏'],
+  }),
+  STAGE4: (engine, runId, tag) => doCommand(engine, runId, `${tag}-stage4`, 'root', 'stage4', {}),
+  EVAL: (engine, runId, tag) => doCommand(engine, runId, `${tag}-eval-report`, 'evaluator', 'eval_report', {
+    reportHash: 'report-1',
+    verdict: 'pass',
+    seeds: DEFAULT_KNOBS.evalSeeds,
+  }),
+  MEMORY: (engine, runId, tag) => doCommand(engine, runId, `${tag}-eval-read`, 'user', 'eval_read', {
+    reportHash: 'report-1',
+  }),
+  DECISION: (engine, runId, tag) => doCommand(engine, runId, `${tag}-decision`, 'user', 'decision', {
+    conclusion: '结构存在',
+    next: 'new-run',
+    evidenceRefs: ['e1'],
+    ambition: 0.7,
+  }),
+};
+
+/** Walk an existing run forward through the frozen state machine. */
+function advanceTo(engine, runId, target, tag = 'adv') {
+  while (engine.getRun(runId).state !== target) {
+    const current = engine.getRun(runId).state;
+    const index = STATE_ORDER.indexOf(current);
+    assert.ok(index >= 0 && index < STATE_ORDER.length - 1, `cannot advance from ${current}`);
+    const next = STATE_ORDER[index + 1];
+    const step = NEXT_STEP[next];
+    assert.ok(step, `no advance step for ${next}`);
+    const receipt = step(engine, runId, tag);
+    assert.equal(receipt.status, 'committed', `advance ${tag} to ${next} (${receipt.reasonCode ?? 'ok'})`);
+  }
+  return runId;
+}
+
+const evalRun = (engine, title = 'eval') => advanceTo(engine, frozenRun(engine, title), 'EVAL', title);
+/** EVAL -> MEMORY via eval_read; no memory proposal yet. */
+const evalReadRun = (engine, title = 'eval-read') => advanceTo(engine, evalRun(engine, title), 'MEMORY', title);
+
+/** MEMORY with one committed proposal; the run can now record a decision. */
+function memoryRun(engine, title = 'memory') {
+  const runId = evalReadRun(engine, title);
+  const proposed = doCommand(engine, runId, `${title}-propose`, 'root', 'memory_propose', {
+    claim: '新路径存在',
+    evidenceRefs: ['e1'],
+  });
+  assert.equal(proposed.status, 'committed');
+  const committed = doCommand(engine, runId, `${title}-commit`, 'user', 'memory_commit', {
+    proposalId: latestProposalId(engine, runId),
+  });
+  assert.equal(committed.status, 'committed');
   return runId;
 }
 
@@ -438,11 +532,20 @@ test('contract rule 1: experiment gate lists missing prereg and opens after free
   assert.equal(gate.nextAction, 'prereg_freeze');
   const denied = doCommand(engine, runId, 'r1-exp', 'coding', 'experiment', { command: 'probe' });
   assert.equal(denied.status, 'rejected');
-  assert.equal(denied.reasonCode, 'PREREG_REQUIRED');
+  // v2 T1.3: INTAKE -> EXECUTING is not a legal edge; the gate() snapshot still
+  // names the missing prereg contract.
+  assert.equal(denied.reasonCode, 'INVALID_TRANSITION');
+  assert.equal(engine.getRun(runId).state, 'INTAKE');
+  assert.equal(doCommand(engine, runId, 'r1-question', 'root', 'question', {
+    question: { text: '未知结构能否被主动提取？', hypothesis: '存在可分离结构', unknowns: [] },
+  }).status, 'committed');
   doCommand(engine, runId, 'r1-freeze', 'root', 'prereg_freeze', { prereg: prereg() });
   const gate2 = engine.gate(runId, 'experiment');
   assert.equal(gate2.allow, true);
   assert.deepEqual(gate2.missing, []);
+  doCommand(engine, runId, 'r1-discussion', 'root', 'discussion', {
+    round: 1, packages: discussionPackages(),
+  });
   const allowed = doCommand(engine, runId, 'r1-exp2', 'coding', 'experiment', {
     command: 'probe', artifactHash: 'h-1',
   });
@@ -460,7 +563,8 @@ test('contract rule 2: post-freeze prereg mutation is a violation that asks for 
     prereg: prereg({ acceptance: '放宽到任意正数' }),
   });
   assert.equal(mutated.status, 'rejected');
-  assert.equal(mutated.reasonCode, 'PREREG_VIOLATION');
+  // v2 T1.3：非当前状态的 prereg_freeze 属于非法转移。
+  assert.equal(mutated.reasonCode, 'INVALID_TRANSITION');
   assert.equal(mutated.nextAction, 'new-run');
   const after = engine.runView(runId);
   assert.equal(after.preregHash ?? after.prereg.hash, oldHash);
@@ -471,7 +575,8 @@ test('contract rule 2: post-freeze prereg mutation is a violation that asks for 
 
 test('contract rule 3: promote rejects kernel paths, closed L2/L3, and unread eval', () => {
   const engine = createEngine();
-  const runId = frozenRun(engine, 'rule3');
+  // v2 §1.1: eval_read is an EVAL action, so the run must reach EVAL first.
+  const runId = evalRun(engine, 'rule3');
   const kernel = doCommand(engine, runId, 'r3-kernel', 'user', 'promote', {
     candidateId: 'k1', touches: ['evaluator'], evalRead: true,
   });
@@ -494,7 +599,7 @@ test('contract rule 3: promote rejects kernel paths, closed L2/L3, and unread ev
 
 test('contract rule 3: promote commits when eval was read and L2/L3 knobs are open', () => {
   const engine = createEngine({ knobs: { l2CodeEdit: true, l3MetaEdit: true } });
-  const runId = frozenRun(engine, 'rule3-open');
+  const runId = evalRun(engine, 'rule3-open');
   doCommand(engine, runId, 'r3o-read', 'user', 'eval_read', { reportHash: 'rh' });
   const promoted = doCommand(engine, runId, 'r3o-promote', 'user', 'promote', {
     candidateId: 'cand-1', touches: ['code', 'meta'],
@@ -506,7 +611,9 @@ test('contract rule 3: promote commits when eval was read and L2/L3 knobs are op
 
 test('contract rule 4: memory separation — propose vs user commit, uncommitted is not memory', () => {
   const engine = createEngine();
-  const runId = frozenRun(engine, 'rule4');
+  // v2 §1.1: memory actions live in MEMORY; this fixture reaches MEMORY with no
+  // proposal yet, so the propose/commit separation is observed cleanly.
+  const runId = evalReadRun(engine, 'rule4');
   const proposed = doCommand(engine, runId, 'r4-propose', 'root', 'memory_propose', {
     claim: '新路径存在', evidenceRefs: ['e1'],
   });
@@ -538,7 +645,8 @@ test('contract rule 4: memory separation — propose vs user commit, uncommitted
 
 test('contract rule 5: repeated same conclusion drifts; fear without evidence is unknown', () => {
   const engine = createEngine();
-  const runId = frozenRun(engine, 'rule5');
+  // v2 §1.1: decision is recorded at MEMORY; drift is measured across decisions.
+  const runId = memoryRun(engine, 'rule5');
   const first = doCommand(engine, runId, 'r5-1', 'root', 'decision', {
     conclusion: '结构不存在', next: 'repeat-same', evidenceRefs: ['e1'],
   });
@@ -681,7 +789,8 @@ test('contract rule 10: below-floor heterogeneity warns without blocking', () =>
 
 test('contract rule 10: below-floor ambition warns without blocking', () => {
   const engine = createEngine();
-  const runId = frozenRun(engine, 'rule10-a');
+  // v2 §1.1: decision is recorded at MEMORY; the ambition warning must not block.
+  const runId = memoryRun(engine, 'rule10-a');
   const receipt = doCommand(engine, runId, 'r10-a-decision', 'root', 'decision', {
     conclusion: '结构存在',
     next: 'new-run',
@@ -789,6 +898,9 @@ test('cognitive map: claims are never averaged into one node', () => {
 test('runView: shape matches contract §3 across the full loop', () => {
   const engine = createEngine();
   const runId = startRun(engine, 'runview');
+  doCommand(engine, runId, 'rv-question', 'root', 'question', {
+    question: { text: '未知结构能否被主动提取？', hypothesis: '存在可分离结构', unknowns: [] },
+  });
   doCommand(engine, runId, 'rv-freeze', 'root', 'prereg_freeze', { prereg: prereg() });
   doCommand(engine, runId, 'rv-persona', 'root', 'pin_persona', {
     persona: {

@@ -1,128 +1,116 @@
-# Praxis 验收证据（2026-11-04）
+# Praxis 验收证据（2026-11-05 v2/v3）
 
-## 1. 测试
+本文只记录**可复现**的检查。每条写明命令、场景与预期；未验证项在 §7 明列，不假装通过。
 
-```text
-$ node --test test/praxis/*.test.js
-ℹ tests 70   ℹ pass 70   ℹ fail 0   ℹ skipped 0
-```
+环境：DSH `0.2.1-rc.5`，Node `v25.2.0`，Chrome `133`（headless，CDP 驱动），插件版本 `@local/dsh-praxis@0.2.0`。
+测试实例：`dsh web --patch /tmp/praxis-test-patch.yml --port 3081 --no-open`，独立 `statePath`，不接触 `~/.dsh/praxis/state.json`。
 
-覆盖：engine 39（13 状态机、10 条硬规则、评分、地图、fork/幂等/冲突、dump/load、权限矩阵、RunView）、store 6、host 10、http 14、integration 1。
+## 1. 契约测试
 
-连续运行两次结果一致，exit 0。
-
-## 2. 安装与激活
-
-```text
-plugin_manager install_bundle target=/home/z/CBAT-W/zbh/plugins/dsh-praxis
-→ bundle @local/dsh-praxis, enabled true, row praxis (include:praxis)
-→ 修复 "Invalid effect"（async apply 返回值被 Cordis 当 disposer）后，
-  新实例日志：praxis.store.loaded runs=2；HTTP /praxis/api/state 200
-```
-
-## 3. 端到端流程
-
-通过 HTTP API 在真实 Host 进程内跑通：
-
-```text
-start → prereg_freeze → pin_persona → discussion → experiment → review
-→ stage4 → eval_report → eval_read → map_claim×3 → map_edge×2
-→ memory_propose → memory_commit → decision → set_knobs(fork)
-```
-
-全部 `committed`；fork 生成子 Run，`lineage.children` 可见；重启后 `load` 恢复 runs 与 knobs。
-
-## 4. 界面证据
-
-`docs/praxis/screenshots/`：
-
-| 文件 | 内容 |
-|---|---|
-| `praxis-tower-light.png` / `-dark.png` | 观测塔：DECISION、野心 0.81/1.00/0.81/0.80、时间线 |
-| `praxis-map-light.png` / `-dark.png` | 认知地图：3 节点、2 边、frontier、均值回归 |
-| `praxis-contract-light.png` / `-dark.png` | 已冻结契约与哈希 |
-| `praxis-discuss-light.png` / `-dark.png` | 讨论与异质度 |
-| `praxis-experiment-light.png` | 实验记录与复核 |
-| `praxis-eval-light.png` / `-dark.png` | 评估与 eval.read |
-| `praxis-memory-light.png` | 提案与提交 |
-| `praxis-lineage-light.png` | 父 Run + fork 子 Run |
-| `praxis-audit-light.png` | 17 条事件 |
-| `praxis-knobs-light.png` / `-dark.png` | 10 个超参滑杆 |
-
-验证环境：本机 `dsh web --port 3081`，独立临时 Chrome profile（1440×1000）。亮/暗主题通过 profile `ui-theme.preference` 切换后重启实例；截图后已恢复 `light`。
-
-## 5. 3080 线上页面（用户已连接实例）
-
-安装完成后对用户已连接的 3080 页面做 Client Inspect：
-
-```text
-sidebar.panellist occupants: plugins, schedules, praxis(active:true, order:35)
-main occupants:            plugins, conversation, schedules, praxis(active:true)
-conversation.composer.dock: activity, usage, context-diet, praxis(active:true, order:40)
-```
-
-三处 occupant 均 active，说明 Client half 已装配到当前页面。Host half 由同一 bundle 提供，且独立实例（3081）已验证 `/praxis/api/state` 200 与持久化恢复。
-
-Host 侧同样已在 3080 进程内注册：Host `Tool.listTools` 返回 `rsi_run`，参数枚举含全部 20 个动作（start/prereg_freeze/discussion/pin_persona/experiment/review/stage4/eval_report/eval_read/memory_propose/memory_commit/map_claim/map_edge/decision/promote/set_knobs/gate/map/snapshot/activate）。
-
-未验证：3080 的 `/praxis/api/state` 未直接 curl（需要该实例的一次性 token）；以 3081 的等价 HTTP 证据替代。
-- 真实科研数据训练（Q19/BENGI）不在本插件验收范围；插件只提供契约与门禁，不内置数据。
-- 真实 subagent 派工（discussion/experiment 由独立 worker Session 执行）尚未接入；当前面板提供 actor 派工面，工具与 UI 共用同一 Host 命令。
-
-## 6. 安装后检查清单
-
-```text
-[ ] Config.listConfigs: include:praxis active
-[ ] Slots.listSubTree(sidebar.panellist): occupant praxis
-[ ] GET /praxis/api/state → 200 + product Praxis
-[ ] 侧栏 Praxis → 主面板渲染
-[ ] node --test test/praxis/*.test.js → 70 pass
-```
-
----
-
-# 再设计验收（v2 画布，2026-11-04 16:20）
-
-## 1. 测试
-
-```text
+```bash
 node --test test/praxis/*.test.js
-ℹ tests 99   ℹ pass 99   ℹ fail 0   ℹ skipped 0
 ```
 
-新增 `graph.test.js`（21）与 `graph-api.test.js`（8）：默认图四剧本校验、V1–V9、状态叠加、GET/POST /graph、layout 合并、非 user actor USER_ONLY、dump 重启保留。
+```text
+ℹ tests 138
+ℹ pass 138
+ℹ fail 0
+ℹ skipped 0
+```
 
-## 2. 交互证据
-
-| 动作 | 证据 |
+| 套件 | 关注点 |
 |---|---|
-| 拖拽节点 | `state.json` 中 `n_intake {x:350,y:287}`；刷新/重启后保持 |
-| 连线 | Start→Question 新增边，DOM `.px-edge` 14→16；服务端 200 `{graph,receipt}` |
-| 源码编辑 | 修改 `name` 后保存，`graph.version` 递增；非法图返回 V 码列表 |
-| 新建 Run | 抽屉创建后运行条显示新标题、阶段 1/11、阻塞 1 |
-| 地图模式 | 3 个 claim 节点 + 2 条边；空态提示“还没有登记主张” |
-| 亮/暗 | 两套 token 下画布、检查器、地图均截图 |
-| 窄屏 1024 | 检查器下沉，画布保留 |
+| `engine.test.js` | 硬规则、评分、地图、权限矩阵、fork/幂等/冲突、dump/load |
+| `engine-v2.test.js` | `question` 动作、`QUESTION_REQUIRED`、`INVALID_TRANSITION`、fork 纯净性、迁移幂等 |
+| `graph.test.js` | 默认图拓扑、端口推导、图操作 |
+| `graph-v2.test.js` | 双轴状态、I1–I6 审计、拓扑钳制、gate done 由 receipt+游标决定、保护节点、布局与迁移 |
+| `graph-api.test.js` | `GET/POST /graph`、`/layout`、revision 冲突 |
+| `wire-v2.test.js` | `wireVersion=2`、`catalog`、409/422 语义、`/evidence` |
+| `client-build.test.js` | `client.js` 与本轮模块一致（`--check`）、模块前缀、单例 store、单一 style |
+| `store.test.js` / `host.test.js` / `http.test.js` / `integration.test.js` | 持久化、命令门面、HTTP 信封、端到端闭环 |
 
-## 3. 截图
+断言来源是契约（`docs/praxis/redesign/10-v2-contract.md`），不是实现现值的回抄。
 
-`canvas-flow-light/dark`、`canvas-inspector-light/dark`、`canvas-map-light/dark`、`canvas-runs-light`、`canvas-source-light`、`canvas-new-run-light`、`canvas-connect-light`、`canvas-narrow-dark`、`dock-dark`。
+## 2. 浏览器验收
 
-## 4. 实现中修正的问题
+```bash
+PRAXIS_BASE_URL=http://127.0.0.1:3081 \
+PRAXIS_SERVER_LOG=/tmp/praxis-3081.log \
+node --test test/praxis/acceptance/browser.test.js
+```
 
-| 问题 | 修复 |
+| 用例 | 断言 | 结果 |
+|---|---|---|
+| `§5.6 @1440×1000` | 15/15 节点可见、内容包围盒宽 ≥70%/高 ≥20%、唯一主按钮、内部码 0、破坏性控件 0、横向溢出 0 | 通过 |
+| `D5-1 @1024×900` | 无页面横向溢出、节点仍全可见、无控制台错误、`world scale < 0.75` 时出现“视口不足”提示 | 通过 |
+| `§5.2` | 节点正文只有人类可读状态，无 `prereg_freeze`/`gate:prereg` 等内部码 | 通过 |
+| `§5.2/T2.1` | 冻结后 prereg 门显示“已完成/契约已冻结”，不再出现倒挂 | 通过 |
+| `§5.4/D6` | 运行模态主按钮唯一，且无“删除节点/连线/拖拽节点”等拓扑控件 | 通过 |
+| `§5.3/D5` | 亮/暗主题分别由独立实例验证（同一实例不可切换主题） | 见 §7 |
+
+浏览器测试使用独立 Chrome profile 与独立 `statePath`（A1），零 npm 依赖（A2），3081 不可达时显式 skip 并打印原因（A3）。
+
+## 3. 手工端到端场景（CDP 脚本，可复跑）
+
+脚本：`tools/dev/preview.mjs`（dev 工具，非交付物）。
+
+| 场景 | 命令 | 观察到的结果 |
+|---|---|---|
+| 冷启动 | `node tools/dev/preview.mjs --scenario empty --coldstart` | 空态只有一个主入口 → 新建运行（顶栏无主按钮）→ INTAKE，进度 1/10，主按钮“记录研究问题” → 填写问题/假设/未知 → 提交 → QUESTION，2/10，banner“已提交：记录研究问题” |
+| 运行推进 | `node tools/dev/preview.mjs --scenario frozen --flow` | 顶栏“提交讨论”打开检查器 → 载入示例 → 提交 → DISCUSSION，v3→v4 |
+| 蓝图保存 | `node tools/dev/preview.mjs --scenario frozen --blueprintsave` | 进入蓝图 → 拖动节点 → 草稿“1 处修改 · 校验：待保存” → 保存 → 确认 diff → graph revision 1→2 → 回到运行态 |
+| 抽屉 | `node tools/dev/preview.mjs --scenario frozen --drawer map` | 认知地图抽屉打开：图例、空态、未知前沿/盲点；无控制台错误 |
+| 亮/暗主题 | `node tools/dev/preview.mjs --theme dark` | 暗色下节点、泳道、检查器、抽屉全部正常渲染 |
+| 1024 窄屏 | `node tools/dev/preview.mjs --size 1024x900` | 无页面横向溢出；`world scale=0.762`；画布内可拖拽 |
+
+上述场景 `consoleErrors = []`。
+
+## 4. 真值修复的验证
+
+| 缺陷（上一版） | 验证方式 | 结果 |
+|---|---|---|
+| `INTAKE` 时下游 `Prereg Gate` 显示 `DONE` | `graph-v2.test.js` I1–I6 + 浏览器 `§5.2/T2.1` | 修复：执行轴只由 receipt+游标决定；条件轴独立 |
+| fork 子 Run 继承 `preregHash` 导致门提前打开 | `engine-v2.test.js` T4.1/T4.2 | 修复：fork 清空 `preregHash`、契约转草稿、`gate('experiment').allow=false` |
+| 旧脏数据不会自愈 | `engine-v2.test.js` T4.3 + 迁移端到端脚本 | 修复：`load` 幂等对账，写 `migration.reconciled` |
+| 运行态可直接删节点/连线/伪造 actor | 浏览器 `§5.4/D6` + 代码审查 | 修复：运行态无拓扑控件；蓝图态保存需 `expectedRevision` + diff 确认 |
+| 客户端 0 测试覆盖 | `client-build.test.js` + `browser.test.js` | 部分修复：构建一致性与真实浏览器任务断言 |
+| 截图可伪造 | `tools/evidence/capture.mjs` + manifest | 每张截图带 sha256、构建 hash、端口、视口、主题、场景 |
+
+## 5. 图与 wire 契约
+
+| 条目 | 验证 |
 |---|---|
-| 画布高度 0 | `.px-shell` 改为 `auto / 1fr` 两行，top 区独立 |
-| Client 改动不生效 | 每次改动 bump package version（bundle rev 由版本决定） |
-| 端口不可点击 | 改点击式连线 + 检查器 CONNECT |
-| 相机丢失上游 | 锚定当前节点前 3 个节点 |
-| 进度 1/11 错位 | `stageKeyFor` 归一化状态键 |
-| nextAction 原始码 | NEXT_LABEL 补全 + 回退聚焦决策节点 |
-| 地图页崩溃 | 补 `num` 定义 |
+| `wireVersion=2`、`catalog` 完整（状态/动作/双轴/原因/阻塞/事件） | `wire-v2.test.js` T8.1/T8.2 |
+| `GET /graph` 扁平投影，含 `states/current/progress/audit/revision` | T8.3/T8.6 |
+| `POST /graph` 缺 `expectedRevision` → 428；过期 → 409 + 当前图 | T8.6 |
+| `POST /command` 成功 200 / 冲突 409 / 其他拒绝 422，带 `view`、`nextAction`、`blockers` | T8.5 |
+| `GET /evidence` 返回 runs+receipts+events+audit | T8.7 |
+| 保护节点、端口推导、V10/V11 | `graph-v2.test.js` T6.1–T6.3 |
 
-## 5. 未验证
+## 6. 安装与激活
 
-- 调色板拖入生成节点；
-- 路径回放（已走过节点回看）；
-- Dock chip 点击聚焦画布；
-- 3080 实例的实时页面（需重启或 HMR 成功），Client Inspect 可查 occupant。
+```text
+profile web: "@local/dsh-praxis": "link:/home/z/CBAT-W/zbh/plugins/dsh-praxis"
+安装层：Config.listConfigs → praxis 行 active
+Client：Slots.listSubTree → sidebar.panellist 出现 praxis occupant；主界面 main[praxis] 渲染
+Host：/praxis/api/state 200，wireVersion 2
+```
+
+修改 `client.js` 后必须重启 DSH web 才会重新加载 Client bundle；只刷新页面不够。
+
+## 7. 未验证 / 不可判定
+
+| 项 | 原因 | 处置 |
+|---|---|---|
+| Dock chip 的视觉验证 | `conversation.composer.dock` 作用域是 `session`，无活动会话时不渲染；headless 新 profile 没有会话 | 已确认 slot 注册代码存在；需在有会话的实例里人工确认 |
+| 1024 全应用下的有效字号下限 | 宿主侧栏 280px 使画布只有 744×840、world scale 0.762；64px 冻结节点高放不下达标字号 | 按 D5-1 记为“不可判定”；插件根 1024×840 下 scale=1.0 且全部达标 |
+| 暗色主题浏览器断言 | 主题由 profile patch 固定，运行时不可切换 | 由独立暗色实例验证（`capture.mjs` 管理实例）；同实例测试显式 skip |
+| 运行中 Playbook 迁移 | 当前策略是 Run 固定原 revision，不做自动迁移 | 设计决策，非缺陷 |
+| 真实 DSH 会话内 `rsi_run` 的工具调用 | 工具只在**新会话**出现；本轮未在对话中实际调用 | 需新会话人工验证 |
+
+## 8. 证据清单
+
+- 截图与 manifest：`docs/praxis/evidence/manifest.json` + `docs/praxis/screenshots/`
+- 契约：`docs/praxis/redesign/10-v2-contract.md`
+- 视觉验收清单：`docs/praxis/redesign/11-visual-acceptance-checklist.md`
+- 设计评审：`docs/praxis/redesign/12-client-visual-review-v2.md`

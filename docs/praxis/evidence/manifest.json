@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "generatedAt": "2026-11-04T17:35:57.173Z",
+  "node": "v25.2.0",
+  "packageVersion": "0.2.0",
+  "gitCommit": "8ae124c",
+  "buildHash": "f24a6badf54042c74549b5c8682dee2ec4fec73f71e00c7aed94f7cb2052f1a2",
+  "bundleSha256": "f24a6badf54042c74549b5c8682dee2ec4fec73f71e00c7aed94f7cb2052f1a2",
+  "buildChecked": true,
+  "port": 35471,
+  "url": "http://127.0.0.1:35471/?token=7heJ…Wlr4",
+  "statePath": "/tmp/praxis-acceptance/state-capture-132292-35471.json",
+  "chromeProfile": "/tmp/praxis-acceptance/chrome-profile-capture-132292-35471",
+  "server": {
+    "reused": false,
+    "port": 35471,
+    "pid": 132313,
+    "statePath": "/tmp/praxis-acceptance/state-capture-132292-35471.json",
+    "theme": "light",
+    "command": "dsh web --patch /tmp/praxis-acceptance/patch-35471.yml --port 35471 --no-open",
+    "patch": "/tmp/praxis-acceptance/patch-35471.yml",
+    "log": "/tmp/praxis-acceptance/server-35471.log",
+    "probeStatus": 200,
+    "stopped": true
+  },
+  "theme": null,
+  "scenarios": [],
+  "screenshots": [],
+  "metricViolations": [],
+  "warnings": [],
+  "errors": [
+    "waitFor timeout (document ready): document.readyState === \"complete\"; last error: CDP socket closed"
+  ],
+  "ok": false,
+  "captures": [
+    {
+      "at": "2026-11-04T17:37:15.551Z",
+      "theme": "light",
+      "scenarios": [
+        "empty",
+        "frozen"
+      ],
+      "buildHash": "f24a6badf54042c74549b5c8682dee2ec4fec73f71e00c7aed94f7cb2052f1a2",
+      "buildChecked": true,
+      "screenshots": [],
+      "errors": [
+        "waitFor timeout (document ready): document.readyState === \"complete\"; last error: CDP socket closed"
+      ],
+      "ok": false
+    }
+  ],
+  "requiredShots": 0
+}

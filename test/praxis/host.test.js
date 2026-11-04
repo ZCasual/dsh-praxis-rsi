@@ -17,14 +17,21 @@ test('host start and gate share one engine', () => {
 
 test('user command text names the next action', () => {
   const host = createHost();
-  host.execute({
+  const started = host.execute({
     action: 'start', commandId: 'h1',
     payload: { playbookId: 'scientific-loop', title: '未知' },
   }, 'user');
+  const runId = started.runId;
+  host.execute({
+    action: 'question', commandId: 'h1q', runId,
+    payload: { question: { text: '未知结构能否被主动提取？', hypothesis: '存在可分离结构', unknowns: [] } },
+  }, 'user');
   const denied = host.execute({
-    action: 'experiment', commandId: 'h2', payload: { command: 'probe' },
+    action: 'experiment', commandId: 'h2', runId, payload: { command: 'probe' },
   }, 'agent');
-  assert.match(commandText(denied), /PREREG_REQUIRED/);
+  // v2 T1.3: experiment from QUESTION is out of order; the receipt still names
+  // the next legal action, which is what the prose must expose.
+  assert.match(commandText(denied), /INVALID_TRANSITION/);
   assert.match(commandText(denied), /prereg_freeze/);
 });
 
@@ -66,6 +73,13 @@ function hostStart(host, title = 'host run') {
 
 function hostFreeze(host, title = 'host run') {
   const runId = hostStart(host, title);
+  const asked = host.execute({
+    action: 'question',
+    commandId: `h-question-${title}`,
+    runId,
+    payload: { question: { text: '未知结构能否被主动提取？', hypothesis: '存在可分离结构', unknowns: [] } },
+  }, 'user');
+  assert.equal(asked.status, 'committed');
   const frozen = host.execute({
     action: 'prereg_freeze',
     commandId: `h-freeze-${title}`,
@@ -73,6 +87,78 @@ function hostFreeze(host, title = 'host run') {
     payload: { prereg: HOST_PREREG },
   }, 'user');
   assert.equal(frozen.status, 'committed');
+  return runId;
+}
+
+const HOST_PACKAGES = [
+  { persona: 'theorist', claim: '未知结构可以被主动提取', assumptions: ['信号存在于声明的语料'], evidence: ['derivation:1'], style: 'theoretical', minority: true, retained: true },
+  { persona: 'empiricist', claim: '当前语料只支持均值回归', assumptions: ['噪声解释全部方差'], evidence: ['data:2'], style: 'empirical', minority: false, retained: true },
+];
+
+const HOST_STEPS = {
+  QUESTION: (host, runId, tag) => host.execute({
+    action: 'question',
+    commandId: `${tag}-question`,
+    runId,
+    payload: { question: { text: '未知结构能否被主动提取？', hypothesis: '存在可分离结构', unknowns: [] } },
+  }, 'user'),
+  PREREG_FROZEN: (host, runId, tag) => host.execute({
+    action: 'prereg_freeze',
+    commandId: `${tag}-freeze`,
+    runId,
+    payload: { prereg: HOST_PREREG },
+  }, 'user'),
+  DISCUSSION: (host, runId, tag) => host.execute({
+    action: 'discussion',
+    commandId: `${tag}-discussion`,
+    runId,
+    payload: { round: 1, packages: HOST_PACKAGES },
+  }, 'user'),
+  EXECUTING: (host, runId, tag) => host.execute({
+    action: 'experiment',
+    commandId: `${tag}-experiment`,
+    runId,
+    actor: { kind: 'coding', id: `${tag}-w` },
+    payload: { command: 'probe', artifactHash: 'h-artifact' },
+  }),
+  REVIEW: (host, runId, tag) => host.execute({
+    action: 'review',
+    commandId: `${tag}-review`,
+    runId,
+    actor: { kind: 'reviewer', id: `${tag}-r` },
+    payload: { verdict: 'pass', items: ['对照被破坏'] },
+  }),
+  STAGE4: (host, runId, tag) => host.execute({
+    action: 'stage4',
+    commandId: `${tag}-stage4`,
+    runId,
+    payload: {},
+  }, 'user'),
+  EVAL: (host, runId, tag) => host.execute({
+    action: 'eval_report',
+    commandId: `${tag}-eval-report`,
+    runId,
+    actor: { kind: 'evaluator', id: `${tag}-e` },
+    payload: { reportHash: 'host-report', verdict: 'pass', seeds: 3 },
+  }),
+  MEMORY: (host, runId, tag) => host.execute({
+    action: 'eval_read',
+    commandId: `${tag}-eval-read`,
+    runId,
+    payload: { reportHash: 'host-report' },
+  }, 'user'),
+};
+
+/** v2 §1.1: advance a host run to a target state through real commands. */
+function hostAdvance(host, runId, target, tag = 'host-adv') {
+  const order = ['INTAKE', 'QUESTION', 'PREREG_FROZEN', 'DISCUSSION', 'EXECUTING', 'REVIEW', 'STAGE4', 'EVAL', 'MEMORY'];
+  while (host.engine.getRun(runId).state !== target) {
+    const index = order.indexOf(host.engine.getRun(runId).state);
+    assert.ok(index >= 0 && index < order.length - 1, `cannot advance from ${host.engine.getRun(runId).state}`);
+    const next = order[index + 1];
+    const receipt = HOST_STEPS[next](host, runId, tag);
+    assert.equal(receipt.status, 'committed', `advance to ${next}: ${receipt.reasonCode ?? 'ok'}`);
+  }
   return runId;
 }
 
@@ -92,7 +178,7 @@ test('host: fresh view exposes product, empty active run, defaults and knob fiel
 
 test('host: user source owns memory commit while agent source can only propose', () => {
   const host = createHost();
-  const runId = hostFreeze(host, 'memory');
+  const runId = hostAdvance(host, hostFreeze(host, 'memory'), 'MEMORY', 'memory');
   const proposed = host.execute({
     action: 'memory_propose',
     commandId: 'h-propose',
@@ -119,7 +205,7 @@ test('host: user source owns memory commit while agent source can only propose',
 
 test('host: explicit actors drive evaluator/reviewer/coding permissions', () => {
   const host = createHost();
-  const runId = hostFreeze(host, 'actors');
+  const runId = hostAdvance(host, hostFreeze(host, 'actors'), 'DISCUSSION', 'actors');
   const coding = host.execute({
     action: 'experiment',
     commandId: 'h-coding-exp',
@@ -134,6 +220,12 @@ test('host: explicit actors drive evaluator/reviewer/coding permissions', () => 
     payload: { verdict: 'pass', items: ['对照被破坏'] },
   });
   assert.equal(reviewer.status, 'committed');
+  const staged = host.execute({
+    action: 'stage4',
+    commandId: 'h-stage4',
+    payload: {},
+  }, 'user');
+  assert.equal(staged.status, 'committed');
   const evaluator = host.execute({
     action: 'eval_report',
     commandId: 'h-eval-report',
@@ -184,28 +276,37 @@ test('host: commandText is honest about committed, replayed and rejected command
   }, 'user');
   assert.equal(replayed.status, 'replayed');
   assert.match(commandText(replayed), /replayed/i);
+  const runId = committed.runId;
+  host.execute({
+    action: 'question', commandId: 'h-txt-question', runId,
+    payload: { question: { text: '未知结构能否被主动提取？', hypothesis: '存在可分离结构', unknowns: [] } },
+  }, 'user');
   const rejected = host.execute({
-    action: 'experiment', commandId: 'h-txt-exp', payload: { command: 'probe' },
+    action: 'experiment', commandId: 'h-txt-exp', runId, payload: { command: 'probe' },
   }, 'agent');
   assert.equal(rejected.status, 'rejected');
-  assert.match(commandText(rejected), /PREREG_REQUIRED/);
+  assert.match(commandText(rejected), /INVALID_TRANSITION/);
   assert.match(commandText(rejected), /prereg_freeze/);
 });
 
 test('host: toolResult keeps the machine-readable fields separate from prose', () => {
   const host = createHost();
   hostStart(host, 'tool');
+  // v2 T1.2/T8.5: freezing before the question is the canonical 422 rejection
+  // that still carries blockers + nextAction for tool consumers.
   const denied = host.execute({
-    action: 'experiment', commandId: 'h-tool-exp', payload: { command: 'probe' },
+    action: 'prereg_freeze', commandId: 'h-tool-freeze', payload: { prereg: HOST_PREREG },
   }, 'agent');
   const result = toolResult(denied);
   for (const key of ['status', 'reasonCode', 'runId', 'nextAction', 'blockers', 'forked', 'state']) {
     assert.ok(key in result, `toolResult.${key} missing`);
   }
   assert.equal(result.status, 'rejected');
-  assert.equal(result.reasonCode, 'PREREG_REQUIRED');
+  assert.equal(result.reasonCode, 'QUESTION_REQUIRED');
   assert.ok(result.blockers.length > 0);
-  assert.equal(result.nextAction, 'prereg_freeze');
+  assert.ok(result.blockers.includes('question'));
+  assert.equal(result.nextAction, 'question');
+  assert.equal(result.state, 'INTAKE');
   assert.equal(result.forked, false);
 });
 

@@ -1,22 +1,28 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildDefaultGraph, validateGraph, graphStates } from '../../plugins/dsh-praxis/src/graph.js';
-import { PLAYBOOKS } from '../../plugins/dsh-praxis/src/engine.js';
+import { createEngine, PLAYBOOKS, DEFAULT_KNOBS } from '../../plugins/dsh-praxis/src/engine.js';
 
 /**
- * 图模型契约 v1（docs/praxis/redesign/07-graph-contract.md §1–§4）。
+ * 图模型契约 v2（docs/praxis/redesign/10-v2-contract.md §1.2–§2）。
  *
  * 实现侧接口（本文件固化）：
  *   buildDefaultGraph(playbook)        -> Graph
- *   validateGraph(graph, playbook)     -> { ok: boolean, errors: [{ code: 'V1'..'V9', message? }] }
- *   graphStates(run, graph)            -> { states: Record<nodeId, NodeState>, current: nodeId|null }
+ *   validateGraph(graph, playbook)     -> { ok: boolean, errors: [{ code: 'V1'..'V11', message? }] }
+ *   graphStates(run, graph, context)   -> { states: Record<nodeId, {execution,condition,reason}>,
+ *                                           current, edges, version, progress, audit }
+ *
+ * v2 §1.2：节点状态是双轴对象；v2 T2.1：执行轴只由 receipt + 状态游标决定。
+ * §4 的投影全部来自真实 engine 生命周期（禁止手写 fakeRun）。
  */
 
 const DEFAULT_PLAYBOOK = PLAYBOOKS['scientific-loop'];
 
 const NODE_TYPES = ['start', 'stage', 'gate', 'actor', 'end'];
 const PORTS = ['contract', 'artifact', 'evidence', 'veto'];
-const NODE_STATES = ['pending', 'active', 'blocked', 'done', 'failed', 'quarantined'];
+/** v2 §1.2 双轴枚举。 */
+const EXECUTION_STATES = ['pending', 'active', 'done', 'blocked', 'failed'];
+const CONDITION_STATES = ['missing', 'satisfied', 'stale', 'unknown'];
 
 const defaultGraph = () => buildDefaultGraph(DEFAULT_PLAYBOOK);
 const clone = (value) => structuredClone(value);
@@ -64,22 +70,100 @@ function edgeBy(graph, fromId, toId) {
   return graph.edges.find((edge) => edge.from === fromId && edge.to === toId);
 }
 
-function fakeRun(overrides = {}) {
-  return {
-    id: 'run_graph_1',
-    state: 'INTAKE',
-    version: 1,
-    preregHash: null,
-    eval: { reportHash: null, readAt: null },
-    ...overrides,
-    ...(overrides.eval ? { eval: { reportHash: null, readAt: null, ...overrides.eval } } : {}),
-  };
+// ---------------------------------------------------------------------------
+// 真实生命周期夹具（v2 T2.1：receipt 是执行轴权威，不能用假 run 推 gate done）
+// ---------------------------------------------------------------------------
+
+const PREREG = {
+  question: 'q', prediction: 'p', acceptance: 'a', acceptableFailure: 'f',
+  controls: ['shuffle'], metrics: { primary: 'separation', threshold: 0.08 },
+  input: { source: 'corpus' }, budget: { wallMin: 30 }, stop: { sameConclusion: 2 },
+};
+
+const PACKAGES = [
+  {
+    persona: 'theorist', claim: '未知结构可以被主动提取',
+    assumptions: ['信号存在于声明的语料'], evidence: ['derivation:1'],
+    style: 'theoretical', minority: true, retained: true,
+  },
+  {
+    persona: 'empiricist', claim: '当前语料只支持均值回归',
+    assumptions: ['噪声解释全部方差'], evidence: ['data:2'],
+    style: 'empirical', minority: false, retained: true,
+  },
+];
+
+function send(engine, runId, commandId, actorKind, action, payload = {}) {
+  return engine.execute({
+    commandId,
+    actor: { kind: actorKind, id: `${actorKind}-1` },
+    action,
+    runId,
+    payload,
+  });
 }
 
-function statesOf(run, graph) {
-  const overlay = graphStates(run, graph);
+const LIFECYCLE_STEPS = {
+  QUESTION: (engine, runId, tag) => send(engine, runId, `${tag}-question`, 'root', 'question', {
+    question: { text: '未知结构能否被主动提取？', hypothesis: '存在可分离结构', unknowns: ['噪声上限'] },
+  }),
+  PREREG_FROZEN: (engine, runId, tag) => send(engine, runId, `${tag}-freeze`, 'root', 'prereg_freeze', { prereg: PREREG }),
+  DISCUSSION: (engine, runId, tag) => send(engine, runId, `${tag}-discussion`, 'root', 'discussion', { round: 1, packages: PACKAGES }),
+  EXECUTING: (engine, runId, tag) => send(engine, runId, `${tag}-experiment`, 'coding', 'experiment', {
+    command: 'probe', artifactHash: 'artifact-1',
+  }),
+  REVIEW: (engine, runId, tag) => send(engine, runId, `${tag}-review`, 'reviewer', 'review', {
+    verdict: 'pass', items: ['对照被破坏'],
+  }),
+  STAGE4: (engine, runId, tag) => send(engine, runId, `${tag}-stage4`, 'root', 'stage4', {}),
+  EVAL: (engine, runId, tag) => send(engine, runId, `${tag}-eval-report`, 'evaluator', 'eval_report', {
+    reportHash: 'report-1', verdict: 'pass', seeds: DEFAULT_KNOBS.evalSeeds,
+  }),
+  MEMORY: (engine, runId, tag) => send(engine, runId, `${tag}-eval-read`, 'user', 'eval_read', { reportHash: 'report-1' }),
+};
+
+/** Start a run and walk it to `target` through real engine commands. */
+function runAt(target, tag = `states-${target}`) {
+  const engine = createEngine();
+  const started = engine.execute({
+    commandId: `${tag}-start`,
+    actor: { kind: 'root', id: 'root' },
+    action: 'start',
+    payload: { playbookId: 'scientific-loop', title: tag },
+  });
+  assert.equal(started.status, 'committed');
+  const runId = started.runId;
+  const order = ['INTAKE', 'QUESTION', 'PREREG_FROZEN', 'DISCUSSION', 'EXECUTING', 'REVIEW', 'STAGE4', 'EVAL', 'MEMORY'];
+  while (engine.getRun(runId).state !== target) {
+    const index = order.indexOf(engine.getRun(runId).state);
+    assert.ok(index >= 0 && index < order.length - 1, `cannot advance from ${engine.getRun(runId).state}`);
+    const next = order[index + 1];
+    const receipt = LIFECYCLE_STEPS[next](engine, runId, tag);
+    assert.equal(receipt.status, 'committed', `advance to ${next}: ${receipt.reasonCode ?? 'ok'}`);
+  }
+  return { engine, runId };
+}
+
+/** Real graph projection for the run, receipt-backed (v2 T2.1). */
+function project(engine, runId) {
+  const run = engine.getRun(runId);
+  const graph = engine.getGraph(run.playbookId);
+  return { graph, run, overlay: statesOf(run, graph, { receipts: engine.receiptsFor(runId) }) };
+}
+
+function statesOf(run, graph, context) {
+  const overlay = graphStates(run, graph, context);
   assert.ok(overlay && typeof overlay === 'object', 'graphStates must return an object');
   assert.ok(overlay.states && typeof overlay.states === 'object', 'graphStates must return {states}');
+  assert.ok(overlay.audit && typeof overlay.audit.ok === 'boolean', 'graphStates must return {audit.ok}');
+  assert.ok(Array.isArray(overlay.audit.violations), 'graphStates must return {audit.violations}');
+  assert.ok(overlay.progress && typeof overlay.progress.done === 'number', 'graphStates must return {progress}');
+  assert.equal(typeof overlay.progress.total, 'number');
+  assert.equal(typeof overlay.progress.index, 'number');
+  // v2 I5：progress 必须与派生 states 一致。
+  const done = Object.values(overlay.states).filter((state) => state.execution === 'done').length;
+  assert.equal(overlay.progress.done, done, 'I5: progress.done matches done nodes');
+  assert.equal(overlay.progress.total, graph.nodes.length, 'I5: progress.total matches node count');
   return overlay;
 }
 
@@ -368,103 +452,163 @@ test('graph: validation never mutates the candidate graph', () => {
 });
 
 // ---------------------------------------------------------------------------
-// §4 graphStates
+// §4 graphStates（v2 双轴投影，投影全部来自真实 engine 生命周期）
 // ---------------------------------------------------------------------------
 
 test('graphStates: INTAKE makes the intake stage active and current', () => {
-  const graph = defaultGraph();
-  const run = fakeRun({ state: 'INTAKE' });
-  const overlay = statesOf(run, graph);
+  const { engine, runId } = runAt('INTAKE');
+  const { graph, overlay } = project(engine, runId);
   const states = overlay.states;
 
   for (const node of graph.nodes) {
-    assert.ok(NODE_STATES.includes(states[node.id]), `state for ${node.id}`);
+    const state = states[node.id];
+    assert.ok(state && typeof state === 'object', `state for ${node.id}`);
+    assert.ok(EXECUTION_STATES.includes(state.execution), `execution for ${node.id}`);
+    assert.ok(CONDITION_STATES.includes(state.condition), `condition for ${node.id}`);
+    assert.ok(state.reason === null || typeof state.reason === 'string', `reason for ${node.id}`);
   }
-  assert.equal(states[stageNode(graph, 'intake').id], 'active');
-  assert.equal(states[stageNode(graph, 'question').id], 'pending');
+  assert.equal(states[stageNode(graph, 'intake').id].execution, 'active');
+  assert.equal(states[stageNode(graph, 'question').id].execution, 'pending');
+  // v2 T2.3：condition 与 execution 独立；还没到 gate 的守护阶段时 gate 仍是 pending。
+  assert.equal(states[gateNode(graph, 'prereg').id].execution, 'pending');
+  assert.equal(states[gateNode(graph, 'prereg').id].condition, 'missing');
   assert.equal(overlay.current, stageNode(graph, 'intake').id);
+  assert.deepEqual(overlay.progress, { done: 1, total: 15, index: 0 });
+  assert.equal(overlay.audit.ok, true);
 });
 
-test('graphStates: PREREG_FROZEN makes prereg_gate done and experiment_gate active', () => {
-  const graph = defaultGraph();
-  const run = fakeRun({ state: 'PREREG_FROZEN', preregHash: 'prereg-hash-1' });
-  const overlay = statesOf(run, graph);
-  assert.equal(overlay.states[gateNode(graph, 'prereg').id], 'done');
-  assert.equal(overlay.states[gateNode(graph, 'experiment').id], 'active');
-  assert.equal(overlay.states[gateNode(graph, 'eval').id], 'pending');
-  const active = Object.entries(overlay.states)
-    .filter(([, state]) => state === 'active' || state === 'blocked')
+test('graphStates: PREREG_FROZEN makes prereg_gate done and experiment_gate pending', () => {
+  const { engine, runId } = runAt('PREREG_FROZEN');
+  const { graph, overlay } = project(engine, runId);
+  const states = overlay.states;
+  const preregGate = gateNode(graph, 'prereg');
+  const experimentGate = gateNode(graph, 'experiment');
+  assert.equal(states[preregGate.id].execution, 'done');
+  assert.equal(states[preregGate.id].condition, 'satisfied');
+  // v2 T2.1：experiment gate 只有到 EXECUTING 才被“到达”，因此仍是 pending。
+  assert.equal(states[experimentGate.id].execution, 'pending');
+  assert.equal(states[experimentGate.id].condition, 'missing');
+  assert.equal(states[stageNode(graph, 'prereg').id].execution, 'active');
+  assert.equal(states[gateNode(graph, 'eval').id].execution, 'pending');
+  const active = Object.entries(states)
+    .filter(([, state]) => state.execution === 'active' || state.execution === 'blocked')
     .map(([id]) => id);
   assert.ok(active.includes(overlay.current), 'current is an active/blocked node');
+  // v2 §1.2：reason 必须人类可读，不得泄漏内部码。
+  for (const [id, state] of Object.entries(states)) {
+    if (state.reason == null) continue;
+    assert.ok(!/[a-z]+_[a-z]+/.test(state.reason), `${id} reason leaks an internal code`);
+  }
+  assert.equal(overlay.audit.ok, true);
 });
 
-test('graphStates: without preregHash experiment_gate is blocked and prereg_gate active', () => {
-  const graph = defaultGraph();
-  const run = fakeRun({ state: 'INTAKE', preregHash: null });
-  const overlay = statesOf(run, graph);
-  assert.equal(overlay.states[gateNode(graph, 'prereg').id], 'active');
-  assert.equal(overlay.states[gateNode(graph, 'experiment').id], 'blocked');
+test('graphStates: without a frozen prereg neither gate is done and the legacy contract is stale', () => {
+  // 新 Run：INTAKE 还没到达任何 gate，双轴都必须是 pending/missing。
+  const { engine, runId } = runAt('INTAKE', 'states-no-prereg');
+  const { graph, overlay } = project(engine, runId);
+  const states = overlay.states;
+  assert.equal(states[gateNode(graph, 'prereg').id].execution, 'pending');
+  assert.equal(states[gateNode(graph, 'prereg').id].condition, 'missing');
+  assert.equal(states[gateNode(graph, 'experiment').id].execution, 'pending');
+  assert.equal(states[gateNode(graph, 'experiment').id].condition, 'missing');
+  assert.equal(states[gateNode(graph, 'experiment').id].execution === 'done', false);
+  const gate = engine.gate(runId, 'experiment');
+  assert.equal(gate.allow, false);
+  assert.ok(gate.missing.includes('prereg.frozen'));
+  assert.equal(overlay.audit.ok, true);
+
+  // v2 T4.1/T4.2：fork 子 Run 只继承草稿契约，condition=stale，且未重冻结前门禁仍拒绝。
+  const parent = runAt('PREREG_FROZEN', 'states-fork-elder');
+  const forked = parent.engine.execute({
+    commandId: 'states-fork-knobs',
+    actor: { kind: 'user', id: 'owner' },
+    action: 'set_knobs',
+    runId: parent.runId,
+    payload: { knobs: { ...DEFAULT_KNOBS, heterogeneityFloor: 0.55 } },
+  });
+  assert.equal(forked.status, 'committed');
+  assert.equal(forked.forked, true);
+  const child = project(parent.engine, forked.runId);
+  const childStates = child.overlay.states;
+  assert.equal(parent.engine.getRun(forked.runId).state, 'INTAKE');
+  assert.equal(childStates[gateNode(child.graph, 'prereg').id].condition, 'stale');
+  assert.equal(childStates[gateNode(child.graph, 'prereg').id].execution, 'pending');
+  assert.equal(childStates[gateNode(child.graph, 'experiment').id].execution, 'pending');
+  assert.equal(parent.engine.gate(forked.runId, 'experiment').allow, false);
 });
 
-test('graphStates: EVAL with readAt makes eval_gate done, without it eval_gate active', () => {
-  const graph = defaultGraph();
-  const read = statesOf(fakeRun({
-    state: 'EVAL',
-    preregHash: 'h',
-    eval: { reportHash: 'report-1', readAt: '2026-11-04T00:00:00.000Z' },
-  }), graph);
-  assert.equal(read.states[gateNode(graph, 'eval').id], 'done');
+test('graphStates: EVAL keeps eval_gate blocked until eval_read (receipt-driven)', () => {
+  const { engine, runId } = runAt('EVAL', 'states-eval');
+  const before = project(engine, runId);
+  const evalGate = gateNode(before.graph, 'eval');
+  // v2 T2.1：有 reportHash（condition=satisfied）不足以让 gate done，
+  // 必须存在本 Run 的 eval_read receipt；到 EVAL 后它是 blocked，而不是 done。
+  assert.equal(before.overlay.states[evalGate.id].condition, 'satisfied');
+  assert.equal(before.overlay.states[evalGate.id].execution, 'blocked');
+  assert.notEqual(before.overlay.states[evalGate.id].execution, 'done');
+  assert.ok(
+    ['active', 'blocked'].includes(before.overlay.states[before.overlay.current]?.execution),
+    'current is an active/blocked node',
+  );
+  assert.equal(before.overlay.audit.ok, true);
 
-  const unread = statesOf(fakeRun({
-    state: 'EVAL',
-    preregHash: 'h',
-    eval: { reportHash: 'report-1', readAt: null },
-  }), graph);
-  assert.equal(unread.states[gateNode(graph, 'eval').id], 'active');
-
-  const noReport = statesOf(fakeRun({
-    state: 'PREREG_FROZEN',
-    preregHash: 'h',
-    eval: { reportHash: null, readAt: null },
-  }), graph);
-  assert.equal(noReport.states[gateNode(graph, 'eval').id], 'pending');
-
-  // 契约 §4：eval_gate 只认 readAt/reportHash，不因 cursor 到 EVAL 就变 active。
-  const evalNoReport = statesOf(fakeRun({
-    state: 'EVAL',
-    preregHash: 'h',
-    eval: { reportHash: null, readAt: null },
-  }), graph);
-  assert.equal(evalNoReport.states[gateNode(graph, 'eval').id], 'pending');
+  const read = send(engine, runId, 'states-eval-read', 'user', 'eval_read', { reportHash: 'report-1' });
+  assert.equal(read.status, 'committed');
+  assert.equal(engine.getRun(runId).state, 'MEMORY');
+  const after = project(engine, runId);
+  assert.equal(after.overlay.states[evalGate.id].execution, 'done');
+  assert.equal(after.overlay.states[stageNode(after.graph, 'eval').id].execution, 'done');
+  assert.equal(after.overlay.states[stageNode(after.graph, 'memory').id].execution, 'active');
+  assert.equal(after.overlay.current, stageNode(after.graph, 'memory').id);
+  assert.equal(after.overlay.audit.ok, true);
 });
 
 test('graphStates: DRIFT_DETECTED fails the walked stage nodes', () => {
-  const graph = defaultGraph();
-  const run = fakeRun({ state: 'DRIFT_DETECTED', preregHash: 'h' });
-  const overlay = statesOf(run, graph);
-  assert.equal(overlay.states[stageNode(graph, 'intake').id], 'failed');
+  const { engine, runId } = runAt('MEMORY', 'states-drift');
+  const first = send(engine, runId, 'states-drift-decision-1', 'user', 'decision', {
+    conclusion: '结构不存在', next: 'repeat-same', evidenceRefs: ['e1'],
+  });
+  assert.equal(first.status, 'committed');
+  const drift = send(engine, runId, 'states-drift-decision-2', 'user', 'decision', {
+    conclusion: '结构不存在', next: 'repeat-same', evidenceRefs: ['e1'],
+  });
+  assert.equal(drift.reasonCode, 'DRIFT_DETECTED');
+  assert.equal(engine.getRun(runId).state, 'DRIFT_DETECTED');
+
+  const { graph, overlay } = project(engine, runId);
+  const states = overlay.states;
+  assert.equal(states[stageNode(graph, 'intake').id].execution, 'failed');
+  assert.equal(states[stageNode(graph, 'memory').id].execution, 'failed');
+  assert.equal(states[gateNode(graph, 'eval').id].execution, 'failed');
   assert.ok(
-    Object.values(overlay.states).includes('failed'),
+    Object.values(states).some((state) => state.execution === 'failed'),
     'at least one node failed',
   );
+  assert.equal(states[graph.nodes.find((node) => node.id === 'end').id].execution, 'pending');
 });
 
 test('graphStates: stage progression marks past stages done and future stages pending', () => {
-  const graph = defaultGraph();
-  const run = fakeRun({ state: 'REVIEW', preregHash: 'h' });
-  const overlay = statesOf(run, graph);
-  assert.equal(overlay.states[stageNode(graph, 'experiment').id], 'done');
-  assert.equal(overlay.states[stageNode(graph, 'review').id], 'active');
-  assert.equal(overlay.states[stageNode(graph, 'stage4').id], 'pending');
+  const { engine, runId } = runAt('REVIEW', 'states-review');
+  const { graph, overlay } = project(engine, runId);
+  const states = overlay.states;
+  assert.equal(states[stageNode(graph, 'experiment').id].execution, 'done');
+  assert.equal(states[stageNode(graph, 'review').id].execution, 'active');
+  assert.equal(states[stageNode(graph, 'stage4').id].execution, 'pending');
   assert.equal(overlay.current, stageNode(graph, 'review').id);
+  // 已提交 receipt 的 gate 是 done；尚未到达的 eval gate 仍是 pending。
+  assert.equal(states[gateNode(graph, 'prereg').id].execution, 'done');
+  assert.equal(states[gateNode(graph, 'experiment').id].execution, 'done');
+  assert.equal(states[gateNode(graph, 'eval').id].execution, 'pending');
+  assert.equal(overlay.audit.ok, true);
 });
 
 test('graphStates: pure — does not mutate run or graph', () => {
-  const graph = defaultGraph();
-  const run = fakeRun({ state: 'PREREG_FROZEN', preregHash: 'h' });
+  const { engine, runId } = runAt('DISCUSSION', 'states-pure');
+  const run = engine.getRun(runId);
+  const graph = engine.getGraph('scientific-loop');
   const graphBefore = clone(graph);
   const runBefore = clone(run);
-  statesOf(run, graph);
+  project(engine, runId);
   assert.deepEqual(graph, graphBefore);
   assert.deepEqual(run, runBefore);
 });

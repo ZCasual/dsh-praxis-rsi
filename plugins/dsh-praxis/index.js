@@ -6,7 +6,7 @@ export const name = 'praxis';
 export const inject = ['tools', 'commands', 'systemPrompt', 'webServer'];
 
 const ACTIONS = [
-  'start', 'prereg_freeze', 'discussion', 'pin_persona', 'experiment', 'review',
+  'start', 'question', 'prereg_freeze', 'discussion', 'pin_persona', 'experiment', 'review',
   'stage4', 'eval_report', 'eval_read', 'memory_propose', 'memory_commit',
   'map_claim', 'map_edge', 'decision', 'promote', 'set_knobs', 'gate', 'map', 'snapshot', 'activate',
   'graph', 'graph_save', 'layout_save',
@@ -80,7 +80,7 @@ export async function apply(ctx, config = {}) {
 
   ctx.effect(() => ctx.tools.register({
     name: 'rsi_run',
-    description: 'Operate the Praxis research engine: start a playbook, freeze a contract, record discussion/experiment/review, read the gate, record decisions, or maintain the cognitive map. The Observatory panel calls the same engine method.',
+    description: 'Operate the Praxis research engine: start a run, record the research question, freeze a contract, record discussion/experiment/review, read the gate, record decisions, or maintain the cognitive map. The Observatory panel calls the same engine method.',
     parameters: PARAMETERS,
     output: {
       schema: OUTPUT,

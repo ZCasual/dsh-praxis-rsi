@@ -8,16 +8,19 @@ import { PLAYBOOKS } from '../../plugins/dsh-praxis/src/engine.js';
 import { buildDefaultGraph } from '../../plugins/dsh-praxis/src/graph.js';
 
 /**
- * 图 API 契约 v1（docs/praxis/redesign/07-graph-contract.md §5–§6）。
+ * 图 API 契约 v2（docs/praxis/redesign/10-v2-contract.md §2.3 / §3）。
  *
  * 实现侧接口（本文件固化）：
- *   GET  /praxis/api/graph?runId=     -> 200 { graph, states, current, runId, version }
- *   POST /praxis/api/graph            -> body { playbookId, graph, actor? }
- *                                        200 { graph, receipt }
- *                                        400 { error, code:'INVALID_GRAPH', errors[] }
- *                                        actor.kind !== 'user' -> 4xx { error, code:'USER_ONLY' }
+ *   GET  /praxis/api/graph?runId=     -> 200 扁平 graph 投影（T8.6a / T8.3）
+ *                                        { id, playbookId, revision, layoutVersion, name,
+ *                                          nodes, edges, states, current, progress, audit }
+ *   POST /praxis/api/graph            -> body { playbookId, graph, expectedRevision, actor? }
+ *                                        缺 expectedRevision -> 428 REVISION_REQUIRED（T8.6）
+ *                                        过期 -> 409 CONFLICT + 当前图
+ *                                        无效图 -> 4xx + V 码
+ *                                        actor.kind !== 'user' -> 4xx USER_ONLY
  *   POST /praxis/api/layout           -> body { playbookId, positions, actor? } -> 200 { graph }
- *   持久化：store dump 的 graphs[playbookId]（§6），重启后保留。
+ *   持久化：store dump 的 graphs[playbookId]，重启后保留。
  */
 
 const PLAYBOOK_ID = 'scientific-loop';
@@ -25,7 +28,8 @@ const PLAYBOOK = PLAYBOOKS[PLAYBOOK_ID];
 const PORT = 3080;
 const LOOPBACK_HOST = '127.0.0.1';
 const BASE_HEADERS = { host: `${LOOPBACK_HOST}:${PORT}`, 'x-praxis-request': '1' };
-const NODE_STATES = ['pending', 'active', 'blocked', 'done', 'failed', 'quarantined'];
+const EXECUTION_STATES = ['pending', 'active', 'done', 'blocked', 'failed'];
+const CONDITION_STATES = ['missing', 'satisfied', 'stale', 'unknown'];
 
 // --- fake domain / store ---------------------------------------------------
 
@@ -191,43 +195,66 @@ async function startRun(route, commandId = 'graph-api-start') {
 
 const intakeId = (graph) => graph.nodes.find((node) => node.type === 'stage' && node.stage === 'intake').id;
 
+/** v2 T8.6: saves must carry the live graph revision. */
+async function currentGraph(route, runId) {
+  const { status, json } = await getGraph(route, runId);
+  assert.equal(status, 200);
+  return json;
+}
+
 // ---------------------------------------------------------------------------
 
-test('graph api: GET /graph without a run returns the default playbook graph', async () => {
+test('graph api: GET /graph without a run returns the flat default playbook graph', async () => {
   const host = createHost();
   const { route } = mount(host);
   const { status, json } = await getGraph(route);
   assert.equal(status, 200);
-  assert.ok(json.graph && typeof json.graph === 'object');
-  assert.equal(json.graph.playbookId, PLAYBOOK_ID);
-  assert.ok(Array.isArray(json.graph.nodes) && json.graph.nodes.length > 0);
-  assert.ok(Array.isArray(json.graph.edges));
-  assert.equal(json.runId, null);
+  // v2 T8.6a：扁平投影，没有 { graph: ... } 包装。
+  assert.equal('graph' in json, false, 'GET /graph must be a flat projection');
+  for (const key of ['id', 'playbookId', 'revision', 'layoutVersion', 'nodes', 'edges', 'states', 'current', 'progress', 'audit']) {
+    assert.ok(key in json, `GET /graph.${key} missing`);
+  }
+  assert.equal(json.playbookId, PLAYBOOK_ID);
+  assert.equal(json.layoutVersion, 2);
+  assert.equal(typeof json.revision, 'number');
+  assert.ok(Array.isArray(json.nodes) && json.nodes.length === 15);
+  assert.ok(Array.isArray(json.edges));
   assert.deepEqual(json.states, {});
   assert.equal(json.current, null);
+  assert.equal(json.audit.ok, true);
 });
 
-test('graph api: GET /graph?runId returns the graph plus derived states', async () => {
+test('graph api: GET /graph?runId returns the graph plus dual-axis derived states', async () => {
   const host = createHost();
   const { route } = mount(host);
   const runId = await startRun(route);
   assert.ok(runId);
   const { status, json } = await getGraph(route, runId);
   assert.equal(status, 200);
-  assert.equal(json.runId, runId);
-  assert.equal(json.version, host.engine.runView(runId).version);
-  assert.equal(json.graph.playbookId, PLAYBOOK_ID);
-  const intake = intakeId(json.graph);
-  assert.equal(json.states[intake], 'active');
+  assert.equal('graph' in json, false, 'GET /graph must be a flat projection');
+  assert.equal(json.playbookId, PLAYBOOK_ID);
+  assert.equal(json.layoutVersion, 2);
+  assert.ok(Array.isArray(json.nodes) && json.nodes.length === 15);
+  const intake = intakeId(json);
+  assert.equal(json.states[intake].execution, 'active');
   assert.equal(json.current, intake);
+  assert.equal(json.progress.total, json.nodes.length);
+  assert.equal(json.progress.index, 0);
+  assert.equal(json.audit.ok, true);
   for (const nodeId of Object.keys(json.states)) {
-    assert.ok(NODE_STATES.includes(json.states[nodeId]), `state ${nodeId}`);
+    const state = json.states[nodeId];
+    assert.ok(EXECUTION_STATES.includes(state.execution), `execution ${nodeId}`);
+    assert.ok(CONDITION_STATES.includes(state.condition), `condition ${nodeId}`);
+    assert.ok(state.reason === null || typeof state.reason === 'string');
   }
+  // 与 engine.graphView 是同一投影。
+  assert.deepEqual(json.states, host.engine.graphView(runId).states);
 });
 
-test('graph api: POST /graph with an invalid graph is 400 with V codes', async () => {
+test('graph api: POST /graph with an invalid graph is 422 with V codes', async () => {
   const host = createHost();
   const { route } = mount(host);
+  const current = await currentGraph(route);
   const graph = buildDefaultGraph(PLAYBOOK);
   graph.edges.push({
     id: 'e_cycle',
@@ -235,22 +262,41 @@ test('graph api: POST /graph with an invalid graph is 400 with V codes', async (
     to: graph.nodes.find((node) => node.type === 'start').id,
     port: 'artifact',
   });
-  const { status, json } = await postGraph(route, { playbookId: PLAYBOOK_ID, graph });
-  assert.equal(status, 400);
+  const { status, json } = await postGraph(route, {
+    playbookId: PLAYBOOK_ID,
+    graph,
+    expectedRevision: current.revision,
+  });
+  // v2 T8.6：expectedRevision 齐备后，无效图是 4xx（实现返回 422）。
+  assert.ok(status >= 400 && status < 500, `expected 4xx, got ${status}`);
   assert.equal(json.code, 'INVALID_GRAPH');
   assert.equal(typeof json.error, 'string');
   assert.ok(Array.isArray(json.errors) && json.errors.length > 0);
   assert.ok(json.errors.every((error) => typeof error.code === 'string'));
   assert.ok(json.errors.some((error) => error.code === 'V3'), 'cycle must surface V3');
+  // 未落盘。
+  const after = await currentGraph(route);
+  assert.equal(after.revision, current.revision);
 });
 
-test('graph api: POST /graph without a graph body is 400 INVALID_GRAPH', async () => {
+test('graph api: POST /graph requires expectedRevision and rejects a body without a graph', async () => {
   const host = createHost();
   const { route } = mount(host);
-  const { status, json } = await postGraph(route, { playbookId: PLAYBOOK_ID });
-  assert.equal(status, 400);
-  assert.equal(json.code, 'INVALID_GRAPH');
-  assert.ok(Array.isArray(json.errors));
+  const before = await currentGraph(route);
+
+  // v2 T8.6：缺 expectedRevision 时保存被拒绝（revision gate 先于其它校验）。
+  const missingRevision = await postGraph(route, { playbookId: PLAYBOOK_ID });
+  assert.equal(missingRevision.status, 428);
+  assert.equal(missingRevision.json.code, 'REVISION_REQUIRED');
+
+  // 带 expectedRevision 但没有 graph：必须是 4xx + V 码，且不能删除受保护节点。
+  const noGraph = await postGraph(route, { playbookId: PLAYBOOK_ID, expectedRevision: before.revision });
+  assert.ok(noGraph.status >= 400 && noGraph.status < 500, `expected 4xx, got ${noGraph.status}`);
+  assert.ok(Array.isArray(noGraph.json.errors) && noGraph.json.errors.length > 0);
+  assert.ok(noGraph.json.errors.every((error) => /^V\d+$/.test(error.code)), 'errors must be V codes');
+  const after = await currentGraph(route);
+  assert.equal(after.revision, before.revision, 'rejected save must not persist');
+  assert.equal(after.nodes.length, before.nodes.length);
 });
 
 test('graph api: POST /graph with a valid graph is 200 and persists into the store dump', async () => {
@@ -261,13 +307,19 @@ test('graph api: POST /graph with a valid graph is 200 and persists into the sto
   graph.name = 'UI 编辑图';
   graph.nodes.find((node) => node.id === intakeId(graph)).label = '进入';
 
-  const { status, json } = await postGraph(route, { playbookId: PLAYBOOK_ID, graph });
+  const current = await currentGraph(route);
+  const { status, json } = await postGraph(route, {
+    playbookId: PLAYBOOK_ID,
+    graph,
+    expectedRevision: current.revision,
+  });
   assert.equal(status, 200);
   assert.ok(json.graph && typeof json.graph === 'object');
   assert.equal(json.graph.name, 'UI 编辑图');
   assert.equal(json.graph.playbookId, PLAYBOOK_ID);
   assert.equal(typeof json.graph.contentHash, 'string');
   assert.ok(json.graph.contentHash.length > 0, 'contentHash is computed when saving');
+  assert.equal(json.graph.revision, current.revision + 1, 'T8.6: revision increments on save');
   assert.ok(json.receipt && typeof json.receipt === 'object');
   assert.equal(json.receipt.status, 'committed');
 
@@ -288,7 +340,12 @@ test('graph api: a saved graph survives a store reload (restart)', async () => {
   const mount1 = mount(host);
   const graph = buildDefaultGraph(PLAYBOOK);
   graph.name = '重启后仍在';
-  const saved = await postGraph(mount1.route, { playbookId: PLAYBOOK_ID, graph });
+  const before = await currentGraph(mount1.route);
+  const saved = await postGraph(mount1.route, {
+    playbookId: PLAYBOOK_ID,
+    graph,
+    expectedRevision: before.revision,
+  });
   assert.equal(saved.status, 200);
   await host.flush();
 
@@ -301,8 +358,10 @@ test('graph api: a saved graph survives a store reload (restart)', async () => {
   const runId = await startRun(mount2.route, 'graph-api-restart');
   const { status, json } = await getGraph(mount2.route, runId);
   assert.equal(status, 200);
-  assert.equal(json.graph.name, '重启后仍在');
-  assert.equal(json.graph.playbookId, PLAYBOOK_ID);
+  // v2 T8.6a：GET /graph 是扁平投影。
+  assert.equal(json.name, '重启后仍在');
+  assert.equal(json.playbookId, PLAYBOOK_ID);
+  assert.equal(json.layoutVersion, 2);
 });
 
 test('graph api: POST /layout merges positions only', async () => {
@@ -311,7 +370,12 @@ test('graph api: POST /layout merges positions only', async () => {
   const { route } = mount(host);
   const graph = buildDefaultGraph(PLAYBOOK);
   graph.name = '布局前';
-  const saved = await postGraph(route, { playbookId: PLAYBOOK_ID, graph });
+  const before = await currentGraph(route);
+  const saved = await postGraph(route, {
+    playbookId: PLAYBOOK_ID,
+    graph,
+    expectedRevision: before.revision,
+  });
   assert.equal(saved.status, 200);
   const intake = intakeId(saved.json.graph);
   const question = saved.json.graph.nodes.find(
@@ -363,10 +427,12 @@ test('graph api: graph and layout management are user-only', async () => {
   const { route } = mount(host);
   const graph = buildDefaultGraph(PLAYBOOK);
   graph.name = '越权图';
+  const before = await currentGraph(route);
 
   const deniedGraph = await postGraph(route, {
     playbookId: PLAYBOOK_ID,
     graph,
+    expectedRevision: before.revision,
     actor: { kind: 'agent', id: 'agent-1' },
   });
   assert.ok(deniedGraph.status >= 400 && deniedGraph.status < 500, `expected 4xx, got ${deniedGraph.status}`);

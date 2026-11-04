@@ -113,8 +113,13 @@ test('http: GET state returns 200 with the contract state envelope', async () =>
   const { status, json } = await call(route, fakeReq());
   assert.equal(status, 200);
   assert.equal(json.product, 'Praxis');
-  assert.equal(json.wireVersion, 1);
+  // v2 T8.1/T8.4：wireVersion 2 与 {...view, view, serverTime, revision} 信封。
+  assert.equal(json.wireVersion, 2);
   assert.ok(json.view && typeof json.view === 'object', 'state envelope carries view');
+  assert.equal(json.view.wireVersion, 2);
+  assert.ok(json.catalog && typeof json.catalog === 'object', 'state envelope carries catalog');
+  assert.ok(!Number.isNaN(Date.parse(json.serverTime)), 'serverTime is an ISO timestamp');
+  assert.equal(typeof json.revision, 'number');
   assert.ok(Array.isArray(json.runs));
   assert.ok(json.knobs && typeof json.knobs === 'object');
   assert.ok(json.defaults && typeof json.defaults === 'object');
@@ -198,24 +203,32 @@ test('http: engine rejection is a 4xx with the contract error envelope', async (
     body: startCommand('http-start-2'),
   }));
   const runId = started.json.receipt.runId;
+  // v2 T1.2/T8.5：冻结前必须先记录 question，这是带 blockers 的规范 422 拒绝。
   const { status, json } = await call(route, fakeReq({
     method: 'POST',
     url: `${API_PREFIX}/command`,
     body: {
       command: {
-        commandId: 'http-early-experiment',
-        action: 'experiment',
+        commandId: 'http-early-freeze',
+        action: 'prereg_freeze',
         runId,
-        payload: { command: 'probe' },
+        payload: {
+          prereg: {
+            question: 'q', prediction: 'p', acceptance: 'a', acceptableFailure: 'f',
+            controls: ['shuffle'], metrics: { primary: 'separation', threshold: 0.08 },
+            input: { source: 'corpus' }, budget: { wallMin: 30 }, stop: { sameConclusion: 2 },
+          },
+        },
       },
     },
   }));
   assert.ok(status >= 400 && status < 500, `expected 4xx, got ${status}`);
   assert.equal(json.receipt.status, 'rejected');
-  assert.equal(json.receipt.reasonCode, 'PREREG_REQUIRED');
-  assert.equal(json.code, 'PREREG_REQUIRED');
+  assert.equal(json.receipt.reasonCode, 'QUESTION_REQUIRED');
+  assert.equal(json.code, 'QUESTION_REQUIRED');
   assert.equal(typeof json.error, 'string');
   assert.ok(Array.isArray(json.blockers ?? json.receipt.blockers));
+  assert.equal(json.nextAction, 'question');
 });
 
 test('http: POST without command is 400', async () => {
