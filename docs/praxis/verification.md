@@ -51,9 +51,19 @@ start → prereg_freeze → pin_persona → discussion → experiment → review
 
 验证环境：本机 `dsh web --port 3081`，独立临时 Chrome profile（1440×1000）。亮/暗主题通过 profile `ui-theme.preference` 切换后重启实例；截图后已恢复 `light`。
 
-## 5. 未验证 / 待重启
+## 5. 3080 线上页面（用户已连接实例）
 
-- 3080 实例在安装前启动，Host 模块代际是旧的；需重启一次 `dsh web` 才会加载 Praxis。**没有**在 3080 上声称已显示。
+安装完成后对用户已连接的 3080 页面做 Client Inspect：
+
+```text
+sidebar.panellist occupants: plugins, schedules, praxis(active:true, order:35)
+main occupants:            plugins, conversation, schedules, praxis(active:true)
+conversation.composer.dock: activity, usage, context-diet, praxis(active:true, order:40)
+```
+
+三处 occupant 均 active，说明 Client half 已装配到当前页面。Host half 由同一 bundle 提供，且独立实例（3081）已验证 `/praxis/api/state` 200 与持久化恢复。
+
+未验证：3080 的 `/praxis/api/state` 未直接 curl（需要该实例的一次性 token）；以 3081 的等价证据替代。
 - 真实科研数据训练（Q19/BENGI）不在本插件验收范围；插件只提供契约与门禁，不内置数据。
 - 真实 subagent 派工（discussion/experiment 由独立 worker Session 执行）尚未接入；当前面板提供 actor 派工面，工具与 UI 共用同一 Host 命令。
 
