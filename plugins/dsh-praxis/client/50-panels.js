@@ -500,8 +500,28 @@ function PanelRuns(props) {
 
 /* ---------------------------------------------------------------- map */
 
+const PanelClaimStatusOptions = [
+  ['unverified', '未验证'],
+  ['supported', '已支持'],
+  ['contradicted', '被反驳'],
+  ['obsolete', '已过时'],
+];
+const PanelEdgeRelationOptions = [
+  ['depends', '依赖'],
+  ['contradicts', '反驳'],
+  ['supports', '支持'],
+];
+
+function PanelMapContradictionCount(node, contradictions) {
+  if (!node) return 0;
+  return (Array.isArray(contradictions) ? contradictions : []).filter((item) => item
+    && (item.left === node.id || item.right === node.id || item.left === node.claim || item.right === node.claim)).length;
+}
+
 function PanelMap(props) {
   const map = props.map ?? {};
+  const onAction = typeof props.onAction === 'function' ? props.onAction : null;
+  const catalog = props.catalog;
   const nodes = Array.isArray(map.nodes) ? map.nodes : [];
   const edges = Array.isArray(map.edges) ? map.edges : [];
   const frontier = Array.isArray(map.frontier) ? map.frontier : [];
@@ -512,6 +532,95 @@ function PanelMap(props) {
     const node = nodes.find((item) => item.id === id);
     return node ? (node.label ?? node.claim ?? '未命名主张') : '未知主张';
   };
+
+  const [claimOpen, setClaimOpen] = useState(true);
+  const [claimText, setClaimText] = useState('');
+  const [claimEvidence, setClaimEvidence] = useState('');
+  const [claimStatus, setClaimStatus] = useState('unverified');
+  const [claimContradicts, setClaimContradicts] = useState('');
+  const [claimBusy, setClaimBusy] = useState(false);
+  const [claimError, setClaimError] = useState('');
+  const [edgeFrom, setEdgeFrom] = useState('');
+  const [edgeTo, setEdgeTo] = useState('');
+  const [edgeRelation, setEdgeRelation] = useState('depends');
+  const [edgeBusy, setEdgeBusy] = useState(false);
+  const [edgeError, setEdgeError] = useState('');
+  const [notice, setNotice] = useState('');
+
+  async function submitClaim() {
+    if (!onAction) {
+      setClaimError('当前视图没有登记通道');
+      return;
+    }
+    if (!String(claimText).trim()) {
+      setClaimError('主张不能为空');
+      return;
+    }
+    setClaimBusy(true);
+    setClaimError('');
+    setNotice('');
+    const payload = {
+      claim: String(claimText).trim(),
+      evidenceRefs: InspectLines(claimEvidence),
+      status: claimStatus,
+    };
+    if (claimContradicts) payload.contradicts = claimContradicts;
+    try {
+      const receipt = await onAction('map_claim', payload, { expectedDomainVersion: map?.version });
+      if (receipt && receipt.status === 'rejected') {
+        setClaimError(InspectReasonText(catalog, receipt.reasonCode) || '登记被拒绝');
+      } else {
+        setClaimText('');
+        setClaimEvidence('');
+        setClaimContradicts('');
+        setClaimStatus('unverified');
+        setNotice('已登记，等待刷新');
+      }
+    } catch (cause) {
+      setClaimError(cause instanceof Error ? cause.message : '登记失败');
+    } finally {
+      setClaimBusy(false);
+    }
+  }
+
+  async function submitEdge() {
+    if (!onAction) {
+      setEdgeError('当前视图没有连接通道');
+      return;
+    }
+    if (!edgeFrom || !edgeTo) {
+      setEdgeError('请选择起点与终点主张');
+      return;
+    }
+    if (edgeFrom === edgeTo) {
+      setEdgeError('起点与终点不能相同');
+      return;
+    }
+    setEdgeBusy(true);
+    setEdgeError('');
+    setNotice('');
+    try {
+      const receipt = await onAction('map_edge', {
+        from: edgeFrom,
+        to: edgeTo,
+        relation: edgeRelation,
+      }, { expectedDomainVersion: map?.version });
+      if (receipt && receipt.status === 'rejected') {
+        setEdgeError(InspectReasonText(catalog, receipt.reasonCode) || '连接被拒绝');
+      } else {
+        setEdgeFrom('');
+        setEdgeTo('');
+        setEdgeRelation('depends');
+        setNotice('已登记连线，等待刷新');
+      }
+    } catch (cause) {
+      setEdgeError(cause instanceof Error ? cause.message : '连接失败');
+    } finally {
+      setEdgeBusy(false);
+    }
+  }
+
+  const claimOptions = nodes.map((node) => [node.id, PrimShort(node.label ?? node.claim ?? node.id, 20)]);
   const legendStatuses = [
     ['unknown', '未知 / 未验证'],
     ['supported', '已支持'],
@@ -525,6 +634,84 @@ function PanelMap(props) {
   ];
 
   const children = [];
+
+  children.push(h('section', { key: 'claim-form', className: 'px-map-form', 'data-testid': 'map-claim-form' },
+    h('div', { className: 'px-action-head' },
+      h('span', { className: 'px-action-kicker' }, '登记主张'),
+      h(PrimBtn, { onClick: () => setClaimOpen((value) => !value) }, claimOpen ? '收起' : '展开')),
+    claimOpen
+      ? h('div', { className: 'px-action-fields' },
+        h(PrimField, { label: '主张', hint: '一条可被检验的判断' },
+          h(PrimArea, {
+            'data-testid': 'map-claim-input',
+            rows: 2,
+            value: claimText,
+            placeholder: '例如：容量匹配后结构增益消失',
+            onChange: (event) => setClaimText(event.target.value),
+          })),
+        h(PrimField, { label: '证据引用', hint: '逗号分隔，可选' },
+          h(PrimInput, {
+            value: claimEvidence,
+            placeholder: '产物哈希、评估报告哈希',
+            onChange: (event) => setClaimEvidence(event.target.value),
+          })),
+        h('div', { className: 'px-form-grid' },
+          h(PrimField, { label: '状态' },
+            h(PrimSelect, {
+              value: claimStatus,
+              options: PanelClaimStatusOptions,
+              onChange: (event) => setClaimStatus(event.target.value),
+            })),
+          h(PrimField, { label: '与已有主张矛盾', hint: '可选' },
+            h(PrimSelect, {
+              value: claimContradicts,
+              options: [['', '（不关联）'], ...claimOptions],
+              onChange: (event) => setClaimContradicts(event.target.value),
+            }))),
+        claimError ? h('p', { className: 'px-action-error' }, claimError) : null,
+        h('div', { className: 'px-inspector-actions' },
+          h(PanelButton, {
+            label: claimBusy ? '提交中…' : '登记主张',
+            testid: 'map-claim-submit',
+            primary: true,
+            scope: 'drawer',
+            disabled: claimBusy || !onAction,
+            onClick: submitClaim,
+          })))
+      : null));
+
+  children.push(h('section', { key: 'edge-form', className: 'px-map-form', 'data-testid': 'map-edge-form' },
+    h('p', { className: 'px-section-title' }, '连接主张'),
+    h('div', { className: 'px-form-grid' },
+      h(PrimField, { label: '起点' },
+        h(PrimSelect, {
+          value: edgeFrom,
+          options: [['', '（选择主张）'], ...claimOptions],
+          onChange: (event) => setEdgeFrom(event.target.value),
+        })),
+      h(PrimField, { label: '终点' },
+        h(PrimSelect, {
+          value: edgeTo,
+          options: [['', '（选择主张）'], ...claimOptions],
+          onChange: (event) => setEdgeTo(event.target.value),
+        }))),
+    h(PrimField, { label: '关系' },
+      h(PrimSelect, {
+        value: edgeRelation,
+        options: PanelEdgeRelationOptions,
+        onChange: (event) => setEdgeRelation(event.target.value),
+      })),
+    edgeError ? h('p', { className: 'px-action-error' }, edgeError) : null,
+    h('div', { className: 'px-inspector-actions' },
+      h(PanelButton, {
+        label: edgeBusy ? '提交中…' : '连接主张',
+        testid: 'map-edge-submit',
+        disabled: edgeBusy || !onAction || nodes.length < 2,
+        onClick: submitEdge,
+      }))));
+
+  if (notice) children.push(h(PrimBanner, { key: 'notice', tone: 'ok' }, notice));
+
   children.push(h('div', { key: 'legend', className: 'px-map-legend' },
     legendStatuses.map(([status, label]) => h('span', { key: status, className: 'px-map-legend-item' },
       h('i', { className: 'px-map-swatch', 'data-status': status, 'aria-hidden': true }), label)),
@@ -536,6 +723,14 @@ function PanelMap(props) {
       key: 'empty',
       title: '还没有登记主张',
       hint: '运行推进时把主张与证据登记到认知地图，这里会按真实状态着色。',
+      action: h(PrimBtn, {
+        onClick: () => {
+          setClaimOpen(true);
+          if (typeof document !== 'undefined') {
+            document.querySelector('[data-testid="map-claim-input"]')?.focus();
+          }
+        },
+      }, '登记第一条主张'),
     }));
   } else {
     children.push(h('div', { key: 'canvas', className: 'px-map-canvas', style: { height: `${layout.height}px` } },
@@ -563,6 +758,7 @@ function PanelMap(props) {
       nodes.map((node) => {
         const position = layout.positions[node.id];
         const status = PanelClaimStatus(node.status);
+        const contradictionCount = PanelMapContradictionCount(node, contradictions);
         return h('div', {
           key: node.id,
           className: 'px-map-node',
@@ -579,7 +775,8 @@ function PanelMap(props) {
         h('div', { className: 'px-map-node-label' }, PrimShort(node.label ?? node.claim ?? '未命名主张', 26)),
         h('div', { className: 'px-map-node-meta' },
           h('span', { className: 'px-map-status' }, status.label),
-          h('span', { className: 'px-map-status' }, `${node.evidenceRefs?.length ?? 0} 条证据`)));
+          h('span', { className: 'px-map-status' }, `${node.evidenceRefs?.length ?? 0} 条证据`),
+          contradictionCount ? h('span', { className: 'px-map-contradiction' }, `矛盾 ${contradictionCount}`) : null));
       })));
   }
 
@@ -951,6 +1148,8 @@ const PanelsCss = `
 .px-map-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .px-map-list li { font-size: var(--px-fs-2); color: var(--dsw-alias-label-primary); line-height: 1.5; }
 .px-map-frontier { display: grid; gap: 1px; border-left: 2px solid var(--dsw-alias-state-warn-primary); padding-left: 8px; }
+.px-map-form { display: grid; gap: 8px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 8px; padding: 10px; background: var(--dsw-alias-bg-layer-1); }
+.px-map-contradiction { font-size: var(--px-fs-3); color: var(--dsw-alias-state-error-primary); }
 .px-knob-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
 .px-knob-controls { display: flex; align-items: center; gap: 8px; }
 .px-knob-controls .px-knob-range { flex: 1 1 auto; }

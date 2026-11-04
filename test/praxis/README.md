@@ -33,7 +33,9 @@ node --test test/praxis/*.test.js 2>&1 | grep -E '^(✖|ℹ (tests|pass|fail))'
 | `graph-v2.test.js` | 双轴状态 / T2.1 receipt 驱动 / T2.2 拓扑钳制 / I1–I6 审计 / T4.1–T4.2 图投影 / T5.1 布局 / T5.2 迁移 / T6.1 V10 / T6.2 derivePort / T6.3 V11 / T7.1 graphView |
 | `wire-v2.test.js` | T8.1 wireVersion=2 / T8.2 catalog / T8.3 view.graph / T8.4 state 信封 / T8.5 200-409-422 / T8.6 GET/POST graph + expectedRevision / T8.7 evidence |
 | `client-build.test.js` | §4.1 模块拆分、`build-client.mjs --check` 不写盘 |
-| `acceptance/browser.test.js` | §5.6 / D5-1 / D6：真实 Chrome+CDP 浏览器断言（1440 指标、1024 溢出/warning、内部码、主按钮唯一、truthful projection、暗色独立实例） |
+| `acceptance/browser.test.js` | §5.6/§5.7 真实 Chrome+CDP：1440 签收指标、1024/700 compat（溢出 0、viewport-hint、可拖拽）、内部码、主按钮唯一、truthful projection |
+| `acceptance/full-loop.test.js` | 真实 HTTP handler 全生命周期（含 delegatedActor evaluator/root 委托、DECISION、2 条 `actor.delegated`、receipt 不泄漏内部异常） |
+| `wire-v2.test.js` 增补 | delegatedActor 权限：无/非法委托 → 422 FORBIDDEN_ACTOR；合法委托 → 200 |
 
 ```bash
 # 契约/不变量（D1）
@@ -56,9 +58,15 @@ node tools/evidence/capture.mjs --all
 （`PRAXIS_THEME=dark`；capture 用 `ui-theme.preference=dark` patch 启动）；
 light 实例上暗色用例显式 skip 并打印原因。
 
-当前浏览器验收结果（2026-11-05 01:5x，latest build）：
-- light 实例：5 pass / 0 fail / 1 skip（暗色需要独立实例）
-- dark 实例：6 pass / 0 fail / 0 skip
+当前验收结果（2026-11-05 02:1x，build 7b286197f246）：
+- 契约套件 `node --test test/praxis/*.test.js`：140 tests / 139 pass / 1 fail
+  （唯一红为 `client-build.test.js`：client/*.js 在本轮又被改动、`client.js` 尚未 rebuild；
+  Lead/build 负责重建后应 140/140）
+- 浏览器+全链路（light 实例）：7 pass / 0 fail / 1 skip（暗色独立实例）
+- 浏览器+全链路（dark 实例）：8 pass / 0 fail / 0 skip
+- 证据 `docs/praxis/evidence/manifest.json`：ok=true，29 张（themes.light 15 / themes.dark 14），
+  buildChecked=true，expectedViolations 2（loading 无 shell、map/drawer primary 规则），
+  unexpectedViolations 0，errors 0。
 
 ## 当前状态（2026-11-04 14:5x CST，已验收）
 

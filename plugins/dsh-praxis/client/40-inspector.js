@@ -344,7 +344,7 @@ function InspectQuestionForm(props) {
       })),
     h(InspectActionError, { message: formError }),
     h('div', { className: 'px-inspector-actions' },
-      h(InspectPrimary, { label: '提交问题', actionId: 'question', pending: submitApi.pending, busy: props.busy, onClick: onSubmit })));
+      h(InspectPrimary, { label: '提交问题', actionId: 'question', pending: submitApi.pending, busy: props.busy, disabled: props.disabled, onClick: onSubmit })));
 }
 
 function InspectPreregForm(props) {
@@ -458,7 +458,7 @@ function InspectPreregForm(props) {
         h(PrimInput, { value: form.stopSameConclusion, inputMode: 'numeric', onChange: upd('stopSameConclusion') }))) : null,
     h(InspectActionError, { message: formError }),
     h('div', { className: 'px-inspector-actions' },
-      h(InspectPrimary, { label: '冻结预注册', actionId: 'prereg_freeze', pending: submitApi.pending, busy: props.busy, onClick: onSubmit })));
+      h(InspectPrimary, { label: '冻结预注册', actionId: 'prereg_freeze', pending: submitApi.pending, busy: props.busy, disabled: props.disabled, onClick: onSubmit })));
 }
 
 function InspectDiscussionForm(props) {
@@ -516,7 +516,7 @@ function InspectDiscussionForm(props) {
       h(PrimBtn, { onClick: () => setText(InspectDiscussionSample) }, '载入示例')),
     h(InspectActionError, { message: submitApi.error || (errors.packages ? '请先修正标红的字段' : '') }),
     h('div', { className: 'px-inspector-actions' },
-      h(InspectPrimary, { label: '提交讨论', actionId: 'discussion', pending: submitApi.pending, busy: props.busy, onClick: onSubmit })));
+      h(InspectPrimary, { label: '提交讨论', actionId: 'discussion', pending: submitApi.pending, busy: props.busy, disabled: props.disabled, onClick: onSubmit })));
 }
 
 function InspectExperimentForm(props) {
@@ -555,7 +555,7 @@ function InspectExperimentForm(props) {
       })),
     h(InspectActionError, { message: formError }),
     h('div', { className: 'px-inspector-actions' },
-      h(InspectPrimary, { label: '记录实验', actionId: 'experiment', pending: submitApi.pending, busy: props.busy, onClick: onSubmit })));
+      h(InspectPrimary, { label: '记录实验', actionId: 'experiment', pending: submitApi.pending, busy: props.busy, disabled: props.disabled, onClick: onSubmit })));
 }
 
 function InspectReviewForm(props) {
@@ -593,7 +593,7 @@ function InspectReviewForm(props) {
       })),
     h(InspectActionError, { message: formError }),
     h('div', { className: 'px-inspector-actions' },
-      h(InspectPrimary, { label: '记录复核', actionId: 'review', pending: submitApi.pending, busy: props.busy, onClick: onSubmit })));
+      h(InspectPrimary, { label: '记录复核', actionId: 'review', pending: submitApi.pending, busy: props.busy, disabled: props.disabled, onClick: onSubmit })));
 }
 
 function InspectStage4Form(props) {
@@ -623,7 +623,7 @@ function InspectStage4Form(props) {
       })),
     h(InspectActionError, { message: formError }),
     h('div', { className: 'px-inspector-actions' },
-      h(InspectPrimary, { label: '记录阶段四', actionId: 'stage4', pending: submitApi.pending, busy: props.busy, onClick: onSubmit })));
+      h(InspectPrimary, { label: '记录阶段四', actionId: 'stage4', pending: submitApi.pending, busy: props.busy, disabled: props.disabled, onClick: onSubmit })));
 }
 
 function InspectEvalForm(props) {
@@ -633,17 +633,20 @@ function InspectEvalForm(props) {
   const [verdict, setVerdict] = useState('suspect');
   const [seeds, setSeeds] = useState(() => String(run?.knobs?.evalSeeds ?? 3));
   const [errors, setErrors] = useState({});
+  const [delegated, setDelegated] = useState(false);
 
   function onSubmit() {
     const next = {};
     if (!String(reportHash).trim()) next.reportHash = '评估报告哈希不能为空';
     if (!Number.isFinite(Number(seeds)) || Number(seeds) < 1) next.seeds = '种子数至少为 1';
+    if (!delegated) next.delegation = '提交前必须勾选委托身份';
     setErrors(next);
     if (Object.keys(next).length) return;
     void submitApi.submit({
       reportHash: String(reportHash).trim(),
       verdict,
       seeds: Number(seeds),
+      delegatedActor: 'evaluator',
     });
   }
 
@@ -670,9 +673,22 @@ function InspectEvalForm(props) {
           inputMode: 'numeric',
           onChange: (event) => setSeeds(event.target.value),
         }))),
+    h(PrimField, {
+      label: '角色委托',
+      hint: '独立评估必须由不同角色提交；直接以本人身份提交会被拒绝',
+      error: fieldErrors.delegation,
+    },
+    h('label', { className: 'px-check' },
+      h('input', {
+        type: 'checkbox',
+        'data-testid': 'delegation-checkbox',
+        checked: delegated,
+        onChange: (event) => setDelegated(event.target.checked),
+      }),
+      h('span', null, '我以独立评估者身份提交（将记录为委托，写入审计）'))),
     h(InspectActionError, { message: formError }),
     h('div', { className: 'px-inspector-actions' },
-      h(InspectPrimary, { label: '提交评估报告', actionId: 'eval_report', pending: submitApi.pending, busy: props.busy, onClick: onSubmit })));
+      h(InspectPrimary, { label: '提交评估报告', actionId: 'eval_report', pending: submitApi.pending, busy: props.busy, disabled: !delegated || props.disabled, onClick: onSubmit })));
 }
 
 function InspectEvalReadForm(props) {
@@ -735,20 +751,22 @@ function InspectMemoryForm(props) {
   const [evidence, setEvidence] = useState('');
   const [selectedId, setSelectedId] = useState(() => pendingProposals[0]?.id ?? '');
   const [errors, setErrors] = useState({});
+  const [proposeDelegated, setProposeDelegated] = useState(false);
 
   useEffect(() => {
     if (!selectedId && pendingProposals.length) setSelectedId(pendingProposals[0].id);
   }, [selectedId, pendingProposals.length]);
 
   function onPropose() {
-    if (!String(claim).trim()) {
-      setErrors({ claim: '提案必须写一条主张' });
-      return;
-    }
-    setErrors({});
+    const next = {};
+    if (!String(claim).trim()) next.claim = '提案必须写一条主张';
+    if (!proposeDelegated) next.delegation = '提议前必须勾选 Agent 委托身份';
+    setErrors(next);
+    if (Object.keys(next).length) return;
     void proposeApi.submit({
       claim: String(claim).trim(),
       evidenceRefs: InspectLines(evidence),
+      delegatedActor: 'root',
     });
   }
 
@@ -765,7 +783,7 @@ function InspectMemoryForm(props) {
   const commitError = commitApi.error || (errors.proposalId ? '请先修正标红的字段' : '');
   return h('div', { className: 'px-action-fields' },
     h('p', { className: 'px-action-hint' },
-      `提案 ${proposals.length} 条 · 已提交 ${commits.length} 条。提交到长期记忆是用户级动作，引擎只接受用户身份。`),
+      `提案 ${proposals.length} 条 · 已提交 ${commits.length} 条。记忆提议需以 Agent 委托身份提交；提交到长期记忆是用户级动作。`),
     h('div', { className: 'px-action-section' },
       h('p', { className: 'px-section-title' }, '提出记忆提案'),
       h(PrimField, { label: '主张', error: errors.claim ?? proposeApi.fieldErrors.claim },
@@ -780,11 +798,34 @@ function InspectMemoryForm(props) {
           placeholder: '产物哈希、评估报告哈希',
           onChange: (event) => setEvidence(event.target.value),
         })),
+      h(PrimField, {
+        label: '角色委托',
+        hint: '记忆提议以 Agent 身份提交；直接以本人身份提交会被拒绝',
+        error: errors.delegation,
+      },
+      h('label', { className: 'px-check' },
+        h('input', {
+          type: 'checkbox',
+          'data-testid': 'delegation-checkbox',
+          checked: proposeDelegated,
+          onChange: (event) => setProposeDelegated(event.target.checked),
+        }),
+        h('span', null, '以 Agent 身份提议记忆（将记录为委托）'))),
       h(InspectActionError, { message: proposeError }),
       h('div', { className: 'px-inspector-actions' },
         commitFirst
-          ? h(PrimBtn, { onClick: onPropose, disabled: proposeApi.pending || props.busy }, proposeApi.pending ? '提交中…' : '提出记忆')
-          : h(InspectPrimary, { label: '提出记忆', actionId: 'memory_propose', pending: proposeApi.pending, busy: props.busy, onClick: onPropose }))),
+          ? h(PrimBtn, {
+            onClick: onPropose,
+            disabled: !proposeDelegated || proposeApi.pending || props.busy || props.disabled,
+          }, proposeApi.pending ? '提交中…' : '提出记忆')
+          : h(InspectPrimary, {
+            label: '提出记忆',
+            actionId: 'memory_propose',
+            pending: proposeApi.pending,
+            busy: props.busy,
+            disabled: !proposeDelegated || props.disabled,
+            onClick: onPropose,
+          }))),
     h('div', { className: 'px-action-section' },
       h('p', { className: 'px-section-title' }, '提交到长期记忆'),
       pendingProposals.length
@@ -798,7 +839,7 @@ function InspectMemoryForm(props) {
       h(InspectActionError, { message: commitError }),
       h('div', { className: 'px-inspector-actions' },
         commitFirst
-          ? h(InspectPrimary, { label: '提交到长期记忆', actionId: 'memory_commit', pending: commitApi.pending, busy: props.busy, onClick: onCommit })
+          ? h(InspectPrimary, { label: '提交到长期记忆', actionId: 'memory_commit', pending: commitApi.pending, busy: props.busy, disabled: props.disabled, onClick: onCommit })
           : h(PrimBtn, { onClick: onCommit, disabled: true }, '提交到长期记忆'))));
 }
 
@@ -916,7 +957,7 @@ function InspectDecisionForm(props) {
     h(InspectActionError, { message: formError }),
     h(InspectActionError, { message: secondaryError }),
     h('div', { className: 'px-inspector-actions' },
-      h(InspectPrimary, { label: '记录决策', actionId: 'decision', pending: submitApi.pending, busy: props.busy, onClick: onSubmit })),
+      h(InspectPrimary, { label: '记录决策', actionId: 'decision', pending: submitApi.pending, busy: props.busy, disabled: props.disabled, onClick: onSubmit })),
     canCloseOrNew
       ? h('div', { className: 'px-inspector-actions' },
         h(PrimBtn, { onClick: onCloseRun, disabled: submitApi.pending || props.busy, title: '记录收束决策并结束本轮' }, '关闭运行'),

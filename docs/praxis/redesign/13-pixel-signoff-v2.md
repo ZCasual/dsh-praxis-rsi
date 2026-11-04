@@ -1,9 +1,50 @@
-# 13 · 像素签收 v2（当前 build）
+# 13 · 像素签收 v2（revision 2）
+
+## Revision 2 · 2026-11-05 02:18
+
+**结论：结构条件性通过（Conditional layout pass），整体不签收。**
+- **签收**：canonical `clean-light-1440x1000`（干净运行态）、`empty`（空态唯一入口）、1440 dark running 的布局/导轨、1024 全应用 **compat**（提示、15/15、无溢出）、**S1-B** 历史节点只读动作区、source drawer 与 blueprint 结构。
+- **不签收**：**S1-A 的 current-node 证据**（`selected-light` 实际是 1/10 状态选中「开始」，不是 current；3/10 的 current「预注册」在 `selected-noncurrent` 里仍被检查器盖住）；**700 的“15/15 同时可见”**（bboxW=1.039，内容 669>canvas 644，截图已裁切）；**D5-5 对比度**（浅色 success 状态文字采样 ≈2.28:1，低于 4.5；warn 待 computed 确认；manifest `contrast=null` 未测）；**loading**（截图仍是宿主首页，不是 Praxis 骨架）；横幅/error/stale 未复拍。
+- 因此 `manifest-light.json`/`manifest-dark.json` 的 `ok=true` 不能作为最终签收依据；本轮只能按 conditionally accepted 记录。
+
+### R2.1 五个焦点逐项
+
+1. **clean-light 是否可作 canonical**：**可以**。无抽屉、无 inspector、无 toast；15/15 节点；1 个 primary「提交讨论」；3/10；3 条透明纸面导轨 + 水平标签；bboxW 0.769、bboxH 0.323、area 0.249（按 aggregate manifest；Lead 口述的 0.374/0.288 与 manifest 不一致，见 R2.2）。
+2. **selected-light 中 current 是否完全可见、右侧面板关系**：**不通过（证据选错节点）**。最新 `selected-light-1440x1000` 是 **1/10** 状态：选中框在「开始」（已完成，dashed），current 是「立项」；这不是 current 节点。3/10 的 `selected-noncurrent` 中选中「开始」可见，但 current「预注册」仍在 360px 检查器后面（x 列第 5 个节点）。**没有任何截图选中 3/10 的 current「预注册」并验证 gap 16px**；代码里宽屏 pan 使用 selectedId，逻辑可行，但像素未证。需补拍后重签。
+3. **selected-noncurrent 只读动作区**：**通过（S1-B）**。检查器显示「开始 / 执行已完成 / 运行下一步：提交讨论 / 该节点已走过；下一步在运行条」，无 inspector primary；运行条保留「提交讨论」唯一 primary。文案与层级成立。小瑕疵：只读块仍出现「运行下一步」标题，建议改为「运行下一步（在运行条）」以免误读，S3。
+4. **暗色对比度是否达到 D5-5**：**不通过（整体 D5-5）**。暗色可读：节点副行 `#9ea1a4` on `#232324` ≈6.05:1、导轨标签 ≈8.0:1；dark success/amber ≈6.89/7.31，但 red `#ef4444` ≈4.17 低于 4.5（若用作小字号 error 文本）。**浅色状态文字失败**：截图采样 success `#22c55e` on white ≈2.28:1，低于 4.5，且「已完成/已满足」就是这种亮绿小字；warn「缺失」采样偏深橙（约 #a15223），ratio 约 5+，但仍需按 token 计算确认。manifest `contrast=null` 没有测出；必须改为深色文本 token（green-700/amber-700）或把亮色限制在圆点/边框；修后输出逐对 ratio 才能签 D5-5。
+5. **1024/700 compat 是否只按 compat 记录**：**1024 是，700 否**。1024 全应用 744×840、scale 0.762、15/15、hint=true、overflow=0，按 compat 记录通过（不套字号/面积）；**700 实际 canvas 644×540、content 669 宽，bboxW=1.039**，`running-light-700` 截图左右节点被裁，静止状态不可能 15/15 全见。compat 断言必须改成“全部节点可通过 pan 到达 + hint + 无页面溢出”，或者把 `<900` 的 fit 下限降到 ≤0.72；当前“15/15 可见”不成立。
+
+### R2.2 证据完整性（必须记录，避免拿假绿签收）
+
+- **主题 manifest 过期**：`manifest-light.json`（01:58）与 `manifest-dark.json`（01:59）中的 sha 与当前文件不一致（例如 selected-light 记 0718…，文件为 c766…；clean 记 89e6…，文件为 ed26…）。当前应以 `docs/praxis/evidence/manifest.json`（02:06，29 张，build 7b286197）为准；主题 manifest 只能作历史。
+- **`ok=true` 语义过宽**：aggregate manifest 同时存在 `unverifiedScenes: error/stale/14-nodes`、`contrast=null`；修前 theme manifest 还有 `loading available=false` 和 cognitive-map primaryCount=0 的 violation，却仍 `ok=true`。签收不能只看 ok。
+- **场景漂移/重复**：clean 3/10，但 selected-light 1/10、running-light-1024 1/10；同一 `frozen` 场景状态不一致。`selected-light-700.png` 与 `blueprint-light-700.png` 同 sha（658f…），`selected-dark-700` 与 `blueprint-dark-700` 同 sha（348f…），700 选中态未被真正捕获。
+- **loading 无效**：`loading-light-1440x1000` 是 DSH 宿主首页（Into the Unknown），`.px-shell` 不存在，metrics available=false；不是 Praxis loading 骨架。
+- **指标口径不一致**：Lead 口述 1440 bboxH 0.374/area 0.288，aggregate manifest 为 0.323/0.249；两者都过 D5-2 阈值，但证据必须统一到 manifest。
+- **selector 统计 bug**：`contractPrimaryClassPresent=false`，但 `primaryClassNames=["px-btn primary"]`；谓词写法与 class 不符，primary 实际通过 `data-testid=primary` 计数正确。
+- **700 duplicate evidence**：见上，不能作为“selected 700”签收。
+
+### R2.3 最终签收前的最小补拍/修正
+
+1. **S1-A**：同一 3/10 frozen 状态下，选中 current「预注册」，1440 light/dark 各一张；断言选中节点 ∩ inspector = ∅（gap ≥16px），zoom=100%，inspector primary=1；另拍 1024 bottom-sheet 版本。
+2. **700**：二选一——(a) 断言改为“每个节点可 pan 到达 + hint + 无页面溢出”，补一张 pan 后节点完整可见的图；(b) 把 `<900` fit 下限降到 ≤0.72，使 15/15 同时可见，再重拍。
+3. **对比度**：metrics 输出 D5-5 逐对 ratio（亮/暗），禁止 null。
+4. **loading**：在 Praxis 面板挂载前截 `.px-shell[data-scene=loading]` 骨架，或明确记录 loading 非签收项。
+5. **横幅/error/stale**：修后各一张；确认横幅不推画布。
+6. 清理 700 重复文件、统一 scenario 状态；修 manifest `ok` 语义；保留 build hash + sha256。
+
+完成 1–3 后，S1-A/S1-B 和布局可转“完全签收”；700 按 (a)/(b) 记录为 compat；对比度数值达到后 D5-5 才签。
+
+---
+
+## Revision 1（历史，2026-11-05 01:42）
+
 
 > 日期：2026-11-05 01:42（北京时间）。只读评审，未改代码。
 > 证据：`/tmp/praxis-preview/` 下 01:26–01:28 截图与 metrics；`build-client.mjs --check` 01:34 通过（sha256 `af2e59137057de65`）。
 > 对应：[10-v2-contract §5.7](./10-v2-contract.md)、[11 视觉验收清单](./11-visual-acceptance-checklist.md)。
-> 结论先行：**本轮不签收（2 个 S1）**；布局、泳道、空态、蓝图通过；1024 全应用只能按 compat 记录；1440 浅色默认截图被抽屉污染，不能作为 canonical 证据。
+> Revision 1 结论（历史）：**当时不签收（2 个 S1）**；下文保留旧证据与 S1 记录，当前结论以 Revision 2 为准。
 
 ## 1. 场景裁决
 

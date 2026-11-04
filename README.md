@@ -6,8 +6,8 @@ Praxis 是 DeepSeek Harness（DSH）的科研工作流引擎与观测台插件�
 - 模型工具：`rsi_run`（22 个动作，含 `question`）
 - 命令：`/praxis status | start <playbook> | gate | map`
 - 主界面：`sidebar.panellist` → `main[praxis]`；输入框 dock 显示当前阶段与下一步动作
-- 契约测试：`node --test test/praxis/*.test.js` → **142 pass / 0 fail**
-- 浏览器验收：`node --test test/praxis/acceptance/browser.test.js`（真实 Chrome + CDP，零 npm 依赖）
+- 契约测试：`node --test test/praxis/*.test.js` → **140 pass / 0 fail**
+- 浏览器验收：`node --test test/praxis/acceptance/*.test.js`（真实 Chrome + CDP，零 npm 依赖；含全生命周期到 DECISION）
 
 ![Praxis 运行视图](docs/praxis/screenshots/v2/clean-light-1440x1000.png)
 
@@ -124,7 +124,7 @@ Edge  = { id, from, to, port: 'contract'|'artifact'|'evidence'|'veto' }
 | 层 | 命令 | 覆盖 |
 |---|---|---|
 | 契约测试 | `node --test test/praxis/*.test.js` | 领域状态机、图模型与不变量、fork/迁移、wire 契约、store、HTTP、模块构建 |
-| 浏览器验收 | `node --test test/praxis/acceptance/browser.test.js` | 真实 Chrome：可见节点比例、内容占比、唯一主按钮、内部码为 0、破坏性控件为 0、横向溢出为 0、节点点击→检查器→提交闭环 |
+| 浏览器验收 | `node --test test/praxis/acceptance/*.test.js` | 真实 Chrome：可见节点比例、内容占比、唯一主按钮、内部码为 0、破坏性控件为 0、横向溢出为 0；全生命周期 start→…→DECISION 含角色委托审计 |
 | 证据采集 | `node tools/evidence/capture.mjs` | 截图 + `docs/praxis/evidence/manifest.json`（sha256、构建 hash、端口、视口、主题、场景、时间） |
 
 浏览器测试使用独立 profile 与独立 `statePath`（`/tmp/praxis-acceptance/`），不写用户的 `~/.dsh/praxis/state.json`。
@@ -143,6 +143,9 @@ node plugins/dsh-praxis/build-client.mjs --check  # 校验是否最新（测试�
 | 场景 | 结果 |
 |---|---|
 | 冷启动：空态 → 新建运行 → 填写研究问题 → 提交 | INTAKE → QUESTION，进度 1/10 → 2/10，banner 回报 |
+| 完整研究闭环：立项→问题→预注册→人格→讨论→实验→复核→阶段四→独立评估→读评估→记忆提议/提交→决策 | 13 步全部 committed，终态 DECISION，`actor.delegated` 审计 2 条 |
+| 独立评估角色委托（UI） | 未勾选“以独立评估者身份提交”时按钮禁用；勾选后提交成功，记录 `actor.delegated` |
+| 认知地图登记（UI） | 地图抽屉登记主张后 `claims=1`，状态配色与证据计数正确 |
 | 运行推进：冻结预注册 → 提交讨论 | PREREG_FROZEN → DISCUSSION，v3 → v4 |
 | 门状态真值 | `INTAKE` 下游门显示“等待/缺失”，不再出现 DONE 倒挂 |
 | fork | 子 Run 回到 INTAKE、`preregHash=null`、`gate('experiment').allow=false` |

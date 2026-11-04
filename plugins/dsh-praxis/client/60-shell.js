@@ -582,7 +582,19 @@ function ShellDrawer({ id, snapshot, active, graph, catalog, onClose, onSelectRu
       onClose,
     });
   }
-  if (id === 'map') return h(PanelMap, { map: snapshot?.map, catalog, onClose });
+  if (id === 'map') {
+    return h(PanelMap, {
+      map: snapshot?.map,
+      run: active,
+      catalog,
+      onClose,
+      onAction: async (action, payload) => {
+        const receipt = await StoreSend(action, payload, { runId: active?.id });
+        if (receipt?.status === 'committed' || receipt?.status === 'replayed') await StoreRefresh();
+        return receipt;
+      },
+    });
+  }
   if (id === 'knobs') {
     return h(PanelKnobs, {
       knobs: snapshot?.knobs,

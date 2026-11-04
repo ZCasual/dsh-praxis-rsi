@@ -2531,7 +2531,7 @@ function InspectQuestionForm(props) {
       })),
     h(InspectActionError, { message: formError }),
     h('div', { className: 'px-inspector-actions' },
-      h(InspectPrimary, { label: '提交问题', actionId: 'question', pending: submitApi.pending, busy: props.busy, onClick: onSubmit })));
+      h(InspectPrimary, { label: '提交问题', actionId: 'question', pending: submitApi.pending, busy: props.busy, disabled: props.disabled, onClick: onSubmit })));
 }
 
 function InspectPreregForm(props) {
@@ -2645,7 +2645,7 @@ function InspectPreregForm(props) {
         h(PrimInput, { value: form.stopSameConclusion, inputMode: 'numeric', onChange: upd('stopSameConclusion') }))) : null,
     h(InspectActionError, { message: formError }),
     h('div', { className: 'px-inspector-actions' },
-      h(InspectPrimary, { label: '冻结预注册', actionId: 'prereg_freeze', pending: submitApi.pending, busy: props.busy, onClick: onSubmit })));
+      h(InspectPrimary, { label: '冻结预注册', actionId: 'prereg_freeze', pending: submitApi.pending, busy: props.busy, disabled: props.disabled, onClick: onSubmit })));
 }
 
 function InspectDiscussionForm(props) {
@@ -2703,7 +2703,7 @@ function InspectDiscussionForm(props) {
       h(PrimBtn, { onClick: () => setText(InspectDiscussionSample) }, '载入示例')),
     h(InspectActionError, { message: submitApi.error || (errors.packages ? '请先修正标红的字段' : '') }),
     h('div', { className: 'px-inspector-actions' },
-      h(InspectPrimary, { label: '提交讨论', actionId: 'discussion', pending: submitApi.pending, busy: props.busy, onClick: onSubmit })));
+      h(InspectPrimary, { label: '提交讨论', actionId: 'discussion', pending: submitApi.pending, busy: props.busy, disabled: props.disabled, onClick: onSubmit })));
 }
 
 function InspectExperimentForm(props) {
@@ -2742,7 +2742,7 @@ function InspectExperimentForm(props) {
       })),
     h(InspectActionError, { message: formError }),
     h('div', { className: 'px-inspector-actions' },
-      h(InspectPrimary, { label: '记录实验', actionId: 'experiment', pending: submitApi.pending, busy: props.busy, onClick: onSubmit })));
+      h(InspectPrimary, { label: '记录实验', actionId: 'experiment', pending: submitApi.pending, busy: props.busy, disabled: props.disabled, onClick: onSubmit })));
 }
 
 function InspectReviewForm(props) {
@@ -2780,7 +2780,7 @@ function InspectReviewForm(props) {
       })),
     h(InspectActionError, { message: formError }),
     h('div', { className: 'px-inspector-actions' },
-      h(InspectPrimary, { label: '记录复核', actionId: 'review', pending: submitApi.pending, busy: props.busy, onClick: onSubmit })));
+      h(InspectPrimary, { label: '记录复核', actionId: 'review', pending: submitApi.pending, busy: props.busy, disabled: props.disabled, onClick: onSubmit })));
 }
 
 function InspectStage4Form(props) {
@@ -2810,7 +2810,7 @@ function InspectStage4Form(props) {
       })),
     h(InspectActionError, { message: formError }),
     h('div', { className: 'px-inspector-actions' },
-      h(InspectPrimary, { label: '记录阶段四', actionId: 'stage4', pending: submitApi.pending, busy: props.busy, onClick: onSubmit })));
+      h(InspectPrimary, { label: '记录阶段四', actionId: 'stage4', pending: submitApi.pending, busy: props.busy, disabled: props.disabled, onClick: onSubmit })));
 }
 
 function InspectEvalForm(props) {
@@ -2820,17 +2820,20 @@ function InspectEvalForm(props) {
   const [verdict, setVerdict] = useState('suspect');
   const [seeds, setSeeds] = useState(() => String(run?.knobs?.evalSeeds ?? 3));
   const [errors, setErrors] = useState({});
+  const [delegated, setDelegated] = useState(false);
 
   function onSubmit() {
     const next = {};
     if (!String(reportHash).trim()) next.reportHash = '评估报告哈希不能为空';
     if (!Number.isFinite(Number(seeds)) || Number(seeds) < 1) next.seeds = '种子数至少为 1';
+    if (!delegated) next.delegation = '提交前必须勾选委托身份';
     setErrors(next);
     if (Object.keys(next).length) return;
     void submitApi.submit({
       reportHash: String(reportHash).trim(),
       verdict,
       seeds: Number(seeds),
+      delegatedActor: 'evaluator',
     });
   }
 
@@ -2857,9 +2860,22 @@ function InspectEvalForm(props) {
           inputMode: 'numeric',
           onChange: (event) => setSeeds(event.target.value),
         }))),
+    h(PrimField, {
+      label: '角色委托',
+      hint: '独立评估必须由不同角色提交；直接以本人身份提交会被拒绝',
+      error: fieldErrors.delegation,
+    },
+    h('label', { className: 'px-check' },
+      h('input', {
+        type: 'checkbox',
+        'data-testid': 'delegation-checkbox',
+        checked: delegated,
+        onChange: (event) => setDelegated(event.target.checked),
+      }),
+      h('span', null, '我以独立评估者身份提交（将记录为委托，写入审计）'))),
     h(InspectActionError, { message: formError }),
     h('div', { className: 'px-inspector-actions' },
-      h(InspectPrimary, { label: '提交评估报告', actionId: 'eval_report', pending: submitApi.pending, busy: props.busy, onClick: onSubmit })));
+      h(InspectPrimary, { label: '提交评估报告', actionId: 'eval_report', pending: submitApi.pending, busy: props.busy, disabled: !delegated || props.disabled, onClick: onSubmit })));
 }
 
 function InspectEvalReadForm(props) {
@@ -2922,20 +2938,22 @@ function InspectMemoryForm(props) {
   const [evidence, setEvidence] = useState('');
   const [selectedId, setSelectedId] = useState(() => pendingProposals[0]?.id ?? '');
   const [errors, setErrors] = useState({});
+  const [proposeDelegated, setProposeDelegated] = useState(false);
 
   useEffect(() => {
     if (!selectedId && pendingProposals.length) setSelectedId(pendingProposals[0].id);
   }, [selectedId, pendingProposals.length]);
 
   function onPropose() {
-    if (!String(claim).trim()) {
-      setErrors({ claim: '提案必须写一条主张' });
-      return;
-    }
-    setErrors({});
+    const next = {};
+    if (!String(claim).trim()) next.claim = '提案必须写一条主张';
+    if (!proposeDelegated) next.delegation = '提议前必须勾选 Agent 委托身份';
+    setErrors(next);
+    if (Object.keys(next).length) return;
     void proposeApi.submit({
       claim: String(claim).trim(),
       evidenceRefs: InspectLines(evidence),
+      delegatedActor: 'root',
     });
   }
 
@@ -2952,7 +2970,7 @@ function InspectMemoryForm(props) {
   const commitError = commitApi.error || (errors.proposalId ? '请先修正标红的字段' : '');
   return h('div', { className: 'px-action-fields' },
     h('p', { className: 'px-action-hint' },
-      `提案 ${proposals.length} 条 · 已提交 ${commits.length} 条。提交到长期记忆是用户级动作，引擎只接受用户身份。`),
+      `提案 ${proposals.length} 条 · 已提交 ${commits.length} 条。记忆提议需以 Agent 委托身份提交；提交到长期记忆是用户级动作。`),
     h('div', { className: 'px-action-section' },
       h('p', { className: 'px-section-title' }, '提出记忆提案'),
       h(PrimField, { label: '主张', error: errors.claim ?? proposeApi.fieldErrors.claim },
@@ -2967,11 +2985,34 @@ function InspectMemoryForm(props) {
           placeholder: '产物哈希、评估报告哈希',
           onChange: (event) => setEvidence(event.target.value),
         })),
+      h(PrimField, {
+        label: '角色委托',
+        hint: '记忆提议以 Agent 身份提交；直接以本人身份提交会被拒绝',
+        error: errors.delegation,
+      },
+      h('label', { className: 'px-check' },
+        h('input', {
+          type: 'checkbox',
+          'data-testid': 'delegation-checkbox',
+          checked: proposeDelegated,
+          onChange: (event) => setProposeDelegated(event.target.checked),
+        }),
+        h('span', null, '以 Agent 身份提议记忆（将记录为委托）'))),
       h(InspectActionError, { message: proposeError }),
       h('div', { className: 'px-inspector-actions' },
         commitFirst
-          ? h(PrimBtn, { onClick: onPropose, disabled: proposeApi.pending || props.busy }, proposeApi.pending ? '提交中…' : '提出记忆')
-          : h(InspectPrimary, { label: '提出记忆', actionId: 'memory_propose', pending: proposeApi.pending, busy: props.busy, onClick: onPropose }))),
+          ? h(PrimBtn, {
+            onClick: onPropose,
+            disabled: !proposeDelegated || proposeApi.pending || props.busy || props.disabled,
+          }, proposeApi.pending ? '提交中…' : '提出记忆')
+          : h(InspectPrimary, {
+            label: '提出记忆',
+            actionId: 'memory_propose',
+            pending: proposeApi.pending,
+            busy: props.busy,
+            disabled: !proposeDelegated || props.disabled,
+            onClick: onPropose,
+          }))),
     h('div', { className: 'px-action-section' },
       h('p', { className: 'px-section-title' }, '提交到长期记忆'),
       pendingProposals.length
@@ -2985,7 +3026,7 @@ function InspectMemoryForm(props) {
       h(InspectActionError, { message: commitError }),
       h('div', { className: 'px-inspector-actions' },
         commitFirst
-          ? h(InspectPrimary, { label: '提交到长期记忆', actionId: 'memory_commit', pending: commitApi.pending, busy: props.busy, onClick: onCommit })
+          ? h(InspectPrimary, { label: '提交到长期记忆', actionId: 'memory_commit', pending: commitApi.pending, busy: props.busy, disabled: props.disabled, onClick: onCommit })
           : h(PrimBtn, { onClick: onCommit, disabled: true }, '提交到长期记忆'))));
 }
 
@@ -3103,7 +3144,7 @@ function InspectDecisionForm(props) {
     h(InspectActionError, { message: formError }),
     h(InspectActionError, { message: secondaryError }),
     h('div', { className: 'px-inspector-actions' },
-      h(InspectPrimary, { label: '记录决策', actionId: 'decision', pending: submitApi.pending, busy: props.busy, onClick: onSubmit })),
+      h(InspectPrimary, { label: '记录决策', actionId: 'decision', pending: submitApi.pending, busy: props.busy, disabled: props.disabled, onClick: onSubmit })),
     canCloseOrNew
       ? h('div', { className: 'px-inspector-actions' },
         h(PrimBtn, { onClick: onCloseRun, disabled: submitApi.pending || props.busy, title: '记录收束决策并结束本轮' }, '关闭运行'),
@@ -4059,8 +4100,28 @@ function PanelRuns(props) {
 
 /* ---------------------------------------------------------------- map */
 
+const PanelClaimStatusOptions = [
+  ['unverified', '未验证'],
+  ['supported', '已支持'],
+  ['contradicted', '被反驳'],
+  ['obsolete', '已过时'],
+];
+const PanelEdgeRelationOptions = [
+  ['depends', '依赖'],
+  ['contradicts', '反驳'],
+  ['supports', '支持'],
+];
+
+function PanelMapContradictionCount(node, contradictions) {
+  if (!node) return 0;
+  return (Array.isArray(contradictions) ? contradictions : []).filter((item) => item
+    && (item.left === node.id || item.right === node.id || item.left === node.claim || item.right === node.claim)).length;
+}
+
 function PanelMap(props) {
   const map = props.map ?? {};
+  const onAction = typeof props.onAction === 'function' ? props.onAction : null;
+  const catalog = props.catalog;
   const nodes = Array.isArray(map.nodes) ? map.nodes : [];
   const edges = Array.isArray(map.edges) ? map.edges : [];
   const frontier = Array.isArray(map.frontier) ? map.frontier : [];
@@ -4071,6 +4132,95 @@ function PanelMap(props) {
     const node = nodes.find((item) => item.id === id);
     return node ? (node.label ?? node.claim ?? '未命名主张') : '未知主张';
   };
+
+  const [claimOpen, setClaimOpen] = useState(true);
+  const [claimText, setClaimText] = useState('');
+  const [claimEvidence, setClaimEvidence] = useState('');
+  const [claimStatus, setClaimStatus] = useState('unverified');
+  const [claimContradicts, setClaimContradicts] = useState('');
+  const [claimBusy, setClaimBusy] = useState(false);
+  const [claimError, setClaimError] = useState('');
+  const [edgeFrom, setEdgeFrom] = useState('');
+  const [edgeTo, setEdgeTo] = useState('');
+  const [edgeRelation, setEdgeRelation] = useState('depends');
+  const [edgeBusy, setEdgeBusy] = useState(false);
+  const [edgeError, setEdgeError] = useState('');
+  const [notice, setNotice] = useState('');
+
+  async function submitClaim() {
+    if (!onAction) {
+      setClaimError('当前视图没有登记通道');
+      return;
+    }
+    if (!String(claimText).trim()) {
+      setClaimError('主张不能为空');
+      return;
+    }
+    setClaimBusy(true);
+    setClaimError('');
+    setNotice('');
+    const payload = {
+      claim: String(claimText).trim(),
+      evidenceRefs: InspectLines(claimEvidence),
+      status: claimStatus,
+    };
+    if (claimContradicts) payload.contradicts = claimContradicts;
+    try {
+      const receipt = await onAction('map_claim', payload, { expectedDomainVersion: map?.version });
+      if (receipt && receipt.status === 'rejected') {
+        setClaimError(InspectReasonText(catalog, receipt.reasonCode) || '登记被拒绝');
+      } else {
+        setClaimText('');
+        setClaimEvidence('');
+        setClaimContradicts('');
+        setClaimStatus('unverified');
+        setNotice('已登记，等待刷新');
+      }
+    } catch (cause) {
+      setClaimError(cause instanceof Error ? cause.message : '登记失败');
+    } finally {
+      setClaimBusy(false);
+    }
+  }
+
+  async function submitEdge() {
+    if (!onAction) {
+      setEdgeError('当前视图没有连接通道');
+      return;
+    }
+    if (!edgeFrom || !edgeTo) {
+      setEdgeError('请选择起点与终点主张');
+      return;
+    }
+    if (edgeFrom === edgeTo) {
+      setEdgeError('起点与终点不能相同');
+      return;
+    }
+    setEdgeBusy(true);
+    setEdgeError('');
+    setNotice('');
+    try {
+      const receipt = await onAction('map_edge', {
+        from: edgeFrom,
+        to: edgeTo,
+        relation: edgeRelation,
+      }, { expectedDomainVersion: map?.version });
+      if (receipt && receipt.status === 'rejected') {
+        setEdgeError(InspectReasonText(catalog, receipt.reasonCode) || '连接被拒绝');
+      } else {
+        setEdgeFrom('');
+        setEdgeTo('');
+        setEdgeRelation('depends');
+        setNotice('已登记连线，等待刷新');
+      }
+    } catch (cause) {
+      setEdgeError(cause instanceof Error ? cause.message : '连接失败');
+    } finally {
+      setEdgeBusy(false);
+    }
+  }
+
+  const claimOptions = nodes.map((node) => [node.id, PrimShort(node.label ?? node.claim ?? node.id, 20)]);
   const legendStatuses = [
     ['unknown', '未知 / 未验证'],
     ['supported', '已支持'],
@@ -4084,6 +4234,84 @@ function PanelMap(props) {
   ];
 
   const children = [];
+
+  children.push(h('section', { key: 'claim-form', className: 'px-map-form', 'data-testid': 'map-claim-form' },
+    h('div', { className: 'px-action-head' },
+      h('span', { className: 'px-action-kicker' }, '登记主张'),
+      h(PrimBtn, { onClick: () => setClaimOpen((value) => !value) }, claimOpen ? '收起' : '展开')),
+    claimOpen
+      ? h('div', { className: 'px-action-fields' },
+        h(PrimField, { label: '主张', hint: '一条可被检验的判断' },
+          h(PrimArea, {
+            'data-testid': 'map-claim-input',
+            rows: 2,
+            value: claimText,
+            placeholder: '例如：容量匹配后结构增益消失',
+            onChange: (event) => setClaimText(event.target.value),
+          })),
+        h(PrimField, { label: '证据引用', hint: '逗号分隔，可选' },
+          h(PrimInput, {
+            value: claimEvidence,
+            placeholder: '产物哈希、评估报告哈希',
+            onChange: (event) => setClaimEvidence(event.target.value),
+          })),
+        h('div', { className: 'px-form-grid' },
+          h(PrimField, { label: '状态' },
+            h(PrimSelect, {
+              value: claimStatus,
+              options: PanelClaimStatusOptions,
+              onChange: (event) => setClaimStatus(event.target.value),
+            })),
+          h(PrimField, { label: '与已有主张矛盾', hint: '可选' },
+            h(PrimSelect, {
+              value: claimContradicts,
+              options: [['', '（不关联）'], ...claimOptions],
+              onChange: (event) => setClaimContradicts(event.target.value),
+            }))),
+        claimError ? h('p', { className: 'px-action-error' }, claimError) : null,
+        h('div', { className: 'px-inspector-actions' },
+          h(PanelButton, {
+            label: claimBusy ? '提交中…' : '登记主张',
+            testid: 'map-claim-submit',
+            primary: true,
+            scope: 'drawer',
+            disabled: claimBusy || !onAction,
+            onClick: submitClaim,
+          })))
+      : null));
+
+  children.push(h('section', { key: 'edge-form', className: 'px-map-form', 'data-testid': 'map-edge-form' },
+    h('p', { className: 'px-section-title' }, '连接主张'),
+    h('div', { className: 'px-form-grid' },
+      h(PrimField, { label: '起点' },
+        h(PrimSelect, {
+          value: edgeFrom,
+          options: [['', '（选择主张）'], ...claimOptions],
+          onChange: (event) => setEdgeFrom(event.target.value),
+        })),
+      h(PrimField, { label: '终点' },
+        h(PrimSelect, {
+          value: edgeTo,
+          options: [['', '（选择主张）'], ...claimOptions],
+          onChange: (event) => setEdgeTo(event.target.value),
+        }))),
+    h(PrimField, { label: '关系' },
+      h(PrimSelect, {
+        value: edgeRelation,
+        options: PanelEdgeRelationOptions,
+        onChange: (event) => setEdgeRelation(event.target.value),
+      })),
+    edgeError ? h('p', { className: 'px-action-error' }, edgeError) : null,
+    h('div', { className: 'px-inspector-actions' },
+      h(PanelButton, {
+        label: edgeBusy ? '提交中…' : '连接主张',
+        testid: 'map-edge-submit',
+        disabled: edgeBusy || !onAction || nodes.length < 2,
+        onClick: submitEdge,
+      }))));
+
+  if (notice) children.push(h(PrimBanner, { key: 'notice', tone: 'ok' }, notice));
+
   children.push(h('div', { key: 'legend', className: 'px-map-legend' },
     legendStatuses.map(([status, label]) => h('span', { key: status, className: 'px-map-legend-item' },
       h('i', { className: 'px-map-swatch', 'data-status': status, 'aria-hidden': true }), label)),
@@ -4095,6 +4323,14 @@ function PanelMap(props) {
       key: 'empty',
       title: '还没有登记主张',
       hint: '运行推进时把主张与证据登记到认知地图，这里会按真实状态着色。',
+      action: h(PrimBtn, {
+        onClick: () => {
+          setClaimOpen(true);
+          if (typeof document !== 'undefined') {
+            document.querySelector('[data-testid="map-claim-input"]')?.focus();
+          }
+        },
+      }, '登记第一条主张'),
     }));
   } else {
     children.push(h('div', { key: 'canvas', className: 'px-map-canvas', style: { height: `${layout.height}px` } },
@@ -4122,6 +4358,7 @@ function PanelMap(props) {
       nodes.map((node) => {
         const position = layout.positions[node.id];
         const status = PanelClaimStatus(node.status);
+        const contradictionCount = PanelMapContradictionCount(node, contradictions);
         return h('div', {
           key: node.id,
           className: 'px-map-node',
@@ -4138,7 +4375,8 @@ function PanelMap(props) {
         h('div', { className: 'px-map-node-label' }, PrimShort(node.label ?? node.claim ?? '未命名主张', 26)),
         h('div', { className: 'px-map-node-meta' },
           h('span', { className: 'px-map-status' }, status.label),
-          h('span', { className: 'px-map-status' }, `${node.evidenceRefs?.length ?? 0} 条证据`)));
+          h('span', { className: 'px-map-status' }, `${node.evidenceRefs?.length ?? 0} 条证据`),
+          contradictionCount ? h('span', { className: 'px-map-contradiction' }, `矛盾 ${contradictionCount}`) : null));
       })));
   }
 
@@ -4510,6 +4748,8 @@ const PanelsCss = `
 .px-map-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .px-map-list li { font-size: var(--px-fs-2); color: var(--dsw-alias-label-primary); line-height: 1.5; }
 .px-map-frontier { display: grid; gap: 1px; border-left: 2px solid var(--dsw-alias-state-warn-primary); padding-left: 8px; }
+.px-map-form { display: grid; gap: 8px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 8px; padding: 10px; background: var(--dsw-alias-bg-layer-1); }
+.px-map-contradiction { font-size: var(--px-fs-3); color: var(--dsw-alias-state-error-primary); }
 .px-knob-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
 .px-knob-controls { display: flex; align-items: center; gap: 8px; }
 .px-knob-controls .px-knob-range { flex: 1 1 auto; }
@@ -5114,7 +5354,19 @@ function ShellDrawer({ id, snapshot, active, graph, catalog, onClose, onSelectRu
       onClose,
     });
   }
-  if (id === 'map') return h(PanelMap, { map: snapshot?.map, catalog, onClose });
+  if (id === 'map') {
+    return h(PanelMap, {
+      map: snapshot?.map,
+      run: active,
+      catalog,
+      onClose,
+      onAction: async (action, payload) => {
+        const receipt = await StoreSend(action, payload, { runId: active?.id });
+        if (receipt?.status === 'committed' || receipt?.status === 'replayed') await StoreRefresh();
+        return receipt;
+      },
+    });
+  }
   if (id === 'knobs') {
     return h(PanelKnobs, {
       knobs: snapshot?.knobs,

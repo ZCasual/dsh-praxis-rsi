@@ -12,8 +12,8 @@ node --test test/praxis/*.test.js
 ```
 
 ```text
-ℹ tests 138
-ℹ pass 138
+ℹ tests 140
+ℹ pass 140
 ℹ fail 0
 ℹ skipped 0
 ```
@@ -36,7 +36,7 @@ node --test test/praxis/*.test.js
 ```bash
 PRAXIS_BASE_URL=http://127.0.0.1:3081 \
 PRAXIS_SERVER_LOG=/tmp/praxis-3081.log \
-node --test test/praxis/acceptance/browser.test.js
+node --test test/praxis/acceptance/*.test.js
 ```
 
 | 用例 | 断言 | 结果 |
@@ -47,6 +47,7 @@ node --test test/praxis/acceptance/browser.test.js
 | `§5.2/T2.1` | 冻结后 prereg 门显示“已完成/契约已冻结”，不再出现倒挂 | 通过 |
 | `§5.4/D6` | 运行模态主按钮唯一，且无“删除节点/连线/拖拽节点”等拓扑控件 | 通过 |
 | `§5.3/D5` | 亮/暗主题分别由独立实例验证（同一实例不可切换主题） | 见 §7 |
+| `acceptance/full-loop` | `start→question→prereg_freeze→pin_persona→discussion→experiment→review→stage4→eval_report(delegatedActor=evaluator)→eval_read→memory_propose(delegatedActor=root)→memory_commit→decision→map_claim`，终态 `DECISION`，`actor.delegated` 恰 2 条 | 通过 |
 
 浏览器测试使用独立 Chrome profile 与独立 `statePath`（A1），零 npm 依赖（A2），3081 不可达时显式 skip 并打印原因（A3）。
 
@@ -73,6 +74,8 @@ node --test test/praxis/acceptance/browser.test.js
 | fork 子 Run 继承 `preregHash` 导致门提前打开 | `engine-v2.test.js` T4.1/T4.2 | 修复：fork 清空 `preregHash`、契约转草稿、`gate('experiment').allow=false` |
 | 旧脏数据不会自愈 | `engine-v2.test.js` T4.3 + 迁移端到端脚本 | 修复：`load` 幂等对账，写 `migration.reconciled` |
 | 运行态可直接删节点/连线/伪造 actor | 浏览器 `§5.4/D6` + 代码审查 | 修复：运行态无拓扑控件；蓝图态保存需 `expectedRevision` + diff 确认 |
+| 独立评估/记忆提议在 UI 是永假按钮（user 角色无权限） | 浏览器 UI 冒烟：未勾选委托复选框 disabled；勾选后提交成功并写 `actor.delegated` | 修复：显式角色委托 + 审计 |
+| 认知地图只能看不能登记 | 浏览器 UI 冒烟：地图抽屉登记主张 → `claims=1` | 修复：PanelMap 增加登记/连接表单 |
 | 客户端 0 测试覆盖 | `client-build.test.js` + `browser.test.js` | 部分修复：构建一致性与真实浏览器任务断言 |
 | 截图可伪造 | `tools/evidence/capture.mjs` + manifest | 每张截图带 sha256、构建 hash、端口、视口、主题、场景 |
 

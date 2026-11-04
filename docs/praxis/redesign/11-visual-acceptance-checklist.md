@@ -11,7 +11,7 @@
 | `running-1440` | 默认 playbook 15 节点；4 done、1 active、10 pending；无 inspector | `.px-shell` = 1160×940（全应用，宿主侧栏 280） | light / dark |
 | `running-1024` | 同上，宿主侧栏折叠或独立挂载（**签收根**） | `.px-shell` = 1024×840 | light / dark |
 | `running-1024-compat` | 同上，1024 全应用，宿主侧栏 280（**compat，不签收**） | `.px-shell` = 744×840 | light / dark |
-| `running-700` | 同上，700×600 视口 | `.px-shell` = 700×600 | light |
+| `running-700` | 同上，700×600 视口 | `.px-shell` = 644×540（宿主 rail 56），内容 669 宽 → 需拖拽 | light |
 | `empty` | 无 Run、无 graph；最近 Run 0–3 条 | 同上两个尺寸 | light / dark |
 | `loading` | `/state` 延迟 ≥2s | 1440 | light |
 | `error` | `/state` 返回 500，且无旧 snapshot | 1440 | light |
@@ -64,7 +64,7 @@ function contrast(fg, bg) {
 | **B-V05** | current/selected 去色可分 | `selected` 场景：DOM 形状断言 + 注入 `html{filter:grayscale(1)}` 截图两节点 ±8px 裁切 | 像素差 ≥0.8%；current 左轨 3px 且亮度差 ≥0.05；selected `outline-style=dashed`、2px、offset 3 | current 与 selected 都是 1px 实线 brand 边框，像素差 0% |
 | **B-V06** | 字号下限（有效，仅签收根） | `effectiveFont()` 取样：节点 title/sub/chip、泳道 label、运行条 title/status、检查器 body/label；1440/1024 签收根 fit=1.0 | title≥11；sub≥9.5；chip/lane≥9；runbar title≥12；runbar status≥10；inspector body≥11.5、label≥10；无可读文本<9。1024 compat / 700 不套，必须出提示 | 签收根 title 10.0；chip 8.9 |
 | **B-V07** | 1024 无横向溢出 | `document.documentElement.scrollWidth ≤ innerWidth`；`shell.scrollWidth ≤ shell.clientWidth`；根 1024 签收 / 744 compat | 两种口径均 0px 溢出；所有主要区域 rect 在 shell 内 | 页面 scrollWidth=1040；运行条溢出 24px |
-| **B-V08** | 明暗主题对比度 | 解析 `getComputedStyle` 前景/背景；按 §3.3 配对；亮/暗各测 | 文本≥4.5:1；非文本（左轨/虚线环/箭头/进度/focus）≥3:1 | 暗色 label-secondary 3.1:1；warn chip 3.8:1 |
+| **B-V08** | 明暗主题对比度 | 解析 `getComputedStyle` 前景/背景；按 §3.3 配对；亮/暗各测 | 文本≥4.5:1；非文本（左轨/虚线环/箭头/进度/focus）≥3:1；success/warn/error 文本必须用深色变体 | 浅色 success `#22c55e` 状态文字 on white 2.28:1；warn 需按 token 实测 |
 | **B-V09** | 空态唯一入口 | `data-scene=empty`：`.px-btn.primary` 数；“新建研究运行”出现数；最近 Run 行数；`.px-node` 数；蓝图是否可用 | primary=1；“新建研究运行”=1；最近 Run≤3 且非 primary；节点=0；泳道骨架标签=3；蓝图禁用 | 空态有“新建研究运行”+“新建运行”两个主入口 |
 | B-V10 | 截断与重叠 | `.px-run-title,.px-node-title span,.px-node-sub,.px-node-chip`：`scrollWidth>clientWidth+1` 时必须 `text-overflow=ellipsis` 且有 title/aria-label；运行条子元素两两相交面积=0 | 0 个无提示截断；0 对重叠 | 标题被裁无 title；primary 与进度重叠 |
 | B-V11 | 进度语义唯一 | `[data-testid="progress"]` 数量；文本匹配 `^当前阶段 \d+/10$` 或契约指定格式 | 1 个；不得用节点 done/total 冒充阶段；空态不渲染 `0/0` | 运行条显示 `4/15`，同时状态 chip 显示 `Question` |
@@ -78,7 +78,7 @@ function contrast(fg, bg) {
 | B-V19 | 键盘与焦点 | Tab 顺序覆盖 primary/更多/节点；Esc 关 inspector/drawer；focus-visible 计算样式 | 可达；Esc 生效；2px 可见环；对比≥3 | 键盘聚焦无可见环；Esc 不关闭 |
 | B-V20 | 主按钮执行语义 | 无 payload 动作点击 → `/command` 请求；有 payload → inspector 打开且首字段聚焦；blocker 由该动作解决时按钮 enabled | 200ms 内发请求 / 焦点正确 / enabled；不得 dead click | 点击“冻结预注册”只选中节点，不发命令 |
 | **B-V21** | 1024 全应用 compat | `.px-shell` 744×840；15 节点可见；`[data-testid=hint]` 出现；页面/根无横向溢出；画布拖拽改变 pan | 15/15；hint 可见；overflow 0；pan Δ≥10px；不套字号/面积 | 744 宽下节点被裁或没有提示；拿 compat 当签收 |
-| **B-V22** | 700×600 降级 | `.px-shell` 700×600；15 节点可见；hint 可见；拖拽可用 | 15/15；hint 可见；pan 可用；不套字号/面积 | 700 下仍套 0.75 宽阈值假红 |
+| **B-V22** | 700×600 降级 | `.px-shell` 644×540；15 节点**逐个**可通过 pan 完整到达；hint 可见；拖拽可用 | 每个节点均可达（不要求同时全见）；hint 可见；page overflow 0；不套字号/面积 | 700 下仍要求静止 15/15 同时可见（bboxW=1.039，几何不可能） |
 
 ## 3. 复杂断言实现
 

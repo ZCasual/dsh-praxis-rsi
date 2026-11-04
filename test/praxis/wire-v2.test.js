@@ -326,3 +326,78 @@ test('wire T8.7: GET /evidence exposes runs with receipts/events plus audit', as
   assert.ok(Array.isArray(run.events));
   assert.ok(evidence.audit && typeof evidence.audit.ok === 'boolean');
 });
+
+// ---------------------------------------------------------------------------
+// delegatedActor：UI user 会话委托 evaluator/root 权限（2026-11-05 修复）
+// ---------------------------------------------------------------------------
+
+async function commitStep(route, action, payload, runId) {
+  const response = await postCommand(route, command(action, { runId, payload }));
+  assert.equal(response.status, 200, `${action} must be 200, got ${response.status} ${JSON.stringify(response.json)}`);
+  return response.json.receipt;
+}
+
+test('wire T8.5: eval_report without/invalid delegatedActor is 422 FORBIDDEN_ACTOR, valid evaluator is 200', async () => {
+  const { route } = mount(createHost());
+  const runId = await startRun(route);
+  await commitStep(route, 'question', QUESTION, runId);
+  await commitStep(route, 'prereg_freeze', { prereg: PREREG }, runId);
+  await commitStep(route, 'discussion', { round: 1, packages: [] }, runId);
+  await commitStep(route, 'experiment', { command: 'probe', artifactHash: 'a' }, runId);
+  await commitStep(route, 'review', { verdict: 'pass', items: [] }, runId);
+  await commitStep(route, 'stage4', {}, runId);
+
+  const missing = await postCommand(route, command('eval_report', {
+    runId, payload: { reportHash: 'r1', verdict: 'pass', seeds: 3 },
+  }));
+  assert.equal(missing.status, 422, `no delegatedActor actual=${missing.status} ${JSON.stringify(missing.json)}`);
+  assert.equal(missing.json.code, 'FORBIDDEN_ACTOR');
+
+  const invalid = await postCommand(route, command('eval_report', {
+    runId, payload: { reportHash: 'r1', verdict: 'pass', seeds: 3, delegatedActor: 'admin' },
+  }));
+  assert.equal(invalid.status, 422, `invalid delegatedActor must be ignored actual=${invalid.status}`);
+  assert.equal(invalid.json.code, 'FORBIDDEN_ACTOR');
+
+  const delegated = await postCommand(route, command('eval_report', {
+    runId, payload: { reportHash: 'r1', verdict: 'pass', seeds: 3, delegatedActor: 'evaluator' },
+  }));
+  assert.equal(delegated.status, 200, `delegated evaluator actual=${delegated.status} ${JSON.stringify(delegated.json)}`);
+  assert.equal(delegated.json.receipt.status, 'committed');
+});
+
+test('wire T8.5: memory_propose without/invalid delegatedActor is 422 FORBIDDEN_ACTOR, valid root is 200', async () => {
+  const { route } = mount(createHost());
+  const runId = await startRun(route);
+  await commitStep(route, 'question', QUESTION, runId);
+  await commitStep(route, 'prereg_freeze', { prereg: PREREG }, runId);
+  await commitStep(route, 'discussion', { round: 1, packages: [] }, runId);
+  await commitStep(route, 'experiment', { command: 'probe', artifactHash: 'a' }, runId);
+  await commitStep(route, 'review', { verdict: 'pass', items: [] }, runId);
+  await commitStep(route, 'stage4', {}, runId);
+  await commitStep(route, 'eval_report', { reportHash: 'r1', verdict: 'pass', seeds: 3, delegatedActor: 'evaluator' }, runId);
+  await commitStep(route, 'eval_read', { reportHash: 'r1' }, runId);
+
+  const missing = await postCommand(route, command('memory_propose', {
+    runId, payload: { claim: 'c', evidenceRefs: ['r1'] },
+  }));
+  assert.equal(missing.status, 422, `no delegatedActor actual=${missing.status}`);
+  assert.equal(missing.json.code, 'FORBIDDEN_ACTOR');
+
+  const invalid = await postCommand(route, command('memory_propose', {
+    runId, payload: { claim: 'c', evidenceRefs: ['r1'], delegatedActor: 'admin' },
+  }));
+  assert.equal(invalid.status, 422);
+  assert.equal(invalid.json.code, 'FORBIDDEN_ACTOR');
+
+  const delegated = await postCommand(route, command('memory_propose', {
+    runId, payload: { claim: 'c', evidenceRefs: ['r1'], delegatedActor: 'root' },
+  }));
+  assert.equal(delegated.status, 200, `delegated root actual=${delegated.status} ${JSON.stringify(delegated.json)}`);
+  assert.equal(delegated.json.receipt.status, 'committed');
+
+  const evidence = await call(route, fakeReq({ url: `${Http.API_PREFIX}/evidence` }));
+  const run = evidence.json.evidence.runs.find((item) => item.id === runId);
+  const delegatedEvents = run.events.filter((event) => event.type === 'actor.delegated');
+  assert.equal(delegatedEvents.length, 2, `actor.delegated events actual=${JSON.stringify(delegatedEvents)}`);
+});
