@@ -121,6 +121,8 @@ Edge  = { id, from, to, port: 'contract'|'artifact'|'evidence'|'veto' }
 
 ## 5. 测试与证据
 
+设计签收：`docs/praxis/redesign/13-pixel-signoff-v2.md` revision 3 — **PASS**（7 个场景：clean/running/selected/empty/blueprint 亮色 + running/selected 暗色），build `17dc23af5f2e`。
+
 | 层 | 命令 | 覆盖 |
 |---|---|---|
 | 契约测试 | `node --test test/praxis/*.test.js` | 领域状态机、图模型与不变量、fork/迁移、wire 契约、store、HTTP、模块构建 |

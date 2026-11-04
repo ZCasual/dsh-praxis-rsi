@@ -253,14 +253,18 @@ function StoreReason(code) {
 
 function StoreApplyView(view) {
   if (!view || typeof view !== 'object') return;
+  // A conflict stays visible until the next successful command or an explicit dismiss.
   StorePatch({
     snapshot: view,
     phase: 'fresh',
     error: '',
-    conflict: '',
     updatedAt: Date.now(),
     revision: Number(view.revision ?? view.active?.version ?? 0),
   });
+}
+
+function StoreDismissConflict() {
+  StorePatch({ conflict: '' });
 }
 
 async function StoreRefresh() {
@@ -320,7 +324,7 @@ async function StoreSend(action, payload, options = {}) {
     });
     if (value.view) StoreApplyView(value.view);
     else await StoreRefresh();
-    StorePatch({ receipt: value.receipt ?? null, busy: StoreSingleton.busy - 1 });
+    StorePatch({ receipt: value.receipt ?? null, busy: StoreSingleton.busy - 1, conflict: '' });
     return value.receipt ?? null;
   } catch (error) {
     const status = error?.status;
@@ -5132,8 +5136,12 @@ function ShellApp() {
       const list = (graph.audit.violations ?? []).slice(0, 2).map((item) => item.message).join('；');
       return h(PrimBanner, { tone: 'bad' }, `状态不一致，需要核对：${list || '存在图不变量违规'}`);
     }
-    if (store.phase === 'stale' && store.conflict) {
-      return h(PrimBanner, { tone: 'warn' }, `数据已更新，本次操作未提交：${store.conflict}`);
+    if (store.conflict) {
+      return h(PrimBanner, {
+        tone: 'warn',
+        onDismiss: () => StoreDismissConflict(),
+        action: h(PrimBtn, { onClick: () => void StoreRefresh(), className: 'px-bar-ghost' }, '刷新'),
+      }, `数据已更新，本次操作未提交：${store.conflict}`);
     }
     if (store.error) return h(PrimBanner, { tone: 'bad' }, store.error);
     if (report) return h(PrimBanner, { tone: 'ok' }, report);
@@ -5156,7 +5164,9 @@ function ShellApp() {
             hint: store.error || '本地回环 API 不可用。',
             action: h(PrimBtn, { tone: 'primary', onClick: () => void StoreRefresh() }, '重试'),
           })
-          : h(PrimSkeleton, { rows: 4 })));
+          : h('div', { className: 'px-boot-wait' },
+            h('p', { className: 'px-boot-hint', 'data-testid': 'loading-hint' }, '正在连接 Praxis 服务…'),
+            h(PrimSkeleton, { rows: 4 }))));
   }
 
   const scene = !active ? 'empty' : mode === 'blueprint' ? 'blueprint' : 'running';
@@ -5649,12 +5659,19 @@ const CssBase = `
 }
 
 /* ---------- skeleton / empty / glyph ---------- */
-.px-skeleton { display: grid; gap: 10px; padding: 18px; }
-.px-skeleton-row { display: block; height: 12px; border-radius: 6px; background: var(--dsw-alias-bg-layer-2); opacity: .8; animation: px-pulse 1.4s ease-in-out infinite; }
+.px-skeleton { display: grid; gap: 10px; padding: 18px 0; width: 100%; }
+.px-skeleton-row {
+  display: block; height: 12px; border-radius: 6px;
+  background: color-mix(in oklab, var(--dsw-alias-border-l2) 45%, var(--dsw-alias-bg-layer-1));
+  border: 1px solid var(--dsw-alias-border-l1);
+  animation: px-pulse 1.4s ease-in-out infinite;
+}
 .px-skeleton-row:nth-child(2) { width: 78%; }
 .px-skeleton-row:nth-child(3) { width: 56%; }
 @keyframes px-pulse { 0%, 100% { opacity: .45; } 50% { opacity: .9; } }
 .px-boot { display: grid; place-items: center; height: 100%; padding: 24px; }
+.px-boot-wait { display: grid; gap: 10px; justify-items: stretch; width: min(420px, 100%); }
+.px-boot-hint { font-size: var(--px-fs-2); color: var(--dsw-alias-label-secondary); text-align: center; }
 .px-empty { display: grid; gap: 8px; place-items: center; text-align: center; padding: 18px; }
 .px-empty-title { font-size: var(--px-fs-1); font-weight: 560; }
 .px-empty-hint { font-size: var(--px-fs-2); color: var(--dsw-alias-label-secondary); max-width: 320px; }

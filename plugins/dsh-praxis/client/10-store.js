@@ -73,14 +73,18 @@ function StoreReason(code) {
 
 function StoreApplyView(view) {
   if (!view || typeof view !== 'object') return;
+  // A conflict stays visible until the next successful command or an explicit dismiss.
   StorePatch({
     snapshot: view,
     phase: 'fresh',
     error: '',
-    conflict: '',
     updatedAt: Date.now(),
     revision: Number(view.revision ?? view.active?.version ?? 0),
   });
+}
+
+function StoreDismissConflict() {
+  StorePatch({ conflict: '' });
 }
 
 async function StoreRefresh() {
@@ -140,7 +144,7 @@ async function StoreSend(action, payload, options = {}) {
     });
     if (value.view) StoreApplyView(value.view);
     else await StoreRefresh();
-    StorePatch({ receipt: value.receipt ?? null, busy: StoreSingleton.busy - 1 });
+    StorePatch({ receipt: value.receipt ?? null, busy: StoreSingleton.busy - 1, conflict: '' });
     return value.receipt ?? null;
   } catch (error) {
     const status = error?.status;

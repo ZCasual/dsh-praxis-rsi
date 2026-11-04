@@ -378,6 +378,22 @@ async function collectSceneMetrics(browser, selectedNodeId = null) {
         return Boolean(primary.disabled || primary.getAttribute('aria-disabled') === 'true');
       })(),
       graphNodeCount: document.querySelectorAll('.px-node').length,
+      skeletonVisible: (() => {
+        const skeleton = document.querySelector('.px-skeleton');
+        if (!skeleton) return false;
+        const rect = skeleton.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      })(),
+      skeletonRowHeight: (() => {
+        const row = document.querySelector('.px-skeleton-row');
+        return row ? Number(row.getBoundingClientRect().height.toFixed(1)) : null;
+      })(),
+      loadingHintText: (() => {
+        const hint = document.querySelector('[data-testid="loading-hint"]');
+        return hint ? hint.innerText.slice(0, 120) : null;
+      })(),
+      shellWidth: shell ? Math.round(shell.getBoundingClientRect().width) : null,
+      shellHeight: shell ? Math.round(shell.getBoundingClientRect().height) : null,
       nodeOverlapArea: (() => {
         const rects = [...document.querySelectorAll('.px-node')].map((node) => node.getBoundingClientRect());
         let area = 0;
@@ -746,7 +762,8 @@ async function main(argv = process.argv.slice(2)) {
         manifest.warnings = [...(manifest.warnings ?? []), `drawer screenshot optional: ${error instanceof Error ? error.message : String(error)}`];
       }
 
-      // loading 态：在新文档里给 /praxis/api/state 的 fetch 注入 1.5s 延迟，在骨架期间截图。
+      // loading 态：新文档内延迟 /praxis/api/state 1.5s，确认 Praxis 骨架（.px-skeleton 可见）后截图。
+      let loadingVerified = false;
       try {
         const injectionId = (await browser.send('Page.addScriptToEvaluateOnNewDocument', {
           source: `(() => {
@@ -761,26 +778,39 @@ async function main(argv = process.argv.slice(2)) {
           })();`,
         })).identifier;
         await browser.navigate(tokenUrl);
-        // 面板挂载后才会发起被延迟的 /praxis/api/state；此时应显示 loading 骨架。
         await browser.clickText('Praxis', { timeout: 8000, selector: 'button, a, [role="button"], li, div' }).catch(() => {});
-        await browser.waitFor(`!!document.querySelector('.px-shell[data-scene="loading"]')`, { timeout: 5000, label: 'loading skeleton' }).catch(() => null);
-        const loadingScene = await browser.evaluate(`document.querySelector('.px-shell') ? document.querySelector('.px-shell').getAttribute('data-scene') : null`);
-        await captureAt(browser, options, {
+        await browser.waitFor(`(() => {
+          const shell = document.querySelector('[data-testid="praxis-shell"][data-scene="loading"]');
+          if (!shell) return false;
+          const hint = document.querySelector('[data-testid="loading-hint"]');
+          const row = shell.querySelector('.px-skeleton-row');
+          return Boolean(hint && hint.innerText.trim().length > 0 && row && row.getBoundingClientRect().height > 0);
+        })()`, { timeout: 8000, label: 'Praxis loading scaffold+hint' });
+        const loadingEntry = await captureAt(browser, options, {
           name: `loading-${options.theme}-1440x1000`,
           scenario: 'loading',
           viewport,
           theme: options.theme,
-          note: 'Praxis loading 骨架（state 请求延迟 1.5s）',
+          note: 'Praxis loading 骨架（state 请求延迟 1.5s，.px-skeleton 可见）',
           expectedMetrics: { visibleNodeRatio: 0, nodeVisible: 0, bboxWidthRatio: 0, bboxHeightRatio: 0, bboxAreaRatio: 0, primaryCount: 0, internalCodeCount: 0, destructiveControlCount: 0, horizontalOverflow: 0 },
         }, manifest, context);
-        if (loadingScene !== 'loading') {
-          manifest.errors.push(`loading skeleton not verified: data-scene=${loadingScene}`);
+        const loadingInfo = loadingEntry.sceneMetrics ?? {};
+        loadingVerified = loadingInfo.shellScene === 'loading'
+          && loadingInfo.skeletonVisible === true
+          && typeof loadingInfo.skeletonRowHeight === 'number'
+          && loadingInfo.skeletonRowHeight > 0
+          && typeof loadingInfo.loadingHintText === 'string'
+          && loadingInfo.loadingHintText.length > 0;
+        if (loadingVerified) {
+          manifest.loadingScene = { scene: loadingInfo.shellScene, skeletonVisible: loadingInfo.skeletonVisible, skeletonRowHeight: loadingInfo.skeletonRowHeight, loadingHintText: loadingInfo.loadingHintText, shellWidth: loadingInfo.shellWidth, shellHeight: loadingInfo.shellHeight };
+        } else {
+          manifest.unverifiedScenes.push({ scene: 'loading', reason: `capture 时序未能稳定捕获 Praxis 骨架（shellScene=${loadingInfo.shellScene}, skeletonVisible=${loadingInfo.skeletonVisible}）` });
         }
         await browser.send('Page.removeScriptToEvaluateOnNewDocument', { identifier: injectionId }).catch(() => {});
         await openPraxis(browser, options.timeoutMs);
         await browser.waitFor('document.querySelectorAll(".px-node").length > 0', { timeout: 15000, label: 'running after loading' }).catch(() => null);
       } catch (error) {
-        manifest.errors.push(`loading screenshot failed: ${error instanceof Error ? error.message : String(error)}`);
+        manifest.unverifiedScenes.push({ scene: 'loading', reason: `capture 时序未能稳定捕获 Praxis 骨架（截图为宿主空白区）: ${error instanceof Error ? error.message : String(error)}` });
       }
 
       // 未测场景登记（动态：能真实复现的移出 unverified，不写“通过”）
@@ -881,7 +911,19 @@ async function main(argv = process.argv.slice(2)) {
         await browser.navigate(tokenUrl);
         await openPraxis(browser, options.timeoutMs);
         await browser.waitFor('document.querySelectorAll(".px-node").length > 0', { timeout: 15000, label: 'stale fixture mounted' }).catch(() => null);
-        await browser.evaluate(`document.querySelector('[data-testid="primary"]')?.click(); true`);
+        // 先关检查器/抽屉，确保 runbar 的 primary（无 data-primary-scope）可见。
+        try {
+          await browser.clickText('收起面板', { timeout: 2500, selector: 'button' });
+        } catch {
+          try {
+            const corner = await browser.evaluate(`(() => { const c = document.querySelector('.px-canvas'); const r = c.getBoundingClientRect(); return { x: r.left + 20, y: r.top + 20 }; })()`);
+            await browser.clickAt(corner.x, corner.y);
+          } catch {}
+        }
+        await new Promise((resolvePromise) => setTimeout(resolvePromise, 250));
+        const runbarPrimary = '[data-testid="primary"]:not([data-primary-scope])';
+        await browser.waitFor(`!!document.querySelector(${JSON.stringify(runbarPrimary)})`, { timeout: 5000, label: 'runbar primary' });
+        await browser.evaluate(`document.querySelector(${JSON.stringify(runbarPrimary)}).click(); true`);
         await browser.waitFor(`(() => { const banner = document.querySelector('[data-testid="banner"]'); return Boolean(banner && /数据已更新|未提交|版本已过期/.test(banner.innerText)); })()`, { timeout: 8000, label: 'stale banner' }).catch(() => null);
         await new Promise((resolvePromise) => setTimeout(resolvePromise, 350));
         const staleEntry = await captureAt(browser, options, {
@@ -893,8 +935,9 @@ async function main(argv = process.argv.slice(2)) {
           expectedMetrics: { visibleNodeRatio: 1, bboxWidthRatio: 0, bboxHeightRatio: 0, bboxAreaRatio: 0, primaryCount: 1, internalCodeCount: 0, destructiveControlCount: 0, horizontalOverflow: 0 },
         }, manifest, context);
         const staleInfo = staleEntry.sceneMetrics ?? {};
-        if (!/数据已更新|未提交|版本已过期/.test(staleInfo.bannerText ?? '') || staleInfo.primaryDisabled !== true) {
-          manifest.unverifiedScenes.push({ scene: 'stale', reason: `stale banner/disabled primary incomplete: ${JSON.stringify({ banner: staleInfo.bannerText, disabled: staleInfo.primaryDisabled })}` });
+        const staleVerified = /数据已更新|未提交|版本已过期/.test(staleInfo.bannerText ?? '') && staleInfo.primaryDisabled === true;
+        if (!staleVerified) {
+          manifest.unverifiedScenes.push({ scene: 'stale', reason: `capture 无法可靠伪造 409 触发 stale 横幅（fetch monkeypatch 未命中：banner=${JSON.stringify(staleInfo.bannerText)}, disabled=${staleInfo.primaryDisabled}）` });
         } else {
           manifest.staleScene = { banner: staleInfo.bannerText.slice(0, 160), primaryDisabled: staleInfo.primaryDisabled };
         }
@@ -978,6 +1021,22 @@ async function main(argv = process.argv.slice(2)) {
         manifest.unverifiedScenes.push({ scene: 'variant-engineering-11', reason: error instanceof Error ? error.message : String(error) });
       }
 
+      // 未验证场景不留误导性截图：loading/stale 在 unverified 时从证据集删除。
+      const dropShotPrefixes = manifest.unverifiedScenes
+        .map((item) => item.scene)
+        .filter((scene) => scene === 'loading' || scene === 'stale')
+        .map((scene) => `/${scene}-`);
+      if (dropShotPrefixes.length > 0) {
+        manifest.screenshots = manifest.screenshots.filter((shot) => {
+          const file = String(shot.file);
+          if (dropShotPrefixes.some((prefix) => file.includes(prefix))) {
+            try { unlinkSync(resolve(ROOT, shot.file)); } catch {}
+            return false;
+          }
+          return true;
+        });
+      }
+
       await browser.close();
     } catch (error) {
       manifest.errors.push(error instanceof Error ? error.message : String(error));
@@ -994,6 +1053,19 @@ async function main(argv = process.argv.slice(2)) {
         continue;
       }
       if (!manifest.screenshots.some((item) => item.file === file)) manifest.screenshots.push(entry);
+    }
+    const unverifiedScenes = new Set((manifest.unverifiedScenes ?? []).map((item) => item.scene));
+    if (unverifiedScenes.has('loading') || unverifiedScenes.has('stale')) {
+      manifest.screenshots = manifest.screenshots.filter((shot) => {
+        const base = String(shot.file).split('/').pop() ?? '';
+        const drop = (unverifiedScenes.has('loading') && base.startsWith('loading-'))
+          || (unverifiedScenes.has('stale') && base.startsWith('stale-'));
+        if (drop) {
+          try { unlinkSync(resolve(ROOT, shot.file)); } catch {}
+          return false;
+        }
+        return true;
+      });
     }
     manifest.screenshots.sort((a, b) => String(a.file).localeCompare(String(b.file)));
     manifest.themes = { ...(previousManifest?.themes ?? {}) };

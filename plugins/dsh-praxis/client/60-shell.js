@@ -338,8 +338,12 @@ function ShellApp() {
       const list = (graph.audit.violations ?? []).slice(0, 2).map((item) => item.message).join('；');
       return h(PrimBanner, { tone: 'bad' }, `状态不一致，需要核对：${list || '存在图不变量违规'}`);
     }
-    if (store.phase === 'stale' && store.conflict) {
-      return h(PrimBanner, { tone: 'warn' }, `数据已更新，本次操作未提交：${store.conflict}`);
+    if (store.conflict) {
+      return h(PrimBanner, {
+        tone: 'warn',
+        onDismiss: () => StoreDismissConflict(),
+        action: h(PrimBtn, { onClick: () => void StoreRefresh(), className: 'px-bar-ghost' }, '刷新'),
+      }, `数据已更新，本次操作未提交：${store.conflict}`);
     }
     if (store.error) return h(PrimBanner, { tone: 'bad' }, store.error);
     if (report) return h(PrimBanner, { tone: 'ok' }, report);
@@ -362,7 +366,9 @@ function ShellApp() {
             hint: store.error || '本地回环 API 不可用。',
             action: h(PrimBtn, { tone: 'primary', onClick: () => void StoreRefresh() }, '重试'),
           })
-          : h(PrimSkeleton, { rows: 4 })));
+          : h('div', { className: 'px-boot-wait' },
+            h('p', { className: 'px-boot-hint', 'data-testid': 'loading-hint' }, '正在连接 Praxis 服务…'),
+            h(PrimSkeleton, { rows: 4 }))));
   }
 
   const scene = !active ? 'empty' : mode === 'blueprint' ? 'blueprint' : 'running';

@@ -119,6 +119,19 @@ Host：/praxis/api/state 200，wireVersion 2
 | 运行中 Playbook 迁移 | 当前策略是 Run 固定原 revision，不做自动迁移 | 设计决策，非缺陷 |
 | 真实 DSH 会话内 `rsi_run` 的工具调用 | 工具只在**新会话**出现；本轮未在对话中实际调用 | 需新会话人工验证 |
 
+## 7.1 设计签收
+
+`docs/praxis/redesign/13-pixel-signoff-v2.md` revision 3：**PASS（build `17dc23af5f2e`，7 signed scenes）**。
+
+| 签收项 | 结果 |
+|---|---|
+| clean-light / running-light / empty-light / blueprint-light 1440 | 通过 |
+| selected-light 1440（3/10 current `n_prereg`，与 inspector gap≈16px，zoom 100%） | 通过 |
+| running-dark / selected-dark 1440 | 通过 |
+| 1024 全应用 / 700×600 | compat 通过（不套字号/面积） |
+| loading | compat-not-signed：截图未稳定捕获 Praxis 骨架，见 §7 |
+| error / variant-engineering-11 | 证据已生成，归 compat |
+
 ## 8. 证据清单
 
 - 截图与 manifest：`docs/praxis/evidence/manifest.json` + `docs/praxis/screenshots/`

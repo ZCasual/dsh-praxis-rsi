@@ -1,6 +1,40 @@
-# 13 · 像素签收 v2（revision 2）
+# 13 · 像素签收 v2（revision 3）
 
-## Revision 2 · 2026-11-05 02:18
+## Revision 3 · 2026-11-05 03:10
+
+**sign-off: PASS（build 17dc23af5f2e，7 signed scenes）**
+
+已核对并签收的场景（manifest `signoff.signed`）：
+
+| # | scene | 结论 |
+|---|---|---|
+| 1 | `clean-light-1440x1000` | 通过：无抽屉/inspector/toast；15/15；1 primary；3 条纸面导轨；3/10 |
+| 2 | `running-light-1440x1000` | 通过：同上布局；1 primary；状态色已换深色文本 |
+| 3 | `selected-light-1440x1000` | 通过：选中 3/10 current「预注册」，节点完整可见，与 inspector gap≈16px，zoom 100%，inspector primary=1 |
+| 4 | `selected-dark-1440x1000` | 通过：同上，深色下 current 可见、gap≈16px |
+| 5 | `running-dark-1440x1000` | 通过：15/15、导轨、primary；对比度 10.42/9.47 |
+| 6 | `empty-light-1440x1000` | 通过：0 节点、唯一 primary「新建研究运行」、3 条泳道骨架 |
+| 7 | `blueprint-light-1440x1000` | 通过：无运行条 primary；底部草稿栏唯一「保存蓝图」；导轨/节点正常 |
+
+**判据结果**
+- **S1-A 通过**：3/10 current `n_prereg` 选中时，节点右缘与 inspector 左缘 gap≈16px；zoom 100% 不变；亮/暗一致。
+- **S1-B 通过**：`selected-noncurrent` 选中历史「立项」，检查器只读「该节点已走过；下一步在运行条」，inspector primary=0；运行条保留「提交讨论」唯一 primary。
+- **D5-5 通过**：manifest 逐对 ratio——light textMin **5.8**、nonTextMin **5.31**；dark **10.42 / 9.47**，均过 4.5/3；状态色已改为图形专用，文本用 label token。
+- **700×600 compat 通过**：scale **0.686**、15/15 完全可见、hint=true、page overflow=0；不套字号/面积（node text 小，属兼容模式）。
+- **1024 全应用 compat 通过**：744×840、scale **0.798**、15/15、hint=true、overflow=0；不套字号/面积，不算 1024 signed。
+- **canonical**：`clean-light` 无遮挡/无浮层、1 primary、15/15；可作为默认运行态基线。
+
+**范围与遗留（不阻断上述 7 场景签收）**
+- **loading**：`loading-light-1440x1000` 仍是 DSH 宿主首页（Into the Unknown），不是 `.px-shell` 的 Praxis 骨架；即便 manifest 记录 `.px-shell` 存在，截图不可用作 loading 证据。loading 归入 compat-not-signed；若发布门禁包含 loading，则仍未签。
+- **stale / error / 14-nodes**：manifest 列为 unverified/compat；不在 7 signed 内。
+- **S3（记录待办，不阻断）**：打开 inspector 后画布水平平移，会裁掉最左侧一列节点（保留 selected/current）；700/1024 字号小但属 compat；只读块仍显示“运行下一步”标题，建议加“（在运行条）”。
+
+**证据**：`docs/praxis/evidence/manifest.json`（build 17dc23af5f2e，27 张，signed 7，文件 sha256 全匹配）；theme manifest 为历史，不作为本轮依据。700 的 scale/阈值已同步到 [10 §5.7](./10-v2-contract.md) 与 [11 B-V22](./11-visual-acceptance-checklist.md)。
+
+---
+
+
+## Revision 2（历史）· 2026-11-05 02:18
 
 **结论：结构条件性通过（Conditional layout pass），整体不签收。**
 - **签收**：canonical `clean-light-1440x1000`（干净运行态）、`empty`（空态唯一入口）、1440 dark running 的布局/导轨、1024 全应用 **compat**（提示、15/15、无溢出）、**S1-B** 历史节点只读动作区、source drawer 与 blueprint 结构。

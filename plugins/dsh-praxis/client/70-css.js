@@ -166,12 +166,19 @@ const CssBase = `
 }
 
 /* ---------- skeleton / empty / glyph ---------- */
-.px-skeleton { display: grid; gap: 10px; padding: 18px; }
-.px-skeleton-row { display: block; height: 12px; border-radius: 6px; background: var(--dsw-alias-bg-layer-2); opacity: .8; animation: px-pulse 1.4s ease-in-out infinite; }
+.px-skeleton { display: grid; gap: 10px; padding: 18px 0; width: 100%; }
+.px-skeleton-row {
+  display: block; height: 12px; border-radius: 6px;
+  background: color-mix(in oklab, var(--dsw-alias-border-l2) 45%, var(--dsw-alias-bg-layer-1));
+  border: 1px solid var(--dsw-alias-border-l1);
+  animation: px-pulse 1.4s ease-in-out infinite;
+}
 .px-skeleton-row:nth-child(2) { width: 78%; }
 .px-skeleton-row:nth-child(3) { width: 56%; }
 @keyframes px-pulse { 0%, 100% { opacity: .45; } 50% { opacity: .9; } }
 .px-boot { display: grid; place-items: center; height: 100%; padding: 24px; }
+.px-boot-wait { display: grid; gap: 10px; justify-items: stretch; width: min(420px, 100%); }
+.px-boot-hint { font-size: var(--px-fs-2); color: var(--dsw-alias-label-secondary); text-align: center; }
 .px-empty { display: grid; gap: 8px; place-items: center; text-align: center; padding: 18px; }
 .px-empty-title { font-size: var(--px-fs-1); font-weight: 560; }
 .px-empty-hint { font-size: var(--px-fs-2); color: var(--dsw-alias-label-secondary); max-width: 320px; }
