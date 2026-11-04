@@ -63,7 +63,7 @@ function ShellDiff(before, after) {
 function ShellRunBar(props) {
   const {
     store, active, graph, mode, setMode, catalog, onPrimary, onSelectNode,
-    onOpenDrawer, onNewRun, inspectorOpen, overlayOpen,
+    onOpenDrawer, onNewRun, inspectorOpen, overlayOpen, inspectorHasPrimary,
   } = props;
   const stateMeta = ShellStateMeta(catalog, active?.state);
   const states = catalog.states ?? [];
@@ -116,7 +116,8 @@ function ShellRunBar(props) {
     h('div', { className: 'px-runbar-right' },
       overlayOpen ? null
         : inspectorOpen ? h(PrimBtn, { onClick: () => onSelectNode(null), className: 'px-bar-ghost' }, '收起面板')
-        : active && mode === 'run' ? h(PrimBtn, {
+        : null,
+      !overlayOpen && (inspectorOpen ? !inspectorHasPrimary : Boolean(active)) && active && mode === 'run' ? h(PrimBtn, {
           tone: 'primary',
           'data-testid': 'primary',
           'data-action-id': actionId ?? '',
@@ -178,6 +179,10 @@ function ShellApp() {
   const selectedNode = selectedId ? nodes.find((node) => node.id === selectedId) ?? null : null;
   const nodeState = selectedNode ? (graph?.states?.[selectedNode.id] ?? null) : null;
   const inspectorOpen = Boolean(selectedNode) && mode === 'run';
+  const nextActionId = catalog.stateActions?.[active?.state] ?? active?.nextAction ?? null;
+  const inspectorHasPrimary = Boolean(selectedNode)
+    && mode === 'run'
+    && (selectedNode.id === graph?.current || (selectedNode.config?.action && selectedNode.config.action === nextActionId));
 
   const editGraph = mode === 'blueprint' ? draft : graph;
 
@@ -378,6 +383,7 @@ function ShellApp() {
       onOpenDrawer: setDrawer,
       onNewRun: () => setNewRun({ title: '', playbookId: snapshot?.playbooks?.[0]?.id ?? 'scientific-loop' }),
       inspectorOpen,
+      inspectorHasPrimary,
       overlayOpen: Boolean(drawer || confirm || newRun),
     }),
     h('div', { className: 'px-workspace' },
@@ -535,6 +541,23 @@ function ShellApp() {
       }))) : null);
 }
 
+function ShellAuditDrawer({ active, graph, catalog, onClose }) {
+  const [receipts, setReceipts] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    StoreApi('/evidence')
+      .then((value) => {
+        if (!alive) return;
+        const run = (value?.evidence?.runs ?? []).find((item) => item.id === active?.id);
+        setReceipts(run?.receipts ?? []);
+      })
+      .catch(() => { if (alive) setReceipts([]); });
+    return () => { alive = false; };
+  }, [active?.id]);
+  const merged = active ? { ...active, receipts: receipts ?? [] } : null;
+  return h(PanelAudit, { run: merged, graph, catalog, onClose });
+}
+
 function ShellDrawer({ id, snapshot, active, graph, catalog, onClose, onSelectRun, onAction, onStart }) {
   if (id === 'source') {
     return h(PanelSource, {
@@ -568,7 +591,7 @@ function ShellDrawer({ id, snapshot, active, graph, catalog, onClose, onSelectRu
       onClose,
     });
   }
-  if (id === 'audit') return h(PanelAudit, { run: active, graph, catalog, onClose });
+  if (id === 'audit') return h(ShellAuditDrawer, { active, graph, catalog, onClose });
   if (id === 'evidence') return h(PanelEvidence, { run: active, graph, catalog, onClose });
   return null;
 }

@@ -19,7 +19,7 @@
  *   node tools/evidence/cdp.mjs --url 'http://127.0.0.1:3081/?token=...' --screenshot /tmp/x.png
  */
 import { spawn } from 'node:child_process';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 
 const DEFAULT_CHROME = '/usr/bin/google-chrome';
@@ -61,7 +61,6 @@ export class CDP {
   static async launch(options = {}) {
     const {
       chromePath = process.env.CHROME_PATH ?? DEFAULT_CHROME,
-      port = 9333,
       userDataDir = '/tmp/praxis-acceptance/chrome-profile',
       viewport = { width: 1440, height: 1000 },
       headless = true,
@@ -69,9 +68,23 @@ export class CDP {
       startUrl = 'about:blank',
     } = options;
     if (!existsSync(chromePath)) throw new Error(`chrome not found at ${chromePath}`);
+    let lastError = null;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const uniqueDir = `${userDataDir}-${process.pid}-${Date.now()}-${attempt}`;
+      try {
+        return await CDP._launchOnce({ chromePath, userDataDir: uniqueDir, viewport, headless, extraArgs, startUrl });
+      } catch (error) {
+        lastError = error;
+        try { rmSync(uniqueDir, { recursive: true, force: true }); } catch {}
+      }
+    }
+    throw lastError ?? new Error('chrome launch failed');
+  }
+
+  static async _launchOnce({ chromePath, userDataDir, viewport, headless, extraArgs, startUrl }) {
     mkdirSync(userDataDir, { recursive: true });
     const args = [
-      `--remote-debugging-port=${port}`,
+      '--remote-debugging-port=0', // 端口由 Chrome 选，读 DevToolsActivePort，避免固定端口冲突
       `--user-data-dir=${userDataDir}`,
       '--no-first-run',
       '--no-default-browser-check',
@@ -80,6 +93,8 @@ export class CDP {
       '--disable-sync',
       '--disable-extensions',
       '--disable-gpu',
+      '--disable-dev-shm-usage',
+      '--disable-software-rasterizer',
       '--hide-scrollbars',
       '--mute-audio',
       `--window-size=${viewport.width},${viewport.height}`,
@@ -88,10 +103,26 @@ export class CDP {
     args.push(...extraArgs, startUrl);
     const chromeProcess = spawn(chromePath, args, { stdio: ['ignore', 'pipe', 'pipe'] });
     chromeProcess.stderr.on('data', () => {});
-    let targets = null;
+    const activePortFile = `${userDataDir}/DevToolsActivePort`;
+    let port = null;
     const deadline = Date.now() + 20000;
     while (Date.now() < deadline) {
       if (chromeProcess.exitCode !== null) throw new Error(`chrome exited early (${chromeProcess.exitCode})`);
+      if (existsSync(activePortFile)) {
+        try {
+          const lines = readFileSync(activePortFile, 'utf8').trim().split('\n');
+          const parsed = Number(lines[0]);
+          if (Number.isInteger(parsed) && parsed > 0) { port = parsed; break; }
+        } catch {}
+      }
+      await sleep(100);
+    }
+    if (!port) {
+      chromeProcess.kill('SIGKILL');
+      throw new Error('chrome DevToolsActivePort not ready');
+    }
+    let targets = null;
+    while (Date.now() < deadline) {
       targets = await fetchJson(`http://127.0.0.1:${port}/json/list`, 800);
       if (Array.isArray(targets) && targets.length > 0) break;
       await sleep(120);
@@ -107,11 +138,19 @@ export class CDP {
     }
     const ws = new WebSocket(page.webSocketDebuggerUrl);
     await new Promise((resolve, reject) => {
-      ws.addEventListener('open', resolve, { once: true });
-      ws.addEventListener('error', () => reject(new Error('CDP websocket failed')), { once: true });
+      const timer = setTimeout(() => reject(new Error('CDP websocket open timeout')), 5000);
+      ws.addEventListener('open', () => { clearTimeout(timer); resolve(); }, { once: true });
+      ws.addEventListener('error', () => { clearTimeout(timer); reject(new Error('CDP websocket failed')); }, { once: true });
     });
-    const browser = new CDP(ws, { info: { pid: chromeProcess.pid, port, chromePath } });
+    const browser = new CDP(ws, { info: { pid: chromeProcess.pid, port, chromePath, userDataDir } });
     browser.chromeProcess = chromeProcess;
+    browser.userDataDir = userDataDir;
+    // 活性校验：ws 打开不等于浏览器可用，必须在 5s 内响应 CDP。
+    const liveness = Promise.race([
+      browser.send('Browser.getVersion'),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('CDP liveness timeout (Browser.getVersion)')), 5000)),
+    ]);
+    await liveness;
     await browser.send('Page.enable');
     await browser.send('Runtime.enable');
     await browser.send('Log.enable');
@@ -348,6 +387,9 @@ export class CDP {
     if (this.chromeProcess && this.chromeProcess.exitCode === null) {
       await sleep(200);
       if (this.chromeProcess.exitCode === null) this.chromeProcess.kill('SIGKILL');
+    }
+    if (this.userDataDir) {
+      try { rmSync(this.userDataDir, { recursive: true, force: true }); } catch {}
     }
   }
 }

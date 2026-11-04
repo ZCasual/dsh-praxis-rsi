@@ -780,6 +780,10 @@ const CanvasEmptyGraph = Object.freeze({ nodes: Object.freeze([]), edges: Object
 const CanvasSheetBreakpoint = 1180;   // ≤1180 检查器变底部 sheet
 const CanvasSheetSafeRatio = 0.40;    // 焦点节点中心超过该比例就可能被 sheet 遮住
 const CanvasSheetTargetRatio = 0.30;  // 向上平移后焦点节点落在可视上半区中心
+const CanvasInspectorPanelWidth = 360;      // 70-css .px-inspector width
+const CanvasInspectorPanelGap = 12;         // 检查器 right:12
+const CanvasInspectorNodeGap = 16;          // 节点右缘与检查器至少留 16px
+const CanvasNarrowCanvasWidth = 900;        // 画布 <900 视为窄屏（此时检查器是底部 sheet）
 
 const CanvasThemeVars = Object.freeze({
   text: 'var(--dsw-alias-label-primary)',
@@ -844,6 +848,17 @@ function CanvasClamp(value, min, max) {
 
 function CanvasEmptyDraft() {
   return { positions: {}, addedEdges: [], removedNodeIds: [], removedEdgeIds: [] };
+}
+
+/** 底部 sheet 的真实触发条件 = 窗口宽度 ≤1180（70-css @media max-width:1180px），与画布宽度无关。 */
+function CanvasWindowMatchesNarrow() {
+  try {
+    if (typeof window === 'undefined') return false;
+    if (typeof window.matchMedia === 'function') return window.matchMedia('(max-width: ' + CanvasSheetBreakpoint + 'px)').matches === true;
+    return typeof window.innerWidth === 'number' && window.innerWidth < CanvasSheetBreakpoint;
+  } catch (error) {
+    return false;
+  }
 }
 
 function CanvasEmptyLayout() {
@@ -1423,6 +1438,7 @@ function CanvasView(props) {
   const [CanvasViewportState, setCanvasViewportState] = useState(function () {
     return { width: LayoutDefaultViewport.width, height: LayoutDefaultViewport.height };
   });
+  const [CanvasWindowNarrow, setCanvasWindowNarrow] = useState(CanvasWindowMatchesNarrow);
   const [CanvasCameraState, setCanvasCameraState] = useState(null);
   const [CanvasInternalZoomState, setCanvasInternalZoomState] = useState(null);
   const [CanvasLocalSelectedId, setCanvasLocalSelectedId] = useState(null);
@@ -1453,6 +1469,22 @@ function CanvasView(props) {
     if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
       window.addEventListener('resize', measure);
       return function () { window.removeEventListener('resize', measure); };
+    }
+    return undefined;
+  }, []);
+
+  useEffect(function () {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
+    const query = window.matchMedia('(max-width: ' + CanvasSheetBreakpoint + 'px)');
+    const update = function (event) { setCanvasWindowNarrow(event && event.matches === true); };
+    setCanvasWindowNarrow(query.matches === true);
+    if (typeof query.addEventListener === 'function') {
+      query.addEventListener('change', update);
+      return function () { query.removeEventListener('change', update); };
+    }
+    if (typeof query.addListener === 'function') {
+      query.addListener(update);
+      return function () { query.removeListener(update); };
     }
     return undefined;
   }, []);
@@ -1539,7 +1571,7 @@ function CanvasView(props) {
   const CanvasSheetFocusId = CanvasSelectedId || CanvasCurrentId;
   const CanvasSheetPosition = CanvasSheetFocusId ? CanvasLayoutData.positions[CanvasSheetFocusId] : null;
   const CanvasSheetActive = mode === 'run'
-    && CanvasViewportState.width < CanvasSheetBreakpoint
+    && CanvasWindowNarrow
     && (raw.inspectorOpen === undefined ? true : raw.inspectorOpen === true);
   let CanvasSheetOffsetY = 0;
   if (CanvasSheetActive && CanvasSheetPosition) {
@@ -1548,13 +1580,26 @@ function CanvasView(props) {
       CanvasSheetOffsetY = CanvasViewportState.height * CanvasSheetTargetRatio - focusCenterY;
     }
   }
-  const CanvasPan = { x: CanvasBasePanX, y: CanvasBasePanY + CanvasSheetOffsetY };
+  // S1-A：inspectorOpen 时（含 1440 宽屏右侧 360px 面板）保证焦点节点不被面板遮住：
+  // visibleRight = canvasW - (360 + 12)，节点屏幕右缘超出 visibleRight-16 才左移相机；scale 不变。
+  const CanvasInspectorOpen = raw.inspectorOpen === true;
+  let CanvasInspectorOffsetX = 0;
+  if (CanvasInspectorOpen && CanvasSheetPosition) {
+    const visibleRight = CanvasViewportState.width - (CanvasInspectorPanelWidth + CanvasInspectorPanelGap);
+    const nodeRight = CanvasBasePanX + (CanvasSheetPosition.x + LayoutConstants.nodeW) * CanvasZoom;
+    const limit = visibleRight - CanvasInspectorNodeGap;
+    if (nodeRight > limit) CanvasInspectorOffsetX = limit - nodeRight;
+  }
+  const CanvasPan = { x: CanvasBasePanX + CanvasInspectorOffsetX, y: CanvasBasePanY + CanvasSheetOffsetY };
 
   // D5-2“视口不足”降级：raw fit < 0.75 时不缩字（scale 夹在 0.75），画布内拖动查看并提示。
   const CanvasNaturalScale = useMemo(function () {
     return LayoutNaturalScale(CanvasLayoutData.bounds, CanvasViewportState, 32);
   }, [CanvasLayoutData, CanvasViewportState]);
-  const CanvasViewportInsufficient = CanvasNaturalScale < LayoutFitMinScale - 0.000001;
+  // D5-2 降级：rawFit<0.75，或窄画布(<900)，或 world scale<0.85（1024 全应用 0.762 / 700×600 0.75）
+  const CanvasViewportInsufficient = CanvasNaturalScale < LayoutFitMinScale - 0.000001
+    || CanvasViewportState.width < CanvasNarrowCanvasWidth
+    || CanvasZoom < 0.85 - 0.000001;
 
   const CanvasNodeModels = useMemo(function () {
     const positions = CanvasLayoutData.positions;
@@ -1948,6 +1993,7 @@ function CanvasView(props) {
     className: 'px-canvas-draft',
     'data-testid': 'draft-status',
     role: 'status',
+    style: CanvasViewportInsufficient ? { top: '44px' } : undefined,
     onPointerDown: CanvasStopPointer,
   },
   h('span', null, CanvasDraftText),
@@ -2002,12 +2048,13 @@ function CanvasView(props) {
     }, '定位当前')));
 
   const CanvasViewportHint = CanvasViewportInsufficient ? h('div', {
-    'data-testid': 'viewport-warning',
+    'data-testid': 'viewport-hint',
     style: {
       position: 'absolute',
       left: '10px',
-      bottom: '10px',
-      zIndex: 3,
+      top: '8px',
+      bottom: 'auto',
+      zIndex: 4,
       padding: '3px 8px',
       fontSize: '12px',
       lineHeight: '16px',
@@ -2017,7 +2064,7 @@ function CanvasView(props) {
       borderRadius: '4px',
       pointerEvents: 'none',
     },
-  }, '视口不足：画布可拖拽查看完整流程') : null;
+  }, '视口不足：可拖拽查看完整流程') : null;
 
   const CanvasEmptyHint = !CanvasEffective.nodes.length ? h('div', {
     style: {
@@ -2265,6 +2312,16 @@ function InspectActionFor(run, catalog) {
     label: InspectActionLabel(catalog, actionId),
     formKey: InspectFormKey(actionId, run?.state),
   };
+}
+
+function InspectActionOwner(graph, actionId, current) {
+  const nodes = Array.isArray(graph?.nodes) ? graph.nodes : [];
+  if (actionId) {
+    const owner = nodes.find((item) => item?.config?.action === actionId);
+    if (owner) return owner;
+  }
+  if (current) return nodes.find((item) => item.id === current) ?? null;
+  return null;
 }
 
 function InspectNodeLabel(node, catalog) {
@@ -3158,7 +3215,7 @@ function InspectRunSummary(props) {
 }
 
 function InspectRunBody(props) {
-  const { run, graph, node, nodeState, catalog, onClose, busy, onOpenPanel } = props;
+  const { run, graph, node, nodeState, current, catalog, onClose, busy, onOpenPanel } = props;
   const nodeStateValue = InspectNodeStateOf(nodeState);
   const execution = InspectExecutionMeta(catalog, nodeStateValue.execution);
   const condition = InspectConditionMeta(catalog, nodeStateValue.condition);
@@ -3168,6 +3225,14 @@ function InspectRunBody(props) {
   const repairAllowed = action.actionId === 'question' || action.actionId === 'prereg_freeze';
   const actionDisabled = auditBlocked && !repairAllowed;
   const formKey = action.formKey;
+  const isCurrent = Boolean(node && current && node.id === current);
+  const nodeAction = node?.config?.action ?? null;
+  const executable = Boolean(formKey) && (nodeAction === action.actionId || isCurrent);
+  const owner = InspectActionOwner(graph, action.actionId, current);
+  const ownerLabel = InspectNodeLabel(owner, catalog);
+  const showWhyBlocked = isCurrent
+    || nodeStateValue.execution === 'blocked'
+    || nodeStateValue.execution === 'failed';
   const claims = Array.isArray(run?.claims) ? run.claims : [];
   const reviews = Array.isArray(run?.reviews) ? run.reviews : [];
   const evalState = run?.eval ?? {};
@@ -3223,19 +3288,34 @@ function InspectRunBody(props) {
         'data-testid': 'condition-chip',
         title: '条件轴',
       }, `条件 · ${condition.label}`)),
-    h(InspectWhyBlocked, { run, nodeState, catalog }),
+    showWhyBlocked ? h(InspectWhyBlocked, { run, nodeState, catalog }) : null,
     auditBlocked && !repairAllowed
       ? h(PrimBanner, { tone: 'bad' }, '状态不一致，需要核对；修正前不能推进运行。')
       : null,
     h('section', { className: 'px-inspector-section' },
       h('div', { className: 'px-action-head' },
-        h('span', { className: 'px-action-kicker' }, '唯一主动作'),
-        h('strong', null, action.label || InspectFormTitles[formKey] || '推进运行')),
-      h('div', {
-        className: 'px-action-form',
-        'data-testid': 'action-form',
-        'data-action': action.actionId ?? '',
-      }, form))),
+        h('span', { className: 'px-action-kicker' }, '运行下一步'),
+        h('strong', null, ownerLabel ? `· ${ownerLabel}` : (action.label || '暂无'))),
+      h('p', { className: 'px-action-owner' },
+        action.label ? `动作：${action.label}` : '当前没有待执行的运行动作'),
+      executable
+        ? h('div', {
+          className: 'px-action-form',
+          'data-testid': 'action-form',
+          'data-action': action.actionId ?? '',
+        }, form)
+        : h('div', {
+          className: 'px-action-form px-action-readonly',
+          'data-testid': 'action-form',
+          'data-action': action.actionId ?? '',
+          'data-readonly': 'true',
+        },
+          h('p', { className: 'px-action-note', 'data-testid': 'action-readonly' },
+            action.actionId
+              ? (nodeStateValue.execution === 'done'
+                ? '该节点已走过；下一步在运行条。'
+                : '该节点尚未到达；下一步在运行条。')
+              : '当前状态没有可提交的推进动作。')))),
   h('footer', { className: 'px-inspector-foot' },
     h('div', { className: 'px-inspector-evidence' },
       h('span', null,
@@ -3455,6 +3535,9 @@ const InspectCss = `
 .px-action-kicker { font-size: var(--px-fs-3); letter-spacing: .08em; color: var(--dsw-alias-label-secondary); }
 .px-action-fields { display: grid; gap: 10px; }
 .px-action-hint { font-size: var(--px-fs-3); color: var(--dsw-alias-label-secondary); line-height: 1.5; }
+.px-action-owner { font-size: var(--px-fs-3); color: var(--dsw-alias-label-secondary); }
+.px-action-note { font-size: var(--px-fs-2); color: var(--dsw-alias-label-secondary); line-height: 1.55; border-left: 2px solid var(--dsw-alias-border-l2); padding-left: 8px; }
+.px-action-readonly .px-action-note { color: var(--dsw-alias-label-secondary); }
 .px-action-section { display: grid; gap: 8px; border-top: 1px solid var(--dsw-alias-border-l1); padding-top: 8px; }
 .px-blocked-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .px-blocked-item { font-size: var(--px-fs-2); color: var(--dsw-alias-state-warn-primary); border-left: 2px solid var(--dsw-alias-state-warn-primary); padding-left: 8px; line-height: 1.45; }
@@ -4512,7 +4595,7 @@ function ShellDiff(before, after) {
 function ShellRunBar(props) {
   const {
     store, active, graph, mode, setMode, catalog, onPrimary, onSelectNode,
-    onOpenDrawer, onNewRun, inspectorOpen, overlayOpen,
+    onOpenDrawer, onNewRun, inspectorOpen, overlayOpen, inspectorHasPrimary,
   } = props;
   const stateMeta = ShellStateMeta(catalog, active?.state);
   const states = catalog.states ?? [];
@@ -4565,7 +4648,8 @@ function ShellRunBar(props) {
     h('div', { className: 'px-runbar-right' },
       overlayOpen ? null
         : inspectorOpen ? h(PrimBtn, { onClick: () => onSelectNode(null), className: 'px-bar-ghost' }, '收起面板')
-        : active && mode === 'run' ? h(PrimBtn, {
+        : null,
+      !overlayOpen && (inspectorOpen ? !inspectorHasPrimary : Boolean(active)) && active && mode === 'run' ? h(PrimBtn, {
           tone: 'primary',
           'data-testid': 'primary',
           'data-action-id': actionId ?? '',
@@ -4627,6 +4711,10 @@ function ShellApp() {
   const selectedNode = selectedId ? nodes.find((node) => node.id === selectedId) ?? null : null;
   const nodeState = selectedNode ? (graph?.states?.[selectedNode.id] ?? null) : null;
   const inspectorOpen = Boolean(selectedNode) && mode === 'run';
+  const nextActionId = catalog.stateActions?.[active?.state] ?? active?.nextAction ?? null;
+  const inspectorHasPrimary = Boolean(selectedNode)
+    && mode === 'run'
+    && (selectedNode.id === graph?.current || (selectedNode.config?.action && selectedNode.config.action === nextActionId));
 
   const editGraph = mode === 'blueprint' ? draft : graph;
 
@@ -4827,6 +4915,7 @@ function ShellApp() {
       onOpenDrawer: setDrawer,
       onNewRun: () => setNewRun({ title: '', playbookId: snapshot?.playbooks?.[0]?.id ?? 'scientific-loop' }),
       inspectorOpen,
+      inspectorHasPrimary,
       overlayOpen: Boolean(drawer || confirm || newRun),
     }),
     h('div', { className: 'px-workspace' },
@@ -4984,6 +5073,23 @@ function ShellApp() {
       }))) : null);
 }
 
+function ShellAuditDrawer({ active, graph, catalog, onClose }) {
+  const [receipts, setReceipts] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    StoreApi('/evidence')
+      .then((value) => {
+        if (!alive) return;
+        const run = (value?.evidence?.runs ?? []).find((item) => item.id === active?.id);
+        setReceipts(run?.receipts ?? []);
+      })
+      .catch(() => { if (alive) setReceipts([]); });
+    return () => { alive = false; };
+  }, [active?.id]);
+  const merged = active ? { ...active, receipts: receipts ?? [] } : null;
+  return h(PanelAudit, { run: merged, graph, catalog, onClose });
+}
+
 function ShellDrawer({ id, snapshot, active, graph, catalog, onClose, onSelectRun, onAction, onStart }) {
   if (id === 'source') {
     return h(PanelSource, {
@@ -5017,7 +5123,7 @@ function ShellDrawer({ id, snapshot, active, graph, catalog, onClose, onSelectRu
       onClose,
     });
   }
-  if (id === 'audit') return h(PanelAudit, { run: active, graph, catalog, onClose });
+  if (id === 'audit') return h(ShellAuditDrawer, { active, graph, catalog, onClose });
   if (id === 'evidence') return h(PanelEvidence, { run: active, graph, catalog, onClose });
   return null;
 }

@@ -9,7 +9,7 @@ Praxis 是 DeepSeek Harness（DSH）的科研工作流引擎与观测台插件�
 - 契约测试：`node --test test/praxis/*.test.js` → **142 pass / 0 fail**
 - 浏览器验收：`node --test test/praxis/acceptance/browser.test.js`（真实 Chrome + CDP，零 npm 依赖）
 
-![Praxis 运行视图](docs/praxis/screenshots/run-view-light.png)
+![Praxis 运行视图](docs/praxis/screenshots/v2/clean-light-1440x1000.png)
 
 ## 1. 界面
 

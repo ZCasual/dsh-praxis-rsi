@@ -127,6 +127,16 @@ function InspectActionFor(run, catalog) {
   };
 }
 
+function InspectActionOwner(graph, actionId, current) {
+  const nodes = Array.isArray(graph?.nodes) ? graph.nodes : [];
+  if (actionId) {
+    const owner = nodes.find((item) => item?.config?.action === actionId);
+    if (owner) return owner;
+  }
+  if (current) return nodes.find((item) => item.id === current) ?? null;
+  return null;
+}
+
 function InspectNodeLabel(node, catalog) {
   if (!node) return '';
   const catalogLabel = catalog?.nodeLabels?.[node.id];
@@ -1018,7 +1028,7 @@ function InspectRunSummary(props) {
 }
 
 function InspectRunBody(props) {
-  const { run, graph, node, nodeState, catalog, onClose, busy, onOpenPanel } = props;
+  const { run, graph, node, nodeState, current, catalog, onClose, busy, onOpenPanel } = props;
   const nodeStateValue = InspectNodeStateOf(nodeState);
   const execution = InspectExecutionMeta(catalog, nodeStateValue.execution);
   const condition = InspectConditionMeta(catalog, nodeStateValue.condition);
@@ -1028,6 +1038,14 @@ function InspectRunBody(props) {
   const repairAllowed = action.actionId === 'question' || action.actionId === 'prereg_freeze';
   const actionDisabled = auditBlocked && !repairAllowed;
   const formKey = action.formKey;
+  const isCurrent = Boolean(node && current && node.id === current);
+  const nodeAction = node?.config?.action ?? null;
+  const executable = Boolean(formKey) && (nodeAction === action.actionId || isCurrent);
+  const owner = InspectActionOwner(graph, action.actionId, current);
+  const ownerLabel = InspectNodeLabel(owner, catalog);
+  const showWhyBlocked = isCurrent
+    || nodeStateValue.execution === 'blocked'
+    || nodeStateValue.execution === 'failed';
   const claims = Array.isArray(run?.claims) ? run.claims : [];
   const reviews = Array.isArray(run?.reviews) ? run.reviews : [];
   const evalState = run?.eval ?? {};
@@ -1083,19 +1101,34 @@ function InspectRunBody(props) {
         'data-testid': 'condition-chip',
         title: '条件轴',
       }, `条件 · ${condition.label}`)),
-    h(InspectWhyBlocked, { run, nodeState, catalog }),
+    showWhyBlocked ? h(InspectWhyBlocked, { run, nodeState, catalog }) : null,
     auditBlocked && !repairAllowed
       ? h(PrimBanner, { tone: 'bad' }, '状态不一致，需要核对；修正前不能推进运行。')
       : null,
     h('section', { className: 'px-inspector-section' },
       h('div', { className: 'px-action-head' },
-        h('span', { className: 'px-action-kicker' }, '唯一主动作'),
-        h('strong', null, action.label || InspectFormTitles[formKey] || '推进运行')),
-      h('div', {
-        className: 'px-action-form',
-        'data-testid': 'action-form',
-        'data-action': action.actionId ?? '',
-      }, form))),
+        h('span', { className: 'px-action-kicker' }, '运行下一步'),
+        h('strong', null, ownerLabel ? `· ${ownerLabel}` : (action.label || '暂无'))),
+      h('p', { className: 'px-action-owner' },
+        action.label ? `动作：${action.label}` : '当前没有待执行的运行动作'),
+      executable
+        ? h('div', {
+          className: 'px-action-form',
+          'data-testid': 'action-form',
+          'data-action': action.actionId ?? '',
+        }, form)
+        : h('div', {
+          className: 'px-action-form px-action-readonly',
+          'data-testid': 'action-form',
+          'data-action': action.actionId ?? '',
+          'data-readonly': 'true',
+        },
+          h('p', { className: 'px-action-note', 'data-testid': 'action-readonly' },
+            action.actionId
+              ? (nodeStateValue.execution === 'done'
+                ? '该节点已走过；下一步在运行条。'
+                : '该节点尚未到达；下一步在运行条。')
+              : '当前状态没有可提交的推进动作。')))),
   h('footer', { className: 'px-inspector-foot' },
     h('div', { className: 'px-inspector-evidence' },
       h('span', null,
@@ -1315,6 +1348,9 @@ const InspectCss = `
 .px-action-kicker { font-size: var(--px-fs-3); letter-spacing: .08em; color: var(--dsw-alias-label-secondary); }
 .px-action-fields { display: grid; gap: 10px; }
 .px-action-hint { font-size: var(--px-fs-3); color: var(--dsw-alias-label-secondary); line-height: 1.5; }
+.px-action-owner { font-size: var(--px-fs-3); color: var(--dsw-alias-label-secondary); }
+.px-action-note { font-size: var(--px-fs-2); color: var(--dsw-alias-label-secondary); line-height: 1.55; border-left: 2px solid var(--dsw-alias-border-l2); padding-left: 8px; }
+.px-action-readonly .px-action-note { color: var(--dsw-alias-label-secondary); }
 .px-action-section { display: grid; gap: 8px; border-top: 1px solid var(--dsw-alias-border-l1); padding-top: 8px; }
 .px-blocked-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .px-blocked-item { font-size: var(--px-fs-2); color: var(--dsw-alias-state-warn-primary); border-left: 2px solid var(--dsw-alias-state-warn-primary); padding-left: 8px; line-height: 1.45; }

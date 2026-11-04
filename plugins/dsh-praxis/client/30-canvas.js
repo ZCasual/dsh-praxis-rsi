@@ -19,6 +19,10 @@ const CanvasEmptyGraph = Object.freeze({ nodes: Object.freeze([]), edges: Object
 const CanvasSheetBreakpoint = 1180;   // ≤1180 检查器变底部 sheet
 const CanvasSheetSafeRatio = 0.40;    // 焦点节点中心超过该比例就可能被 sheet 遮住
 const CanvasSheetTargetRatio = 0.30;  // 向上平移后焦点节点落在可视上半区中心
+const CanvasInspectorPanelWidth = 360;      // 70-css .px-inspector width
+const CanvasInspectorPanelGap = 12;         // 检查器 right:12
+const CanvasInspectorNodeGap = 16;          // 节点右缘与检查器至少留 16px
+const CanvasNarrowCanvasWidth = 900;        // 画布 <900 视为窄屏（此时检查器是底部 sheet）
 
 const CanvasThemeVars = Object.freeze({
   text: 'var(--dsw-alias-label-primary)',
@@ -83,6 +87,17 @@ function CanvasClamp(value, min, max) {
 
 function CanvasEmptyDraft() {
   return { positions: {}, addedEdges: [], removedNodeIds: [], removedEdgeIds: [] };
+}
+
+/** 底部 sheet 的真实触发条件 = 窗口宽度 ≤1180（70-css @media max-width:1180px），与画布宽度无关。 */
+function CanvasWindowMatchesNarrow() {
+  try {
+    if (typeof window === 'undefined') return false;
+    if (typeof window.matchMedia === 'function') return window.matchMedia('(max-width: ' + CanvasSheetBreakpoint + 'px)').matches === true;
+    return typeof window.innerWidth === 'number' && window.innerWidth < CanvasSheetBreakpoint;
+  } catch (error) {
+    return false;
+  }
 }
 
 function CanvasEmptyLayout() {
@@ -662,6 +677,7 @@ function CanvasView(props) {
   const [CanvasViewportState, setCanvasViewportState] = useState(function () {
     return { width: LayoutDefaultViewport.width, height: LayoutDefaultViewport.height };
   });
+  const [CanvasWindowNarrow, setCanvasWindowNarrow] = useState(CanvasWindowMatchesNarrow);
   const [CanvasCameraState, setCanvasCameraState] = useState(null);
   const [CanvasInternalZoomState, setCanvasInternalZoomState] = useState(null);
   const [CanvasLocalSelectedId, setCanvasLocalSelectedId] = useState(null);
@@ -692,6 +708,22 @@ function CanvasView(props) {
     if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
       window.addEventListener('resize', measure);
       return function () { window.removeEventListener('resize', measure); };
+    }
+    return undefined;
+  }, []);
+
+  useEffect(function () {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
+    const query = window.matchMedia('(max-width: ' + CanvasSheetBreakpoint + 'px)');
+    const update = function (event) { setCanvasWindowNarrow(event && event.matches === true); };
+    setCanvasWindowNarrow(query.matches === true);
+    if (typeof query.addEventListener === 'function') {
+      query.addEventListener('change', update);
+      return function () { query.removeEventListener('change', update); };
+    }
+    if (typeof query.addListener === 'function') {
+      query.addListener(update);
+      return function () { query.removeListener(update); };
     }
     return undefined;
   }, []);
@@ -778,7 +810,7 @@ function CanvasView(props) {
   const CanvasSheetFocusId = CanvasSelectedId || CanvasCurrentId;
   const CanvasSheetPosition = CanvasSheetFocusId ? CanvasLayoutData.positions[CanvasSheetFocusId] : null;
   const CanvasSheetActive = mode === 'run'
-    && CanvasViewportState.width < CanvasSheetBreakpoint
+    && CanvasWindowNarrow
     && (raw.inspectorOpen === undefined ? true : raw.inspectorOpen === true);
   let CanvasSheetOffsetY = 0;
   if (CanvasSheetActive && CanvasSheetPosition) {
@@ -787,13 +819,26 @@ function CanvasView(props) {
       CanvasSheetOffsetY = CanvasViewportState.height * CanvasSheetTargetRatio - focusCenterY;
     }
   }
-  const CanvasPan = { x: CanvasBasePanX, y: CanvasBasePanY + CanvasSheetOffsetY };
+  // S1-A：inspectorOpen 时（含 1440 宽屏右侧 360px 面板）保证焦点节点不被面板遮住：
+  // visibleRight = canvasW - (360 + 12)，节点屏幕右缘超出 visibleRight-16 才左移相机；scale 不变。
+  const CanvasInspectorOpen = raw.inspectorOpen === true;
+  let CanvasInspectorOffsetX = 0;
+  if (CanvasInspectorOpen && CanvasSheetPosition) {
+    const visibleRight = CanvasViewportState.width - (CanvasInspectorPanelWidth + CanvasInspectorPanelGap);
+    const nodeRight = CanvasBasePanX + (CanvasSheetPosition.x + LayoutConstants.nodeW) * CanvasZoom;
+    const limit = visibleRight - CanvasInspectorNodeGap;
+    if (nodeRight > limit) CanvasInspectorOffsetX = limit - nodeRight;
+  }
+  const CanvasPan = { x: CanvasBasePanX + CanvasInspectorOffsetX, y: CanvasBasePanY + CanvasSheetOffsetY };
 
   // D5-2“视口不足”降级：raw fit < 0.75 时不缩字（scale 夹在 0.75），画布内拖动查看并提示。
   const CanvasNaturalScale = useMemo(function () {
     return LayoutNaturalScale(CanvasLayoutData.bounds, CanvasViewportState, 32);
   }, [CanvasLayoutData, CanvasViewportState]);
-  const CanvasViewportInsufficient = CanvasNaturalScale < LayoutFitMinScale - 0.000001;
+  // D5-2 降级：rawFit<0.75，或窄画布(<900)，或 world scale<0.85（1024 全应用 0.762 / 700×600 0.75）
+  const CanvasViewportInsufficient = CanvasNaturalScale < LayoutFitMinScale - 0.000001
+    || CanvasViewportState.width < CanvasNarrowCanvasWidth
+    || CanvasZoom < 0.85 - 0.000001;
 
   const CanvasNodeModels = useMemo(function () {
     const positions = CanvasLayoutData.positions;
@@ -1187,6 +1232,7 @@ function CanvasView(props) {
     className: 'px-canvas-draft',
     'data-testid': 'draft-status',
     role: 'status',
+    style: CanvasViewportInsufficient ? { top: '44px' } : undefined,
     onPointerDown: CanvasStopPointer,
   },
   h('span', null, CanvasDraftText),
@@ -1241,12 +1287,13 @@ function CanvasView(props) {
     }, '定位当前')));
 
   const CanvasViewportHint = CanvasViewportInsufficient ? h('div', {
-    'data-testid': 'viewport-warning',
+    'data-testid': 'viewport-hint',
     style: {
       position: 'absolute',
       left: '10px',
-      bottom: '10px',
-      zIndex: 3,
+      top: '8px',
+      bottom: 'auto',
+      zIndex: 4,
       padding: '3px 8px',
       fontSize: '12px',
       lineHeight: '16px',
@@ -1256,7 +1303,7 @@ function CanvasView(props) {
       borderRadius: '4px',
       pointerEvents: 'none',
     },
-  }, '视口不足：画布可拖拽查看完整流程') : null;
+  }, '视口不足：可拖拽查看完整流程') : null;
 
   const CanvasEmptyHint = !CanvasEffective.nodes.length ? h('div', {
     style: {

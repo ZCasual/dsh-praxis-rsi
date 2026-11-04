@@ -1,5 +1,7 @@
 # 12 · 客户端模块视觉评审 v2
 
+> **01:35 复核注记**：01:18–01:27 的 build 已修复本文件多数 S1/S2（primary 执行、world/data-scale 钩子、阶段进度、角标/字号、泳道导轨、边线、fit 下限、遮罩层 primary）。本文件保留 01:03 快照；**当前结论以 [13-pixel-signoff-v2.md](./13-pixel-signoff-v2.md) 为准**。
+
 > 日期：2026-11-05 01:10（北京时间）。只读评审，未修改任何源码。
 > 依据：`client/` 8 个 part（最后更新 01:03）、[10-v2-contract §5.7](./10-v2-contract.md)、[11 视觉验收清单](./11-visual-acceptance-checklist.md)。
 > 证据限制：`node plugins/dsh-praxis/build-client.mjs --check` 在 01:09 已通过（client.js 与 8 个 part 一致），但 `docs/praxis/screenshots/` 最新仍是 16:41 的旧版本截图，且 `dock-light.png` 与 `canvas-inspector-advanced-light.png` sha256 相同，没有当前 build 的 manifest。**因此本轮没有像素签收，只有静态与几何评审。**旧截图只作历史对照，不作为当前 UI 证据。
@@ -108,7 +110,7 @@
 
 **代码层已消除的旧硬伤（待截图确认）**
 - 单行 60px 运行条替代 84px 品牌头 + 46px 运行条；重复品牌与 9 个等权按钮收进“更多”。
-- 3 泳道 world bbox 1076×304 替代 3166px 一字长蛇；1024 根下 fit≈0.892，理论上 15/15 可见。
+- 3 泳道 world bbox **892×304**（5/5/5）替代 3166px 一字长蛇；1440/1024 签收根 fit=1.0，理论上 15/15 可见。
 - 检查器默认关闭、360 浮层，画布不再被常驻 320 挤压；空态有 3 条泳道骨架 + 最近运行 + 单一 primary。
 - `hardBlocked` 与 soft block 分离（`60-shell.js:74`），由主按钮解决的 blocker 不再自动禁用；空态蓝图禁用。
 - 节点状态有中文映射与 shape 通道（左轨/点/斜纹/双线/glyph），edge 有 execution tone。

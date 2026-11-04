@@ -9,7 +9,9 @@
 | 场景 id | 数据/操作 | 期望根尺寸 | 主题 |
 |---|---|---|---|
 | `running-1440` | 默认 playbook 15 节点；4 done、1 active、10 pending；无 inspector | `.px-shell` = 1160×940（全应用，宿主侧栏 280） | light / dark |
-| `running-1024` | 同上，宿主侧栏折叠或独立挂载 | `.px-shell` = 1024×840 | light / dark |
+| `running-1024` | 同上，宿主侧栏折叠或独立挂载（**签收根**） | `.px-shell` = 1024×840 | light / dark |
+| `running-1024-compat` | 同上，1024 全应用，宿主侧栏 280（**compat，不签收**） | `.px-shell` = 744×840 | light / dark |
+| `running-700` | 同上，700×600 视口 | `.px-shell` = 700×600 | light |
 | `empty` | 无 Run、无 graph；最近 Run 0–3 条 | 同上两个尺寸 | light / dark |
 | `loading` | `/state` 延迟 ≥2s | 1440 | light |
 | `error` | `/state` 返回 500，且无旧 snapshot | 1440 | light |
@@ -56,12 +58,12 @@ function contrast(fg, bg) {
 | ID | 检查项 | 选择器 / 度量方法 | 阈值 | 失败示例 |
 |---|---|---|---|---|
 | **B-V01** | 可见节点比例 | 全部 `.px-node`：`shown()` 且 `inside(nodeRect, canvasRect)` | 100%（15/15；14 节点夹具 14/14） | 12/15，右侧 Prereg Gate 超出 canvas 40px |
-| **B-V02** | 内容包围盒占比 | 节点并集外扩 4px，按视口测 `W/Wc`、`H/Hc`、`area` | 1440：宽≥0.90、高≥0.28、面积≥0.25；1024：宽≥0.85、高≥0.28、面积≥0.28 | 宽 0.75、高 0.09（一字长蛇）或面积 0.24 |
+| **B-V02** | 内容包围盒占比（canonical 892×304） | 节点并集外扩 4px，按测量根测 `W/Wc`、`H/Hc`、`area` | 1440 签收根：宽≥0.75、高≥0.28、面积≥0.24；1024 签收根：宽≥0.85、高≥0.28、面积≥0.28；1024 compat / 700：不套 | 1440 宽 0.769 通过；若用旧阈值 0.90 则假红；面积 <0.24 或高 <0.28 |
 | **B-V03** | primary 按钮数量 | `.px-btn.primary` 且 `shown()`；按场景矩阵 | running/blocked/empty/selected=1；loading=0；error=1（重试）；任意场景 ≤1 | 同屏 3 个黑按钮（新建/冻结/提交） |
 | **B-V04** | 内部码出现次数 | 扫描 `.px-runbar,.px-node,.px-empty*,.px-inspector,.px-run-item` 的可见文本，排除 `[data-technical],code,pre,[data-raw=true]`；见 §3.1 正则 | 0；节点标题 CJK 覆盖 100%；primary 文本不匹配 `^[a-z_]+$` | 节点出现 `gate:prereg`；检查器出现 `prereg_freeze`；`PENDING` |
 | **B-V05** | current/selected 去色可分 | `selected` 场景：DOM 形状断言 + 注入 `html{filter:grayscale(1)}` 截图两节点 ±8px 裁切 | 像素差 ≥0.8%；current 左轨 3px 且亮度差 ≥0.05；selected `outline-style=dashed`、2px、offset 3 | current 与 selected 都是 1px 实线 brand 边框，像素差 0% |
-| **B-V06** | 字号下限（有效） | `effectiveFont()` 取样：节点 title/sub/chip/badge、泳道 label、运行条 title/status、检查器 body/label | title≥11；sub≥9.5；chip/badge/lane≥9；runbar title≥12；runbar status≥10；inspector body≥11.5、label≥10；无可见文本<9 | 1024 下 badge 8.0px；chip 8.9px |
-| **B-V07** | 1024 无横向溢出 | `document.documentElement.scrollWidth ≤ innerWidth`；`shell.scrollWidth ≤ shell.clientWidth`；根尺寸=1024 | 0px 溢出；所有主要区域 rect 在 shell 内 | 页面 scrollWidth=1040；运行条溢出 24px |
+| **B-V06** | 字号下限（有效，仅签收根） | `effectiveFont()` 取样：节点 title/sub/chip、泳道 label、运行条 title/status、检查器 body/label；1440/1024 签收根 fit=1.0 | title≥11；sub≥9.5；chip/lane≥9；runbar title≥12；runbar status≥10；inspector body≥11.5、label≥10；无可读文本<9。1024 compat / 700 不套，必须出提示 | 签收根 title 10.0；chip 8.9 |
+| **B-V07** | 1024 无横向溢出 | `document.documentElement.scrollWidth ≤ innerWidth`；`shell.scrollWidth ≤ shell.clientWidth`；根 1024 签收 / 744 compat | 两种口径均 0px 溢出；所有主要区域 rect 在 shell 内 | 页面 scrollWidth=1040；运行条溢出 24px |
 | **B-V08** | 明暗主题对比度 | 解析 `getComputedStyle` 前景/背景；按 §3.3 配对；亮/暗各测 | 文本≥4.5:1；非文本（左轨/虚线环/箭头/进度/focus）≥3:1 | 暗色 label-secondary 3.1:1；warn chip 3.8:1 |
 | **B-V09** | 空态唯一入口 | `data-scene=empty`：`.px-btn.primary` 数；“新建研究运行”出现数；最近 Run 行数；`.px-node` 数；蓝图是否可用 | primary=1；“新建研究运行”=1；最近 Run≤3 且非 primary；节点=0；泳道骨架标签=3；蓝图禁用 | 空态有“新建研究运行”+“新建运行”两个主入口 |
 | B-V10 | 截断与重叠 | `.px-run-title,.px-node-title span,.px-node-sub,.px-node-chip`：`scrollWidth>clientWidth+1` 时必须 `text-overflow=ellipsis` 且有 title/aria-label；运行条子元素两两相交面积=0 | 0 个无提示截断；0 对重叠 | 标题被裁无 title；primary 与进度重叠 |
@@ -75,6 +77,8 @@ function contrast(fg, bg) {
 | B-V18 | 14 节点夹具 | `nodes-14`：可见数、节点计数文案、泳道标签 | 14/14 可见；计数=14；布局不写死 15 | 少一个节点仍显示 15/15 |
 | B-V19 | 键盘与焦点 | Tab 顺序覆盖 primary/更多/节点；Esc 关 inspector/drawer；focus-visible 计算样式 | 可达；Esc 生效；2px 可见环；对比≥3 | 键盘聚焦无可见环；Esc 不关闭 |
 | B-V20 | 主按钮执行语义 | 无 payload 动作点击 → `/command` 请求；有 payload → inspector 打开且首字段聚焦；blocker 由该动作解决时按钮 enabled | 200ms 内发请求 / 焦点正确 / enabled；不得 dead click | 点击“冻结预注册”只选中节点，不发命令 |
+| **B-V21** | 1024 全应用 compat | `.px-shell` 744×840；15 节点可见；`[data-testid=hint]` 出现；页面/根无横向溢出；画布拖拽改变 pan | 15/15；hint 可见；overflow 0；pan Δ≥10px；不套字号/面积 | 744 宽下节点被裁或没有提示；拿 compat 当签收 |
+| **B-V22** | 700×600 降级 | `.px-shell` 700×600；15 节点可见；hint 可见；拖拽可用 | 15/15；hint 可见；pan 可用；不套字号/面积 | 700 下仍套 0.75 宽阈值假红 |
 
 ## 3. 复杂断言实现
 

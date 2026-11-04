@@ -2,7 +2,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { CDP } from '../../../tools/evidence/cdp.mjs';
-import { checkMetrics, collectMetrics } from '../../../tools/evidence/metrics.mjs';
+import { COMPAT_THRESHOLDS, METRIC_THRESHOLDS, checkMetrics, collectMetrics } from '../../../tools/evidence/metrics.mjs';
 
 /**
  * 浏览器验收门槛（10-v2-contract.md §5.6 / §6 / D2、D5、D6）。
@@ -159,7 +159,22 @@ async function refreshPraxis() {
   await new Promise((resolve) => setTimeout(resolve, 4200));
 }
 
-test('browser §5.6 @1440×1000: 15/15 可见、内容占比 ≥35%、唯一主按钮、0 内部码、0 破坏性控件、无横向溢出', async (t) => {
+async function dragCanvas(dx = 60, dy = 0) {
+  const before = await browser.evaluate(`getComputedStyle(document.querySelector('.px-canvas-world')).transform`);
+  const point = await browser.evaluate(`(() => {
+    const canvas = document.querySelector('.px-canvas');
+    const rect = canvas.getBoundingClientRect();
+    return { x: rect.left + 40, y: rect.top + rect.height - 40 };
+  })()`);
+  await browser.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: point.x, y: point.y, button: 'left', buttons: 1, clickCount: 1 });
+  await browser.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: point.x + dx, y: point.y + dy, button: 'left', buttons: 1 });
+  await browser.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: point.x + dx, y: point.y + dy, button: 'left', buttons: 0, clickCount: 1 });
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  const after = await browser.evaluate(`getComputedStyle(document.querySelector('.px-canvas-world')).transform`);
+  return { before, after, changed: before !== after };
+}
+
+test('browser §5.7 @1440×1000: 15/15 可见、内容占比 ≥35%、唯一主按钮、0 内部码、0 破坏性控件、无横向溢出', async (t) => {
   if (!requireReady(t)) return;
   await seedRun('frozen');
   await refreshPraxis();
@@ -175,21 +190,43 @@ test('browser §5.6 @1440×1000: 15/15 可见、内容占比 ≥35%、唯一主�
     [],
     `scenario=1440x1000-run actual=${JSON.stringify(metrics)} violations=${JSON.stringify(violations)}`,
   );
+  t.diagnostic(`§5.7 1440 metrics=${JSON.stringify({ bboxW: metrics.bboxWidthRatio, bboxH: metrics.bboxHeightRatio, area: metrics.bboxAreaRatio, fontSizeMin: metrics.fontSizeMin, contrast: metrics.contrast })}`);
+  if (metrics.contrast?.status === 'sampled' && metrics.contrast.text !== null) {
+    assert.ok(metrics.contrast.text >= 4.5, `scenario=1440-contrast 正文对比度 actual=${metrics.contrast.text}`);
+    assert.ok(metrics.contrast.nonText === null || metrics.contrast.nonText >= 3.0, `scenario=1440-contrast 非文本 actual=${metrics.contrast.nonText}`);
+  }
 });
 
-test('browser D5-1 @1024×900: 无页面横向溢出、15/15 可见、无控制台错误、<0.75 缩放有 viewport-warning', async (t) => {
+test('browser D5-1 @1024×900（全应用 compat）: 15/15、页面/根溢出 0、viewport-hint、可拖拽', async (t) => {
   if (!requireReady(t)) return;
   browser.consoleErrors.length = 0;
   await browser.setViewport({ width: 1024, height: 900 });
   await new Promise((resolve) => setTimeout(resolve, 600));
   const metrics = await collectMetrics(browser);
   assert.equal(metrics.available, true, `scenario=1024x900 actual=${JSON.stringify(metrics)}`);
-  assert.equal(metrics.horizontalOverflow, 0, `scenario=1024x900 横向溢出 actual=${metrics.horizontalOverflow}`);
+  assert.equal(metrics.horizontalOverflow, 0, `scenario=1024x900 页面横向溢出 actual=${metrics.horizontalOverflow}`);
+  assert.equal(metrics.shellOverflow, 0, `scenario=1024x900 根横向溢出 actual=${metrics.shellOverflow}`);
   assert.equal(metrics.nodeVisible, metrics.nodeTotal, `scenario=1024x900 可见节点 actual=${metrics.nodeVisible}/${metrics.nodeTotal}`);
   if (metrics.worldScale !== null && metrics.worldScale < 0.75) {
-    assert.equal(metrics.viewportWarning, true, `scenario=1024x900 worldScale=${metrics.worldScale} 但缺少 viewport-warning`);
+    assert.equal(metrics.viewportHint, true, `scenario=1024x900 worldScale=${metrics.worldScale} 但缺少 viewport-hint`);
   }
+  const drag = await dragCanvas();
+  assert.equal(drag.changed, true, `scenario=1024x900 画布不可拖拽 transform=${JSON.stringify(drag)}`);
   assert.deepEqual(browser.consoleErrors, [], `scenario=1024x900 控制台错误 actual=${JSON.stringify(browser.consoleErrors)}`);
+  t.diagnostic(`1024 compat metrics=${JSON.stringify({ worldScale: metrics.worldScale, viewportHint: metrics.viewportHint })}`);
+  await browser.setViewport({ width: 1440, height: 1000 });
+});
+
+test('browser D5-1 @700×600（compat）: 15/15、viewport-hint、可拖拽', async (t) => {
+  if (!requireReady(t)) return;
+  await browser.setViewport({ width: 700, height: 600 });
+  await new Promise((resolve) => setTimeout(resolve, 600));
+  const metrics = await collectMetrics(browser);
+  assert.equal(metrics.available, true, `scenario=700x600 actual=${JSON.stringify(metrics)}`);
+  assert.equal(metrics.nodeVisible, metrics.nodeTotal, `scenario=700x600 可见节点 actual=${metrics.nodeVisible}/${metrics.nodeTotal}`);
+  assert.equal(metrics.viewportHint, true, `scenario=700x600 缺少 viewport-hint`);
+  const drag = await dragCanvas(40, 20);
+  assert.equal(drag.changed, true, `scenario=700x600 画布不可拖拽 transform=${JSON.stringify(drag)}`);
   await browser.setViewport({ width: 1440, height: 1000 });
 });
 

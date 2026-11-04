@@ -24,7 +24,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { CDP } from './cdp.mjs';
-import { checkMetrics, collectMetrics } from './metrics.mjs';
+import { COMPAT_THRESHOLDS, METRIC_THRESHOLDS, checkMetrics, collectMetrics } from './metrics.mjs';
 
 const ROOT = resolve(import.meta.dirname, '../..');
 const PLUGIN = join(ROOT, 'plugins/dsh-praxis');
@@ -75,6 +75,7 @@ function parseArgs(argv) {
     else if (arg === '--skip-build-check') options.skipBuildCheck = true;
     else if (arg === '--restart') options.restart = true;
     else if (arg === '--keep-server') options.keepServer = true;
+    else if (arg === '--all') options.all = true;
     else if (arg === '--help') { options.help = true; }
   }
   return options;
@@ -268,7 +269,7 @@ async function applyTheme(browser, theme) {
   };
 }
 
-function registerShot(manifest, { file, viewport, theme, scenario, metrics, themeApplied, note }) {
+function registerShot(manifest, { file, viewport, theme, scenario, metrics, themeApplied, note, expectedMetrics = null }) {
   const absolute = resolve(file);
   const relativePath = relative(ROOT, absolute);
   const sha256 = sha256File(absolute);
@@ -281,7 +282,7 @@ function registerShot(manifest, { file, viewport, theme, scenario, metrics, them
     scenario,
     capturedAt: new Date().toISOString(),
     metrics,
-    metricsViolations: checkMetrics(metrics),
+    metricsViolations: checkMetrics(metrics, expectedMetrics ?? {}),
     note: note ?? null,
   };
   manifest.screenshots = [...(manifest.screenshots ?? []).filter((item) => item.file !== relativePath), entry];
@@ -290,6 +291,7 @@ function registerShot(manifest, { file, viewport, theme, scenario, metrics, them
 
 async function captureAt(browser, options, target, manifest, context) {
   const { viewport, theme, scenario, name, note } = target;
+  const expectedMetrics = target.expectedMetrics ?? null;
   await browser.setViewport(viewport);
   await new Promise((resolvePromise) => setTimeout(resolvePromise, 250));
   const metrics = await collectMetrics(browser);
@@ -303,8 +305,10 @@ async function captureAt(browser, options, target, manifest, context) {
     metrics,
     themeApplied: context.themeApplied,
     note,
+    expectedMetrics: target.expectedMetrics ?? null,
   });
-  const violations = entry.metricsViolations;
+  const violations = entry.metricsViolations.filter((item) => !(expectedMetrics?.allowUnavailable && !metrics.available));
+  entry.metricsViolations = violations;
   process.stdout.write(
     `shot ${relative(ROOT, file)} sha256=${entry.sha256.slice(0, 12)} visible=${metrics.available ? `${metrics.nodeVisible}/${metrics.nodeTotal}` : 'n/a'} primary=${metrics.available ? metrics.primaryCount : 'n/a'} violations=${violations.length}\n`,
   );
@@ -314,8 +318,8 @@ async function captureAt(browser, options, target, manifest, context) {
   return entry;
 }
 
-async function main() {
-  const options = parseArgs(process.argv.slice(2));
+async function main(argv = process.argv.slice(2)) {
+  const options = parseArgs(argv);
   if (options.help) {
     process.stdout.write('usage: node tools/evidence/capture.mjs [--port 3081] [--reuse] [--manage-server] [--theme light|dark] [--scenario fresh,frozen,blocked] [--out dir] [--manifest path]\n');
     return 0;
@@ -451,7 +455,7 @@ async function main() {
       manifest.stateRevision = browserState.json.revision ?? null;
       const runsNow = browserState.json?.view?.runs ?? browserState.json?.runs ?? [];
       const context = { themeApplied: theme.applied };
-      const viewports = [viewport, { width: 1024, height: 900 }];
+      const viewports = [viewport, { width: 1024, height: 900 }, { width: 700, height: 600 }];
       const tagOf = (vp) => `${vp.width}x${vp.height}`;
 
       // 场景 1/4：empty（仅在全新 statePath 下可截；不伪造空态）
@@ -465,6 +469,7 @@ async function main() {
               name: `empty-${options.theme}-${tagOf(vp)}`,
               scenario: 'empty', viewport: vp, theme: options.theme,
               note: `空态（无 Run，${tagOf(vp)}）`,
+              expectedMetrics: { visibleNodeRatio: 0, nodeVisible: 0, bboxWidthRatio: 0, bboxHeightRatio: 0, bboxAreaRatio: 0, primaryCount: 1, internalCodeCount: 0, destructiveControlCount: 0, horizontalOverflow: 0 },
             }, manifest, context);
           }
           await browser.setViewport(viewport);
@@ -478,19 +483,28 @@ async function main() {
       const mainScenario = options.scenarios.includes('frozen') ? 'frozen' : options.scenarios[0] ?? 'frozen';
       const seeded = await seedScenario(browser, mainScenario, { json: browserState.json });
       manifest.scenarios.push({ scenario: mainScenario, ...seeded });
+      // 客户端 4s 轮询：等真实 Run 投影到画布后再截图，避免拍到上一帧/空态。
+      try {
+        await browser.waitFor('document.querySelectorAll(".px-node").length > 0', { timeout: 15000, label: 'seed projected to canvas' });
+      } catch (error) {
+        manifest.errors.push(`seed projection timeout: ${error instanceof Error ? error.message : String(error)}`);
+      }
       await browser.evaluate('window.scrollTo(0,0); true');
 
       for (const vp of viewports) {
         await browser.setViewport(vp);
         await new Promise((resolvePromise) => setTimeout(resolvePromise, 300));
+        const viewportExpected = vp.width >= 1440 ? null : { ...COMPAT_THRESHOLDS };
         await captureAt(browser, options, {
           name: `running-${options.theme}-${tagOf(vp)}`,
           scenario: `running:${mainScenario}`,
           viewport: vp,
           theme: options.theme,
           note: `运行态画布（${tagOf(vp)}）`,
+          expectedMetrics: viewportExpected,
         }, manifest, context);
 
+        if (vp.width < 1024) continue; // 700×600 仅兼容性 running 截图（compat）
         // selected：点选第一个节点并等检查器滑出
         try {
           const clicked = await browser.evaluate(`(() => {
@@ -510,6 +524,7 @@ async function main() {
             viewport: vp,
             theme: options.theme,
             note: `节点选中态（检查器，${tagOf(vp)}）`,
+            expectedMetrics: viewportExpected,
           }, manifest, context);
         } catch (error) {
           manifest.errors.push(`selected screenshot unavailable (${tagOf(vp)}): ${error instanceof Error ? error.message : String(error)}`);
@@ -517,14 +532,20 @@ async function main() {
 
         // blueprint：蓝图模态（D6 拓扑编辑）
         try {
+          const modeBefore = await browser.evaluate(`document.querySelector('.px-shell')?.getAttribute('data-mode')`);
           await browser.clickText('蓝图', { timeout: 6000, selector: 'button, [role="tab"], .px-btn' });
           await new Promise((resolvePromise) => setTimeout(resolvePromise, 400));
+          const modeAfter = await browser.evaluate(`document.querySelector('.px-shell')?.getAttribute('data-mode')`);
+          if (modeAfter === modeBefore) {
+            throw new Error(`blueprint mode not entered (data-mode=${modeAfter})`);
+          }
           await captureAt(browser, options, {
             name: `blueprint-${options.theme}-${tagOf(vp)}`,
             scenario: `blueprint:${mainScenario}`,
             viewport: vp,
             theme: options.theme,
             note: `蓝图模态（拓扑编辑草稿/diff，${tagOf(vp)}）`,
+            expectedMetrics: viewportExpected,
           }, manifest, context);
           await browser.clickText('运行', { timeout: 5000, selector: 'button, [role="tab"], .px-btn' });
           await new Promise((resolvePromise) => setTimeout(resolvePromise, 300));
@@ -532,6 +553,95 @@ async function main() {
           manifest.errors.push(`blueprint screenshot unavailable (${tagOf(vp)}): ${error instanceof Error ? error.message : String(error)}`);
         }
       }
+
+      // designer canonical：干净 1440 light，无抽屉/无选中污染
+      try {
+        await browser.setViewport(viewport);
+        if (options.theme === 'light') {
+          await browser.press('Escape').catch(() => {});
+          try {
+            const corner = await browser.evaluate(`(() => { const c = document.querySelector('.px-canvas'); const r = c.getBoundingClientRect(); return { x: r.left + 20, y: r.top + 20 }; })()`);
+            await browser.clickAt(corner.x, corner.y);
+          } catch {}
+          await new Promise((resolvePromise) => setTimeout(resolvePromise, 350));
+          await captureAt(browser, options, {
+            name: `clean-${options.theme}-1440x1000`,
+            scenario: `clean:${mainScenario}`,
+            viewport,
+            theme: options.theme,
+            note: 'canonical 干净运行态（无抽屉、无选中）',
+          }, manifest, context);
+        }
+      } catch (error) {
+        manifest.errors.push(`clean canonical screenshot unavailable: ${error instanceof Error ? error.message : String(error)}`);
+      }
+
+      // selected 非 current 节点（只读动作）
+      try {
+        const clicked = await browser.evaluate(`(() => {
+          const nodes = [...document.querySelectorAll('.px-node')];
+          const target = nodes.find((node) => !node.classList.contains('is-current')) ?? nodes[1] ?? nodes[0];
+          if (!target) return null;
+          const rect = target.getBoundingClientRect();
+          return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        })()`);
+        if (clicked) {
+          await browser.clickAt(clicked.x, clicked.y);
+          await new Promise((resolvePromise) => setTimeout(resolvePromise, 400));
+          await captureAt(browser, options, {
+            name: `selected-noncurrent-${options.theme}-1440x1000`,
+            scenario: `selected-noncurrent:${mainScenario}`,
+            viewport,
+            theme: options.theme,
+            note: '选中的非 current 节点（只读动作/证据）',
+          }, manifest, context);
+        }
+      } catch (error) {
+        manifest.errors.push(`selected-noncurrent screenshot unavailable: ${error instanceof Error ? error.message : String(error)}`);
+      }
+
+      // drawer/modal
+      try {
+        await browser.press('Escape').catch(() => {});
+        await browser.clickText('更多', { timeout: 5000, selector: 'button, [role="button"], .px-btn, [class*="menu"]' });
+        await new Promise((resolvePromise) => setTimeout(resolvePromise, 250));
+        await browser.clickText('源码', { timeout: 5000, selector: 'button, [role="menuitem"], [class*="item"], a, li, div' });
+        await new Promise((resolvePromise) => setTimeout(resolvePromise, 350));
+        await captureAt(browser, options, {
+          name: `drawer-source-${options.theme}-1440x1000`,
+          scenario: 'drawer:source',
+          viewport,
+          theme: options.theme,
+          note: '源码抽屉（modal）',
+        }, manifest, context);
+        await browser.press('Escape').catch(() => {});
+      } catch (error) {
+        manifest.warnings = [...(manifest.warnings ?? []), `drawer screenshot optional: ${error instanceof Error ? error.message : String(error)}`];
+      }
+
+      // loading 态（重载瞬间的骨架/加载）
+      try {
+        await browser.navigate(tokenUrl);
+        await new Promise((resolvePromise) => setTimeout(resolvePromise, 120));
+        await captureAt(browser, options, {
+          name: `loading-${options.theme}-1440x1000`,
+          scenario: 'loading',
+          viewport,
+          theme: options.theme,
+          note: '加载态（重载瞬间）',
+          expectedMetrics: { ...COMPAT_THRESHOLDS, allowUnavailable: true, visibleNodeRatio: 0, nodeVisible: 0, bboxWidthRatio: 0, bboxHeightRatio: 0, bboxAreaRatio: 0, primaryCount: 0 },
+        }, manifest, context);
+        await openPraxis(browser, options.timeoutMs);
+      } catch (error) {
+        manifest.warnings = [...(manifest.warnings ?? []), `loading screenshot optional: ${error instanceof Error ? error.message : String(error)}`];
+      }
+
+      // 未测场景登记（不写“通过”）
+      manifest.unverifiedScenes = [
+        { scene: 'error', reason: '需注入接口 500/断网；当前 capture 未实现' },
+        { scene: 'stale', reason: '需客户端 StoreSend 触发 409；当前 capture 未实现' },
+        { scene: '14-nodes', reason: '受保护节点约束下尚未定义合法 14 节点自定义图；待 Lead 提供夹具' },
+      ];
 
       // 附加：认知地图（非 D3 必需场景；失败记为 warning，不阻塞 manifest）
       try {
@@ -543,7 +653,7 @@ async function main() {
           await new Promise((resolvePromise) => setTimeout(resolvePromise, 250));
           await browser.clickText('地图', { timeout: 5000, selector: 'button, [role="menuitem"], [class*="item"], a, li, div' });
         }
-        await browser.waitFor('!!document.querySelector(".px-map, [class*="px-map"], [data-mode=\\"map\\"], .px-canvas")', { timeout: 5000 });
+        await browser.waitFor(`!!document.querySelector('[data-mode="map"], .px-map, .px-canvas')`, { timeout: 5000 });
         await new Promise((resolvePromise) => setTimeout(resolvePromise, 400));
         await captureAt(browser, options, {
           name: `cognitive-map-${options.theme}-${viewport.width}x${viewport.height}`,
@@ -608,7 +718,19 @@ async function main() {
 
 const isEntry = import.meta.url === `file://${process.argv[1]}`;
 if (isEntry) {
-  const exitCode = await main();
+  const argv = process.argv.slice(2);
+  if (argv.includes('--all')) {
+    const base = argv.filter((item) => item !== '--all');
+    const withScenario = base.includes('--scenario') ? base : [...base, '--scenario', 'empty,frozen'];
+    let exitCode = 0;
+    for (const theme of ['light', 'dark']) {
+      const runArgs = [...withScenario.filter((item, index) => !(item === '--theme' || (index > 0 && withScenario[index - 1] === '--theme'))), '--theme', theme];
+      const code = await main(runArgs);
+      if (code !== 0) exitCode = code;
+    }
+    process.exit(exitCode);
+  }
+  const exitCode = await main(argv);
   process.exit(exitCode);
 }
 

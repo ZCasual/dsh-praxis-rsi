@@ -23,6 +23,43 @@ node --test test/praxis/*.test.js 2>&1 | grep -E '^(✖|ℹ (tests|pass|fail))'
 无测试依赖、无网络、无文件系统写入：`store.test.js` 用内存 fake domain，
 `http.test.js` 用 fake `req`/`res`。仅依赖 Node 内置 `node:test`/`node:assert`。
 
+## v2 契约测试与证据工具（2026-11-05）
+
+权威契约：`docs/praxis/redesign/10-v2-contract.md`（v2，冻结）。
+
+| 文件 | 覆盖 |
+|---|---|
+| `engine-v2.test.js` | T1.1 question / T1.2 QUESTION_REQUIRED / T1.3 INVALID_TRANSITION / T4.1 fork 纯净性 / T4.2 fork 门禁 / T4.3 dump 迁移与幂等 |
+| `graph-v2.test.js` | 双轴状态 / T2.1 receipt 驱动 / T2.2 拓扑钳制 / I1–I6 审计 / T4.1–T4.2 图投影 / T5.1 布局 / T5.2 迁移 / T6.1 V10 / T6.2 derivePort / T6.3 V11 / T7.1 graphView |
+| `wire-v2.test.js` | T8.1 wireVersion=2 / T8.2 catalog / T8.3 view.graph / T8.4 state 信封 / T8.5 200-409-422 / T8.6 GET/POST graph + expectedRevision / T8.7 evidence |
+| `client-build.test.js` | §4.1 模块拆分、`build-client.mjs --check` 不写盘 |
+| `acceptance/browser.test.js` | §5.6 / D5-1 / D6：真实 Chrome+CDP 浏览器断言（1440 指标、1024 溢出/warning、内部码、主按钮唯一、truthful projection、暗色独立实例） |
+
+```bash
+# 契约/不变量（D1）
+node --test test/praxis/*.test.js
+
+# 浏览器验收（D2；Node 25 不接受目录参数，须用文件/glob）
+node --test test/praxis/acceptance/browser.test.js
+
+# 证据（D3）：capture 自管实例（随机端口 + 独立 statePath/profile），生成 manifest
+node tools/evidence/capture.mjs --all
+```
+
+`--all` = light + dark 各跑一次自管实例，场景矩阵 1440×1000 / 1024×900 ×
+`empty` / `running` / `selected` / `blueprint`（≥8 张），写入
+`docs/praxis/evidence/manifest.json`（sha256、build hash、git commit、node/package 版本、
+端口、打码 token URL、statePath、viewport、theme、scenario、time、§5.6 metrics）。
+
+浏览器验收的 skip 规则：3081/指定实例不可达、缺 token 或缺 Chrome 时显式
+`t.skip(原因)`，绝不静默通过。暗色断言只能对独立 dark 实例运行
+（`PRAXIS_THEME=dark`；capture 用 `ui-theme.preference=dark` patch 启动）；
+light 实例上暗色用例显式 skip 并打印原因。
+
+当前浏览器验收结果（2026-11-05 01:5x，latest build）：
+- light 实例：5 pass / 0 fail / 1 skip（暗色需要独立实例）
+- dark 实例：6 pass / 0 fail / 0 skip
+
 ## 当前状态（2026-11-04 14:5x CST，已验收）
 
 ```text

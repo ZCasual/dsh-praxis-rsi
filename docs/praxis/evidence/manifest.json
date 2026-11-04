@@ -1,37 +1,1913 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-04T17:35:57.173Z",
+  "generatedAt": "2026-11-04T18:00:55.668Z",
   "node": "v25.2.0",
   "packageVersion": "0.2.0",
-  "gitCommit": "8ae124c",
-  "buildHash": "f24a6badf54042c74549b5c8682dee2ec4fec73f71e00c7aed94f7cb2052f1a2",
-  "bundleSha256": "f24a6badf54042c74549b5c8682dee2ec4fec73f71e00c7aed94f7cb2052f1a2",
+  "gitCommit": "54e4305",
+  "buildHash": "7b286197f2460b11bfbf972fd63fc6eb68ab2a85f6f9fc7a4c04a519dbf7090d",
+  "bundleSha256": "7b286197f2460b11bfbf972fd63fc6eb68ab2a85f6f9fc7a4c04a519dbf7090d",
   "buildChecked": true,
-  "port": 35471,
-  "url": "http://127.0.0.1:35471/?token=7heJ…Wlr4",
-  "statePath": "/tmp/praxis-acceptance/state-capture-132292-35471.json",
-  "chromeProfile": "/tmp/praxis-acceptance/chrome-profile-capture-132292-35471",
+  "port": 45629,
+  "url": "http://127.0.0.1:45629/?token=RViH…E2fM",
+  "statePath": "/tmp/praxis-acceptance/state-capture-142029-45629.json",
+  "chromeProfile": "/tmp/praxis-acceptance/chrome-profile-capture-142029-45629",
   "server": {
     "reused": false,
-    "port": 35471,
-    "pid": 132313,
-    "statePath": "/tmp/praxis-acceptance/state-capture-132292-35471.json",
-    "theme": "light",
-    "command": "dsh web --patch /tmp/praxis-acceptance/patch-35471.yml --port 35471 --no-open",
-    "patch": "/tmp/praxis-acceptance/patch-35471.yml",
-    "log": "/tmp/praxis-acceptance/server-35471.log",
+    "port": 45629,
+    "pid": 142480,
+    "statePath": "/tmp/praxis-acceptance/state-capture-142029-45629.json",
+    "theme": "dark",
+    "command": "dsh web --patch /tmp/praxis-acceptance/patch-45629.yml --port 45629 --no-open",
+    "patch": "/tmp/praxis-acceptance/patch-45629.yml",
+    "log": "/tmp/praxis-acceptance/server-45629.log",
     "probeStatus": 200,
     "stopped": true
   },
-  "theme": null,
-  "scenarios": [],
-  "screenshots": [],
-  "metricViolations": [],
-  "warnings": [],
-  "errors": [
-    "waitFor timeout (document ready): document.readyState === \"complete\"; last error: CDP socket closed"
+  "theme": {
+    "requested": "dark",
+    "applied": true,
+    "mechanism": "CDP Emulation.setEmulatedMedia + host theme source"
+  },
+  "scenarios": [
+    {
+      "scenario": "empty",
+      "status": "seeded",
+      "note": "no run"
+    },
+    {
+      "scenario": "frozen",
+      "status": "seeded",
+      "runId": "run_67d80a24",
+      "expected": "PREREG_FROZEN"
+    }
   ],
-  "ok": false,
+  "screenshots": [
+    {
+      "file": "docs/praxis/screenshots/v2/blueprint-dark-1024x900.png",
+      "sha256": "0abb2ffa7fa253ccceff22643312017938eff2b970c41f59d9de0a8684d8a8f2",
+      "viewport": "1024x900",
+      "theme": "dark",
+      "themeApplied": true,
+      "scenario": "blueprint:frozen",
+      "capturedAt": "2026-11-04T18:01:41.554Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1024,
+          "height": 900
+        },
+        "canvas": {
+          "width": 744,
+          "height": 840
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.2506186614252685,
+        "bboxWidthRatio": 0.9111827727287046,
+        "bboxHeightRatio": 0.2750476292201451,
+        "bboxAreaRatio": 0.2506186614252685,
+        "shellWidth": 744,
+        "shellHeight": 900,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 7.62,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "data-testid=primary",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "保存蓝图"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 0.762,
+        "viewportHint": true,
+        "themeSource": "dark",
+        "bodyBackground": "rgb(21, 21, 23)",
+        "pageScrollHeight": 900
+      },
+      "metricsViolations": [],
+      "note": "蓝图模态（拓扑编辑草稿/diff，1024x900）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
+      "sha256": "10867aa5e43dfe86a078bbca18c3c5814c4520ba8c29d5f84ec0b879e7378e97",
+      "viewport": "1440x1000",
+      "theme": "dark",
+      "themeApplied": true,
+      "scenario": "blueprint:frozen",
+      "capturedAt": "2026-11-04T18:01:39.148Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "canvas": {
+          "width": 1160,
+          "height": 940
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.24868672046955245,
+        "bboxWidthRatio": 0.7689655172413793,
+        "bboxHeightRatio": 0.32340425531914896,
+        "bboxAreaRatio": 0.24868672046955245,
+        "shellWidth": 1160,
+        "shellHeight": 1000,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 10,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "data-testid=primary",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "保存蓝图"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 1,
+        "viewportHint": false,
+        "themeSource": "dark",
+        "bodyBackground": "rgb(21, 21, 23)",
+        "pageScrollHeight": 1000
+      },
+      "metricsViolations": [],
+      "note": "蓝图模态（拓扑编辑草稿/diff，1440x1000）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/blueprint-dark-700x600.png",
+      "sha256": "348fdfe913f619d6c0524cd0e0c65ea440b089645032f8b179430cff054422ad",
+      "viewport": "700x600",
+      "theme": "dark",
+      "themeApplied": true,
+      "scenario": "blueprint:frozen",
+      "capturedAt": "2026-11-04T17:58:42.989Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 700,
+          "height": 600
+        },
+        "canvas": {
+          "width": 644,
+          "height": 540
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.4386128364389234,
+        "bboxWidthRatio": 1.0388198757763976,
+        "bboxHeightRatio": 0.4222222222222222,
+        "bboxAreaRatio": 0.4386128364389234,
+        "shellWidth": 644,
+        "shellHeight": 600,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 7.5,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "data-testid=primary",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "提交讨论"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 0.75,
+        "viewportHint": true,
+        "themeSource": "dark",
+        "bodyBackground": "rgb(21, 21, 23)",
+        "pageScrollHeight": 600
+      },
+      "metricsViolations": [],
+      "note": "蓝图模态（拓扑编辑草稿/diff，700x600）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/blueprint-light-1024x900.png",
+      "sha256": "e9035d90771404341ffcb94d229918adbbd6ba9da59f36c5f8efdefde735622d",
+      "viewport": "1024x900",
+      "theme": "light",
+      "themeApplied": true,
+      "scenario": "blueprint:frozen",
+      "capturedAt": "2026-11-04T18:00:46.521Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1024,
+          "height": 900
+        },
+        "canvas": {
+          "width": 744,
+          "height": 840
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.2506186614252685,
+        "bboxWidthRatio": 0.9111827727287046,
+        "bboxHeightRatio": 0.2750476292201451,
+        "bboxAreaRatio": 0.2506186614252685,
+        "shellWidth": 744,
+        "shellHeight": 900,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 7.62,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "data-testid=primary",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "保存蓝图"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 0.762,
+        "viewportHint": true,
+        "themeSource": "light",
+        "bodyBackground": "rgb(255, 255, 255)",
+        "pageScrollHeight": 900
+      },
+      "metricsViolations": [],
+      "note": "蓝图模态（拓扑编辑草稿/diff，1024x900）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
+      "sha256": "e0912879e004979ee0e69cedc7c149917377d03313362d21bb74f188d850d105",
+      "viewport": "1440x1000",
+      "theme": "light",
+      "themeApplied": true,
+      "scenario": "blueprint:frozen",
+      "capturedAt": "2026-11-04T18:00:44.074Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "canvas": {
+          "width": 1160,
+          "height": 940
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.24868672046955245,
+        "bboxWidthRatio": 0.7689655172413793,
+        "bboxHeightRatio": 0.32340425531914896,
+        "bboxAreaRatio": 0.24868672046955245,
+        "shellWidth": 1160,
+        "shellHeight": 1000,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 10,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "data-testid=primary",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "保存蓝图"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 1,
+        "viewportHint": false,
+        "themeSource": "light",
+        "bodyBackground": "rgb(255, 255, 255)",
+        "pageScrollHeight": 1000
+      },
+      "metricsViolations": [],
+      "note": "蓝图模态（拓扑编辑草稿/diff，1440x1000）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/blueprint-light-700x600.png",
+      "sha256": "658f81bd04a3c7cf2189c313cbb24cf8e6e9dc3affa0b0415f0d8fca0926aa68",
+      "viewport": "700x600",
+      "theme": "light",
+      "themeApplied": true,
+      "scenario": "blueprint:frozen",
+      "capturedAt": "2026-11-04T17:57:46.014Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 700,
+          "height": 600
+        },
+        "canvas": {
+          "width": 644,
+          "height": 540
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.4386128364389234,
+        "bboxWidthRatio": 1.0388198757763976,
+        "bboxHeightRatio": 0.4222222222222222,
+        "bboxAreaRatio": 0.4386128364389234,
+        "shellWidth": 644,
+        "shellHeight": 600,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 7.5,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "data-testid=primary",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "提交讨论"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 0.75,
+        "viewportHint": true,
+        "themeSource": "light",
+        "bodyBackground": "rgb(255, 255, 255)",
+        "pageScrollHeight": 600
+      },
+      "metricsViolations": [],
+      "note": "蓝图模态（拓扑编辑草稿/diff，700x600）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
+      "sha256": "d160f5ae165a8872b8668ee5a8875d2ba214d518c3763911d30340d43ff6987a",
+      "viewport": "1440x1000",
+      "theme": "light",
+      "themeApplied": true,
+      "scenario": "clean:frozen",
+      "capturedAt": "2026-11-04T18:00:48.185Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "canvas": {
+          "width": 1160,
+          "height": 940
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.24868672046955245,
+        "bboxWidthRatio": 0.7689655172413793,
+        "bboxHeightRatio": 0.32340425531914896,
+        "bboxAreaRatio": 0.24868672046955245,
+        "shellWidth": 1160,
+        "shellHeight": 1000,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 10,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "data-testid=primary",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "提交讨论"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 1,
+        "viewportHint": false,
+        "themeSource": "light",
+        "bodyBackground": "rgb(255, 255, 255)",
+        "pageScrollHeight": 1000
+      },
+      "metricsViolations": [],
+      "note": "canonical 干净运行态（无抽屉、无选中）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
+      "sha256": "3adbc38e9083e7193209383ac8c6abb167938a1e76cc04e0cbf6d7596a8ebe83",
+      "viewport": "1440x1000",
+      "theme": "dark",
+      "themeApplied": true,
+      "scenario": "map:frozen",
+      "capturedAt": "2026-11-04T18:01:49.815Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "canvas": {
+          "width": 1160,
+          "height": 940
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.24868672046955245,
+        "bboxWidthRatio": 0.7689655172413793,
+        "bboxHeightRatio": 0.32340425531914896,
+        "bboxAreaRatio": 0.24868672046955245,
+        "shellWidth": 1160,
+        "shellHeight": 1000,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 10,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "class-fallback",
+        "primaryCount": 0,
+        "primaryTexts": [],
+        "primaryClassNames": [],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 1,
+        "viewportHint": false,
+        "themeSource": "dark",
+        "bodyBackground": "rgb(21, 21, 23)",
+        "pageScrollHeight": 1000
+      },
+      "metricsViolations": [
+        {
+          "metric": "primaryCount",
+          "expected": 1,
+          "actual": 0,
+          "texts": []
+        }
+      ],
+      "note": "认知地图"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
+      "sha256": "ca9a32e8892a02158343f2e9f6e9d7750a203461d9fe5bdeef18eb0d19503e3f",
+      "viewport": "1440x1000",
+      "theme": "light",
+      "themeApplied": true,
+      "scenario": "map:frozen",
+      "capturedAt": "2026-11-04T18:00:55.449Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "canvas": {
+          "width": 1160,
+          "height": 940
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.24868672046955245,
+        "bboxWidthRatio": 0.7689655172413793,
+        "bboxHeightRatio": 0.32340425531914896,
+        "bboxAreaRatio": 0.24868672046955245,
+        "shellWidth": 1160,
+        "shellHeight": 1000,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 10,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "class-fallback",
+        "primaryCount": 0,
+        "primaryTexts": [],
+        "primaryClassNames": [],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 1,
+        "viewportHint": false,
+        "themeSource": "light",
+        "bodyBackground": "rgb(255, 255, 255)",
+        "pageScrollHeight": 1000
+      },
+      "metricsViolations": [
+        {
+          "metric": "primaryCount",
+          "expected": 1,
+          "actual": 0,
+          "texts": []
+        }
+      ],
+      "note": "认知地图"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/drawer-source-dark-1440x1000.png",
+      "sha256": "d2dbd2b904dea323fffd67ceebce53d1239a180ba022ad14b1d5488635d82b86",
+      "viewport": "1440x1000",
+      "theme": "dark",
+      "themeApplied": true,
+      "scenario": "drawer:source",
+      "capturedAt": "2026-11-04T18:01:44.310Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "canvas": {
+          "width": 1160,
+          "height": 940
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.24868672046955245,
+        "bboxWidthRatio": 0.7689655172413793,
+        "bboxHeightRatio": 0.32340425531914896,
+        "bboxAreaRatio": 0.24868672046955245,
+        "shellWidth": 1160,
+        "shellHeight": 1000,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 10,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 1,
+        "primarySelector": "class-fallback",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "保存"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 1,
+        "viewportHint": false,
+        "themeSource": "dark",
+        "bodyBackground": "rgb(21, 21, 23)",
+        "pageScrollHeight": 1000
+      },
+      "metricsViolations": [],
+      "note": "源码抽屉（modal）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/drawer-source-light-1440x1000.png",
+      "sha256": "87ba7ae2b70ffd7f28cfd3b597a8c694e2753c0dda20de4a8b804dd10b12f983",
+      "viewport": "1440x1000",
+      "theme": "light",
+      "themeApplied": true,
+      "scenario": "drawer:source",
+      "capturedAt": "2026-11-04T18:00:50.010Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "canvas": {
+          "width": 1160,
+          "height": 940
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.24868672046955245,
+        "bboxWidthRatio": 0.7689655172413793,
+        "bboxHeightRatio": 0.32340425531914896,
+        "bboxAreaRatio": 0.24868672046955245,
+        "shellWidth": 1160,
+        "shellHeight": 1000,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 10,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 1,
+        "primarySelector": "class-fallback",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "保存"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 1,
+        "viewportHint": false,
+        "themeSource": "light",
+        "bodyBackground": "rgb(255, 255, 255)",
+        "pageScrollHeight": 1000
+      },
+      "metricsViolations": [],
+      "note": "源码抽屉（modal）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/empty-dark-1024x900.png",
+      "sha256": "ef8f23adb700c758634f28bdd766fc6045d74feedfc8b156103e5510f2194db3",
+      "viewport": "1024x900",
+      "theme": "dark",
+      "themeApplied": true,
+      "scenario": "empty",
+      "capturedAt": "2026-11-04T18:01:27.023Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1024,
+          "height": 900
+        },
+        "canvas": {
+          "width": 1024,
+          "height": 900
+        },
+        "nodeTotal": 0,
+        "nodeVisible": 0,
+        "visibleNodeRatio": 0,
+        "contentBBoxRatio": 0,
+        "bboxWidthRatio": 0,
+        "bboxHeightRatio": 0,
+        "bboxAreaRatio": 0,
+        "shellWidth": 744,
+        "shellHeight": 900,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 13,
+        "fontSizeMin": 13,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "未测"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "class-fallback",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "新建研究运行"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": null,
+        "viewportHint": false,
+        "themeSource": "dark",
+        "bodyBackground": "rgb(21, 21, 23)",
+        "pageScrollHeight": 900
+      },
+      "metricsViolations": [],
+      "note": "空态（无 Run，1024x900）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/empty-dark-1440x1000.png",
+      "sha256": "989aa486192536881f9bf32a1d38eabbed9b7dcbc8deeba7e2a5dc4df783878a",
+      "viewport": "1440x1000",
+      "theme": "dark",
+      "themeApplied": true,
+      "scenario": "empty",
+      "capturedAt": "2026-11-04T18:01:26.461Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "canvas": {
+          "width": 1440,
+          "height": 1000
+        },
+        "nodeTotal": 0,
+        "nodeVisible": 0,
+        "visibleNodeRatio": 0,
+        "contentBBoxRatio": 0,
+        "bboxWidthRatio": 0,
+        "bboxHeightRatio": 0,
+        "bboxAreaRatio": 0,
+        "shellWidth": 1160,
+        "shellHeight": 1000,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 13,
+        "fontSizeMin": 13,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "未测"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "class-fallback",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "新建研究运行"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": null,
+        "viewportHint": false,
+        "themeSource": "dark",
+        "bodyBackground": "rgb(21, 21, 23)",
+        "pageScrollHeight": 1000
+      },
+      "metricsViolations": [],
+      "note": "空态（无 Run，1440x1000）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/empty-dark-700x600.png",
+      "sha256": "7f3360ff73691a8961d2e69391ef12af549348f5d4765ff1b6b5a1f1dd24a8a6",
+      "viewport": "700x600",
+      "theme": "dark",
+      "themeApplied": true,
+      "scenario": "empty",
+      "capturedAt": "2026-11-04T18:01:27.574Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 700,
+          "height": 600
+        },
+        "canvas": {
+          "width": 700,
+          "height": 600
+        },
+        "nodeTotal": 0,
+        "nodeVisible": 0,
+        "visibleNodeRatio": 0,
+        "contentBBoxRatio": 0,
+        "bboxWidthRatio": 0,
+        "bboxHeightRatio": 0,
+        "bboxAreaRatio": 0,
+        "shellWidth": 644,
+        "shellHeight": 600,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 13,
+        "fontSizeMin": 13,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "未测"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "class-fallback",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "新建研究运行"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": null,
+        "viewportHint": false,
+        "themeSource": "dark",
+        "bodyBackground": "rgb(21, 21, 23)",
+        "pageScrollHeight": 600
+      },
+      "metricsViolations": [],
+      "note": "空态（无 Run，700x600）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/empty-light-1024x900.png",
+      "sha256": "bcc42f4e6c84d54c474e4fe51893406ef25d3b22fcae4dd41c6a45ca04375d2a",
+      "viewport": "1024x900",
+      "theme": "light",
+      "themeApplied": true,
+      "scenario": "empty",
+      "capturedAt": "2026-11-04T18:00:31.272Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1024,
+          "height": 900
+        },
+        "canvas": {
+          "width": 1024,
+          "height": 900
+        },
+        "nodeTotal": 0,
+        "nodeVisible": 0,
+        "visibleNodeRatio": 0,
+        "contentBBoxRatio": 0,
+        "bboxWidthRatio": 0,
+        "bboxHeightRatio": 0,
+        "bboxAreaRatio": 0,
+        "shellWidth": 744,
+        "shellHeight": 900,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 13,
+        "fontSizeMin": 13,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "未测"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "class-fallback",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "新建研究运行"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": null,
+        "viewportHint": false,
+        "themeSource": "light",
+        "bodyBackground": "rgb(255, 255, 255)",
+        "pageScrollHeight": 900
+      },
+      "metricsViolations": [],
+      "note": "空态（无 Run，1024x900）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
+      "sha256": "b88504a42adf8e0ccf4a0aef215be413ce22e6fd42e6e43520157e860ae7ef64",
+      "viewport": "1440x1000",
+      "theme": "light",
+      "themeApplied": true,
+      "scenario": "empty",
+      "capturedAt": "2026-11-04T18:00:30.663Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "canvas": {
+          "width": 1440,
+          "height": 1000
+        },
+        "nodeTotal": 0,
+        "nodeVisible": 0,
+        "visibleNodeRatio": 0,
+        "contentBBoxRatio": 0,
+        "bboxWidthRatio": 0,
+        "bboxHeightRatio": 0,
+        "bboxAreaRatio": 0,
+        "shellWidth": 1160,
+        "shellHeight": 1000,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 13,
+        "fontSizeMin": 13,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "未测"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "class-fallback",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "新建研究运行"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": null,
+        "viewportHint": false,
+        "themeSource": "light",
+        "bodyBackground": "rgb(255, 255, 255)",
+        "pageScrollHeight": 1000
+      },
+      "metricsViolations": [],
+      "note": "空态（无 Run，1440x1000）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/empty-light-700x600.png",
+      "sha256": "2fb1fb83b4ecb2304e536dc916aa657df81fddfeb70fcf704e4a3ab88afabae4",
+      "viewport": "700x600",
+      "theme": "light",
+      "themeApplied": true,
+      "scenario": "empty",
+      "capturedAt": "2026-11-04T18:00:31.830Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 700,
+          "height": 600
+        },
+        "canvas": {
+          "width": 700,
+          "height": 600
+        },
+        "nodeTotal": 0,
+        "nodeVisible": 0,
+        "visibleNodeRatio": 0,
+        "contentBBoxRatio": 0,
+        "bboxWidthRatio": 0,
+        "bboxHeightRatio": 0,
+        "bboxAreaRatio": 0,
+        "shellWidth": 644,
+        "shellHeight": 600,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 13,
+        "fontSizeMin": 13,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "未测"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "class-fallback",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "新建研究运行"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": null,
+        "viewportHint": false,
+        "themeSource": "light",
+        "bodyBackground": "rgb(255, 255, 255)",
+        "pageScrollHeight": 600
+      },
+      "metricsViolations": [],
+      "note": "空态（无 Run，700x600）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/loading-dark-1440x1000.png",
+      "sha256": "394e330c8baec7718fd4d58e65b20f1529884cc3be33f2e28a2b6c0e2a14d689",
+      "viewport": "1440x1000",
+      "theme": "dark",
+      "themeApplied": true,
+      "scenario": "loading",
+      "capturedAt": "2026-11-04T18:01:45.628Z",
+      "metrics": {
+        "available": false,
+        "reason": "no .px-shell (Praxis panel not mounted)"
+      },
+      "metricsViolations": [],
+      "note": "加载态（重载瞬间）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/loading-light-1440x1000.png",
+      "sha256": "4b23153da47d17938de33a19f64c04ba7d849aa5f855eae631a8b692659345c6",
+      "viewport": "1440x1000",
+      "theme": "light",
+      "themeApplied": true,
+      "scenario": "loading",
+      "capturedAt": "2026-11-04T18:00:51.298Z",
+      "metrics": {
+        "available": false,
+        "reason": "no .px-shell (Praxis panel not mounted)"
+      },
+      "metricsViolations": [],
+      "note": "加载态（重载瞬间）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/running-dark-1024x900.png",
+      "sha256": "4d922c4f9b1f8747bd08d7dcf97380f467fd872c442f38f97da80686b64593e8",
+      "viewport": "1024x900",
+      "theme": "dark",
+      "themeApplied": true,
+      "scenario": "running:frozen",
+      "capturedAt": "2026-11-04T18:01:40.098Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1024,
+          "height": 900
+        },
+        "canvas": {
+          "width": 744,
+          "height": 840
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.2506186614252685,
+        "bboxWidthRatio": 0.9111827727287046,
+        "bboxHeightRatio": 0.2750476292201451,
+        "bboxAreaRatio": 0.2506186614252685,
+        "shellWidth": 744,
+        "shellHeight": 900,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 7.62,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "data-testid=primary",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "提交讨论"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 0.762,
+        "viewportHint": true,
+        "themeSource": "dark",
+        "bodyBackground": "rgb(21, 21, 23)",
+        "pageScrollHeight": 900
+      },
+      "metricsViolations": [],
+      "note": "运行态画布（1024x900）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/running-dark-1440x1000.png",
+      "sha256": "46b9ac893ca8195c8ecc936cf063e4207e7c6acb621efcb55e3c178ed4edcecc",
+      "viewport": "1440x1000",
+      "theme": "dark",
+      "themeApplied": true,
+      "scenario": "running:frozen",
+      "capturedAt": "2026-11-04T18:01:37.634Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "canvas": {
+          "width": 1160,
+          "height": 940
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.24868672046955245,
+        "bboxWidthRatio": 0.7689655172413793,
+        "bboxHeightRatio": 0.32340425531914896,
+        "bboxAreaRatio": 0.24868672046955245,
+        "shellWidth": 1160,
+        "shellHeight": 1000,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 10,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "data-testid=primary",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "提交讨论"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 1,
+        "viewportHint": false,
+        "themeSource": "dark",
+        "bodyBackground": "rgb(21, 21, 23)",
+        "pageScrollHeight": 1000
+      },
+      "metricsViolations": [],
+      "note": "运行态画布（1440x1000）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/running-dark-700x600.png",
+      "sha256": "20a31ccdce69246513e2130a340f62f8c66b3ffcb555f9e49e3921e7d3f3bcc5",
+      "viewport": "700x600",
+      "theme": "dark",
+      "themeApplied": true,
+      "scenario": "running:frozen",
+      "capturedAt": "2026-11-04T18:01:42.480Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 700,
+          "height": 600
+        },
+        "canvas": {
+          "width": 644,
+          "height": 540
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.4386128364389234,
+        "bboxWidthRatio": 1.0388198757763976,
+        "bboxHeightRatio": 0.4222222222222222,
+        "bboxAreaRatio": 0.4386128364389234,
+        "shellWidth": 644,
+        "shellHeight": 600,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 7.5,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "data-testid=primary",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "提交讨论"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 0.75,
+        "viewportHint": true,
+        "themeSource": "dark",
+        "bodyBackground": "rgb(21, 21, 23)",
+        "pageScrollHeight": 600
+      },
+      "metricsViolations": [],
+      "note": "运行态画布（700x600）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/running-light-1024x900.png",
+      "sha256": "8184f6d008bcdefe9ba5eb85a1ce6c064878fe67fd91dc0e0944be70bfb60afd",
+      "viewport": "1024x900",
+      "theme": "light",
+      "themeApplied": true,
+      "scenario": "running:frozen",
+      "capturedAt": "2026-11-04T18:00:45.036Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1024,
+          "height": 900
+        },
+        "canvas": {
+          "width": 744,
+          "height": 840
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.2506186614252685,
+        "bboxWidthRatio": 0.9111827727287046,
+        "bboxHeightRatio": 0.2750476292201451,
+        "bboxAreaRatio": 0.2506186614252685,
+        "shellWidth": 744,
+        "shellHeight": 900,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 7.62,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "data-testid=primary",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "提交讨论"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 0.762,
+        "viewportHint": true,
+        "themeSource": "light",
+        "bodyBackground": "rgb(255, 255, 255)",
+        "pageScrollHeight": 900
+      },
+      "metricsViolations": [],
+      "note": "运行态画布（1024x900）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/running-light-1440x1000.png",
+      "sha256": "8d15faf9e9aaba6a4ef3927c7af75df340c8bb4b251dca513abd9db061095d04",
+      "viewport": "1440x1000",
+      "theme": "light",
+      "themeApplied": true,
+      "scenario": "running:frozen",
+      "capturedAt": "2026-11-04T18:00:42.557Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "canvas": {
+          "width": 1160,
+          "height": 940
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.24868672046955245,
+        "bboxWidthRatio": 0.7689655172413793,
+        "bboxHeightRatio": 0.32340425531914896,
+        "bboxAreaRatio": 0.24868672046955245,
+        "shellWidth": 1160,
+        "shellHeight": 1000,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 10,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "data-testid=primary",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "提交讨论"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 1,
+        "viewportHint": false,
+        "themeSource": "light",
+        "bodyBackground": "rgb(255, 255, 255)",
+        "pageScrollHeight": 1000
+      },
+      "metricsViolations": [],
+      "note": "运行态画布（1440x1000）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/running-light-700x600.png",
+      "sha256": "b1e9b4999ede6c96862169c997942ecf234f354db009c94fddc2fd56fde295dc",
+      "viewport": "700x600",
+      "theme": "light",
+      "themeApplied": true,
+      "scenario": "running:frozen",
+      "capturedAt": "2026-11-04T18:00:47.450Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 700,
+          "height": 600
+        },
+        "canvas": {
+          "width": 644,
+          "height": 540
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.4386128364389234,
+        "bboxWidthRatio": 1.0388198757763976,
+        "bboxHeightRatio": 0.4222222222222222,
+        "bboxAreaRatio": 0.4386128364389234,
+        "shellWidth": 644,
+        "shellHeight": 600,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 7.5,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "data-testid=primary",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "提交讨论"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 0.75,
+        "viewportHint": true,
+        "themeSource": "light",
+        "bodyBackground": "rgb(255, 255, 255)",
+        "pageScrollHeight": 600
+      },
+      "metricsViolations": [],
+      "note": "运行态画布（700x600）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/selected-dark-1024x900.png",
+      "sha256": "82f4b75c7bbdca10ce53e6b99892b587001c9d6d29dbb556ff43045f9295bddb",
+      "viewport": "1024x900",
+      "theme": "dark",
+      "themeApplied": true,
+      "scenario": "selected:frozen",
+      "capturedAt": "2026-11-04T18:01:40.820Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1024,
+          "height": 900
+        },
+        "canvas": {
+          "width": 744,
+          "height": 840
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.2506186614252685,
+        "bboxWidthRatio": 0.9111827727287046,
+        "bboxHeightRatio": 0.2750476292201451,
+        "bboxAreaRatio": 0.2506186614252685,
+        "shellWidth": 744,
+        "shellHeight": 900,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 7.62,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "data-testid=primary",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "提交讨论"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 0.762,
+        "viewportHint": true,
+        "themeSource": "dark",
+        "bodyBackground": "rgb(21, 21, 23)",
+        "pageScrollHeight": 900
+      },
+      "metricsViolations": [],
+      "note": "节点选中态（检查器，1024x900）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
+      "sha256": "033aa63257d84aba2f1bee58f0a658410ce89ef93b161650530a7ac05e3b9770",
+      "viewport": "1440x1000",
+      "theme": "dark",
+      "themeApplied": true,
+      "scenario": "selected:frozen",
+      "capturedAt": "2026-11-04T18:01:38.388Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "canvas": {
+          "width": 1160,
+          "height": 940
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.24868672046955245,
+        "bboxWidthRatio": 0.7689655172413793,
+        "bboxHeightRatio": 0.32340425531914896,
+        "bboxAreaRatio": 0.24868672046955245,
+        "shellWidth": 1160,
+        "shellHeight": 1000,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 10,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "data-testid=primary",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "提交讨论"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 1,
+        "viewportHint": false,
+        "themeSource": "dark",
+        "bodyBackground": "rgb(21, 21, 23)",
+        "pageScrollHeight": 1000
+      },
+      "metricsViolations": [],
+      "note": "节点选中态（检查器，1440x1000）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/selected-dark-700x600.png",
+      "sha256": "348fdfe913f619d6c0524cd0e0c65ea440b089645032f8b179430cff054422ad",
+      "viewport": "700x600",
+      "theme": "dark",
+      "themeApplied": true,
+      "scenario": "selected:frozen",
+      "capturedAt": "2026-11-04T17:58:42.281Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 700,
+          "height": 600
+        },
+        "canvas": {
+          "width": 644,
+          "height": 540
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.4386128364389234,
+        "bboxWidthRatio": 1.0388198757763976,
+        "bboxHeightRatio": 0.4222222222222222,
+        "bboxAreaRatio": 0.4386128364389234,
+        "shellWidth": 644,
+        "shellHeight": 600,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 7.5,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "data-testid=primary",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "提交讨论"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 0.75,
+        "viewportHint": true,
+        "themeSource": "dark",
+        "bodyBackground": "rgb(21, 21, 23)",
+        "pageScrollHeight": 600
+      },
+      "metricsViolations": [],
+      "note": "节点选中态（检查器，700x600）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/selected-light-1024x900.png",
+      "sha256": "86fd0acd746759646566cf825d4777ee32ecd6a0d0cc5f2bba71e83ccf96494a",
+      "viewport": "1024x900",
+      "theme": "light",
+      "themeApplied": true,
+      "scenario": "selected:frozen",
+      "capturedAt": "2026-11-04T18:00:45.783Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1024,
+          "height": 900
+        },
+        "canvas": {
+          "width": 744,
+          "height": 840
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.2506186614252685,
+        "bboxWidthRatio": 0.9111827727287046,
+        "bboxHeightRatio": 0.2750476292201451,
+        "bboxAreaRatio": 0.2506186614252685,
+        "shellWidth": 744,
+        "shellHeight": 900,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 7.62,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "data-testid=primary",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "提交讨论"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 0.762,
+        "viewportHint": true,
+        "themeSource": "light",
+        "bodyBackground": "rgb(255, 255, 255)",
+        "pageScrollHeight": 900
+      },
+      "metricsViolations": [],
+      "note": "节点选中态（检查器，1024x900）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
+      "sha256": "07db03e941205d46b4a7dd572e03cb35efad18650f09338cdd4c3e2c873272c9",
+      "viewport": "1440x1000",
+      "theme": "light",
+      "themeApplied": true,
+      "scenario": "selected:frozen",
+      "capturedAt": "2026-11-04T18:00:43.325Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "canvas": {
+          "width": 1160,
+          "height": 940
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.24868672046955245,
+        "bboxWidthRatio": 0.7689655172413793,
+        "bboxHeightRatio": 0.32340425531914896,
+        "bboxAreaRatio": 0.24868672046955245,
+        "shellWidth": 1160,
+        "shellHeight": 1000,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 10,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "data-testid=primary",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "提交讨论"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 1,
+        "viewportHint": false,
+        "themeSource": "light",
+        "bodyBackground": "rgb(255, 255, 255)",
+        "pageScrollHeight": 1000
+      },
+      "metricsViolations": [],
+      "note": "节点选中态（检查器，1440x1000）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/selected-light-700x600.png",
+      "sha256": "658f81bd04a3c7cf2189c313cbb24cf8e6e9dc3affa0b0415f0d8fca0926aa68",
+      "viewport": "700x600",
+      "theme": "light",
+      "themeApplied": true,
+      "scenario": "selected:frozen",
+      "capturedAt": "2026-11-04T17:57:45.312Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 700,
+          "height": 600
+        },
+        "canvas": {
+          "width": 644,
+          "height": 540
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.4386128364389234,
+        "bboxWidthRatio": 1.0388198757763976,
+        "bboxHeightRatio": 0.4222222222222222,
+        "bboxAreaRatio": 0.4386128364389234,
+        "shellWidth": 644,
+        "shellHeight": 600,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 7.5,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "data-testid=primary",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "提交讨论"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 0.75,
+        "viewportHint": true,
+        "themeSource": "light",
+        "bodyBackground": "rgb(255, 255, 255)",
+        "pageScrollHeight": 600
+      },
+      "metricsViolations": [],
+      "note": "节点选中态（检查器，700x600）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/selected-noncurrent-dark-1440x1000.png",
+      "sha256": "532cd50343914211f6d983c6c6742700bd8a162755dd9148e970ab16a969d2fa",
+      "viewport": "1440x1000",
+      "theme": "dark",
+      "themeApplied": true,
+      "scenario": "selected-noncurrent:frozen",
+      "capturedAt": "2026-11-04T18:01:43.271Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "canvas": {
+          "width": 1160,
+          "height": 940
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.24868672046955245,
+        "bboxWidthRatio": 0.7689655172413793,
+        "bboxHeightRatio": 0.32340425531914896,
+        "bboxAreaRatio": 0.24868672046955245,
+        "shellWidth": 1160,
+        "shellHeight": 1000,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 10,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "data-testid=primary",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "提交讨论"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 1,
+        "viewportHint": false,
+        "themeSource": "dark",
+        "bodyBackground": "rgb(21, 21, 23)",
+        "pageScrollHeight": 1000
+      },
+      "metricsViolations": [],
+      "note": "选中的非 current 节点（只读动作/证据）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png",
+      "sha256": "f51d915edb7c5d103db7734012b17e396175cbad790bf0c9d67012d964b99625",
+      "viewport": "1440x1000",
+      "theme": "light",
+      "themeApplied": true,
+      "scenario": "selected-noncurrent:frozen",
+      "capturedAt": "2026-11-04T18:00:48.946Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "canvas": {
+          "width": 1160,
+          "height": 940
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.24868672046955245,
+        "bboxWidthRatio": 0.7689655172413793,
+        "bboxHeightRatio": 0.32340425531914896,
+        "bboxAreaRatio": 0.24868672046955245,
+        "shellWidth": 1160,
+        "shellHeight": 1000,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 10,
+        "contrast": {
+          "text": null,
+          "nonText": null,
+          "status": "sampled"
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "data-testid=primary",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "提交讨论"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 1,
+        "viewportHint": false,
+        "themeSource": "light",
+        "bodyBackground": "rgb(255, 255, 255)",
+        "pageScrollHeight": 1000
+      },
+      "metricsViolations": [],
+      "note": "选中的非 current 节点（只读动作/证据）"
+    }
+  ],
+  "metricViolations": [
+    {
+      "file": "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
+      "violations": [
+        {
+          "metric": "primaryCount",
+          "expected": 1,
+          "actual": 0,
+          "texts": []
+        }
+      ]
+    }
+  ],
+  "warnings": [],
+  "errors": [],
+  "ok": true,
+  "stateRevision": 0,
+  "unverifiedScenes": [
+    {
+      "scene": "error",
+      "reason": "需注入接口 500/断网；当前 capture 未实现"
+    },
+    {
+      "scene": "stale",
+      "reason": "需客户端 StoreSend 触发 409；当前 capture 未实现"
+    },
+    {
+      "scene": "14-nodes",
+      "reason": "受保护节点约束下尚未定义合法 14 节点自定义图；待 Lead 提供夹具"
+    }
+  ],
   "captures": [
     {
       "at": "2026-11-04T17:37:15.551Z",
@@ -47,7 +1923,318 @@
         "waitFor timeout (document ready): document.readyState === \"complete\"; last error: CDP socket closed"
       ],
       "ok": false
+    },
+    {
+      "at": "2026-11-04T17:40:06.998Z",
+      "theme": "light",
+      "scenarios": [
+        "empty",
+        "frozen"
+      ],
+      "buildHash": "f24a6badf54042c74549b5c8682dee2ec4fec73f71e00c7aed94f7cb2052f1a2",
+      "buildChecked": true,
+      "screenshots": [],
+      "errors": [
+        "CDP socket closed"
+      ],
+      "ok": false
+    },
+    {
+      "at": "2026-11-04T17:44:48.230Z",
+      "theme": "light",
+      "scenarios": [
+        "empty",
+        "frozen"
+      ],
+      "buildHash": "d129dd8838b5cf311418a97d10b48c94a99772086aa8f71c047aa75cb1c931ef",
+      "buildChecked": true,
+      "screenshots": [
+        "docs/praxis/screenshots/v2/blueprint-light-1024x900.png",
+        "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-light-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-light-1024x900.png",
+        "docs/praxis/screenshots/v2/running-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-light-1024x900.png",
+        "docs/praxis/screenshots/v2/selected-light-1440x1000.png"
+      ],
+      "errors": [],
+      "ok": true
+    },
+    {
+      "at": "2026-11-04T17:45:39.857Z",
+      "theme": "dark",
+      "scenarios": [
+        "empty",
+        "frozen"
+      ],
+      "buildHash": "d129dd8838b5cf311418a97d10b48c94a99772086aa8f71c047aa75cb1c931ef",
+      "buildChecked": true,
+      "screenshots": [
+        "docs/praxis/screenshots/v2/blueprint-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/blueprint-light-1024x900.png",
+        "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-light-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/running-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-light-1024x900.png",
+        "docs/praxis/screenshots/v2/running-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-light-1024x900.png",
+        "docs/praxis/screenshots/v2/selected-light-1440x1000.png"
+      ],
+      "errors": [],
+      "ok": true
+    },
+    {
+      "at": "2026-11-04T17:47:51.209Z",
+      "theme": "light",
+      "scenarios": [
+        "empty",
+        "frozen"
+      ],
+      "buildHash": "d129dd8838b5cf311418a97d10b48c94a99772086aa8f71c047aa75cb1c931ef",
+      "buildChecked": true,
+      "screenshots": [
+        "docs/praxis/screenshots/v2/blueprint-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/blueprint-light-1024x900.png",
+        "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-light-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/running-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-light-1024x900.png",
+        "docs/praxis/screenshots/v2/running-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-light-1024x900.png",
+        "docs/praxis/screenshots/v2/selected-light-1440x1000.png"
+      ],
+      "errors": [],
+      "ok": true
+    },
+    {
+      "at": "2026-11-04T17:48:41.653Z",
+      "theme": "dark",
+      "scenarios": [
+        "empty",
+        "frozen"
+      ],
+      "buildHash": "d129dd8838b5cf311418a97d10b48c94a99772086aa8f71c047aa75cb1c931ef",
+      "buildChecked": true,
+      "screenshots": [
+        "docs/praxis/screenshots/v2/blueprint-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/blueprint-light-1024x900.png",
+        "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-light-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/running-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-light-1024x900.png",
+        "docs/praxis/screenshots/v2/running-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-light-1024x900.png",
+        "docs/praxis/screenshots/v2/selected-light-1440x1000.png"
+      ],
+      "errors": [],
+      "ok": true
+    },
+    {
+      "at": "2026-11-04T17:57:54.328Z",
+      "theme": "light",
+      "scenarios": [
+        "empty",
+        "frozen"
+      ],
+      "buildHash": "7b286197f2460b11bfbf972fd63fc6eb68ab2a85f6f9fc7a4c04a519dbf7090d",
+      "buildChecked": true,
+      "screenshots": [
+        "docs/praxis/screenshots/v2/blueprint-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/blueprint-light-1024x900.png",
+        "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/blueprint-light-700x600.png",
+        "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/drawer-source-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-light-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-light-700x600.png",
+        "docs/praxis/screenshots/v2/loading-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/running-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-light-1024x900.png",
+        "docs/praxis/screenshots/v2/running-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-light-700x600.png",
+        "docs/praxis/screenshots/v2/selected-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-light-1024x900.png",
+        "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-light-700x600.png",
+        "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png"
+      ],
+      "errors": [],
+      "ok": true
+    },
+    {
+      "at": "2026-11-04T17:58:50.974Z",
+      "theme": "dark",
+      "scenarios": [
+        "empty",
+        "frozen"
+      ],
+      "buildHash": "7b286197f2460b11bfbf972fd63fc6eb68ab2a85f6f9fc7a4c04a519dbf7090d",
+      "buildChecked": true,
+      "screenshots": [
+        "docs/praxis/screenshots/v2/blueprint-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/blueprint-dark-700x600.png",
+        "docs/praxis/screenshots/v2/blueprint-light-1024x900.png",
+        "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/blueprint-light-700x600.png",
+        "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/drawer-source-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/drawer-source-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-dark-700x600.png",
+        "docs/praxis/screenshots/v2/empty-light-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-light-700x600.png",
+        "docs/praxis/screenshots/v2/loading-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/loading-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/running-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-dark-700x600.png",
+        "docs/praxis/screenshots/v2/running-light-1024x900.png",
+        "docs/praxis/screenshots/v2/running-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-light-700x600.png",
+        "docs/praxis/screenshots/v2/selected-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-dark-700x600.png",
+        "docs/praxis/screenshots/v2/selected-light-1024x900.png",
+        "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-light-700x600.png",
+        "docs/praxis/screenshots/v2/selected-noncurrent-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png"
+      ],
+      "errors": [],
+      "ok": true
+    },
+    {
+      "at": "2026-11-04T18:00:55.663Z",
+      "theme": "light",
+      "scenarios": [
+        "empty",
+        "frozen"
+      ],
+      "buildHash": "7b286197f2460b11bfbf972fd63fc6eb68ab2a85f6f9fc7a4c04a519dbf7090d",
+      "buildChecked": true,
+      "screenshots": [
+        "docs/praxis/screenshots/v2/blueprint-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/blueprint-dark-700x600.png",
+        "docs/praxis/screenshots/v2/blueprint-light-1024x900.png",
+        "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/blueprint-light-700x600.png",
+        "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/drawer-source-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/drawer-source-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-dark-700x600.png",
+        "docs/praxis/screenshots/v2/empty-light-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-light-700x600.png",
+        "docs/praxis/screenshots/v2/loading-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/loading-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/running-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-dark-700x600.png",
+        "docs/praxis/screenshots/v2/running-light-1024x900.png",
+        "docs/praxis/screenshots/v2/running-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-light-700x600.png",
+        "docs/praxis/screenshots/v2/selected-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-dark-700x600.png",
+        "docs/praxis/screenshots/v2/selected-light-1024x900.png",
+        "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-light-700x600.png",
+        "docs/praxis/screenshots/v2/selected-noncurrent-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png"
+      ],
+      "errors": [],
+      "ok": true
+    },
+    {
+      "at": "2026-11-04T18:01:50.026Z",
+      "theme": "dark",
+      "scenarios": [
+        "empty",
+        "frozen"
+      ],
+      "buildHash": "7b286197f2460b11bfbf972fd63fc6eb68ab2a85f6f9fc7a4c04a519dbf7090d",
+      "buildChecked": true,
+      "screenshots": [
+        "docs/praxis/screenshots/v2/blueprint-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/blueprint-dark-700x600.png",
+        "docs/praxis/screenshots/v2/blueprint-light-1024x900.png",
+        "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/blueprint-light-700x600.png",
+        "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/drawer-source-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/drawer-source-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-dark-700x600.png",
+        "docs/praxis/screenshots/v2/empty-light-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-light-700x600.png",
+        "docs/praxis/screenshots/v2/loading-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/loading-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/running-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-dark-700x600.png",
+        "docs/praxis/screenshots/v2/running-light-1024x900.png",
+        "docs/praxis/screenshots/v2/running-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-light-700x600.png",
+        "docs/praxis/screenshots/v2/selected-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-dark-700x600.png",
+        "docs/praxis/screenshots/v2/selected-light-1024x900.png",
+        "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-light-700x600.png",
+        "docs/praxis/screenshots/v2/selected-noncurrent-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png"
+      ],
+      "errors": [],
+      "ok": true
     }
   ],
-  "requiredShots": 0
+  "requiredShots": 26
 }
