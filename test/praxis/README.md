@@ -58,15 +58,11 @@ node tools/evidence/capture.mjs --all
 （`PRAXIS_THEME=dark`；capture 用 `ui-theme.preference=dark` patch 启动）；
 light 实例上暗色用例显式 skip 并打印原因。
 
-当前验收结果（2026-11-05 02:1x，build 7b286197f246）：
-- 契约套件 `node --test test/praxis/*.test.js`：140 tests / 139 pass / 1 fail
-  （唯一红为 `client-build.test.js`：client/*.js 在本轮又被改动、`client.js` 尚未 rebuild；
-  Lead/build 负责重建后应 140/140）
-- 浏览器+全链路（light 实例）：7 pass / 0 fail / 1 skip（暗色独立实例）
-- 浏览器+全链路（dark 实例）：8 pass / 0 fail / 0 skip
-- 证据 `docs/praxis/evidence/manifest.json`：ok=true，29 张（themes.light 15 / themes.dark 14），
-  buildChecked=true，expectedViolations 2（loading 无 shell、map/drawer primary 规则），
-  unexpectedViolations 0，errors 0。
+当前验收结果（2026-11-05 03:0x，build 17dc23af5f2e，client.js --check 通过）：
+- 契约套件 `node --test test/praxis/*.test.js`：140 tests / 140 pass / 0 fail / 0 skip
+- 浏览器+全链路（light 实例）：8 tests / 7 pass / 0 fail / 1 skip（暗色由独立 dark 实例证据）
+- 浏览器+全链路（dark 实例）：8 tests / 8 pass / 0 fail / 0 skip
+- 证据 `docs/praxis/evidence/manifest.json`：`ok=true`，25 张；`signoff.signed` 6（light empty/running/selected/blueprint 1440 + dark running/selected 1440），`compat` 12（1024/700 + clean/drawer/loading/map），`unverified` 3（error/stale/14-nodes，未伪造）；`unexpectedMetricViolations:0`，`expectedMetricViolations:2`（B-V03 drawer primary 规则）；`contrastSummary.light={textMin:5.8,nonTextMin:5.31}`、`dark={textMin:5.55,nonTextMin:9.47}`；`sceneConsistency.progressValues=['3/10']`；selected/inspector 交集 0；700×600 running=15/15、scale 0.686、W0.956/H0.388/area0.371、overflow 0、hint true。
 
 ## 当前状态（2026-11-04 14:5x CST，已验收）
 

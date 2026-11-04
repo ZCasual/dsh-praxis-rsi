@@ -46,10 +46,17 @@ node --test test/praxis/acceptance/*.test.js
 | `§5.2` | 节点正文只有人类可读状态，无 `prereg_freeze`/`gate:prereg` 等内部码 | 通过 |
 | `§5.2/T2.1` | 冻结后 prereg 门显示“已完成/契约已冻结”，不再出现倒挂 | 通过 |
 | `§5.4/D6` | 运行模态主按钮唯一，且无“删除节点/连线/拖拽节点”等拓扑控件 | 通过 |
-| `§5.3/D5` | 亮/暗主题分别由独立实例验证（同一实例不可切换主题） | 见 §7 |
+| `§5.3/D5` | 亮/暗主题分别由独立实例验证（同一实例不可切换主题） | 暗色独立实例 8/8 通过 |
 | `acceptance/full-loop` | `start→question→prereg_freeze→pin_persona→discussion→experiment→review→stage4→eval_report(delegatedActor=evaluator)→eval_read→memory_propose(delegatedActor=root)→memory_commit→decision→map_claim`，终态 `DECISION`，`actor.delegated` 恰 2 条 | 通过 |
 
 浏览器测试使用独立 Chrome profile 与独立 `statePath`（A1），零 npm 依赖（A2），3081 不可达时显式 skip 并打印原因（A3）。
+
+实测统计（build `17dc23af5f2e`）：
+- 亮色实例：`tests 8 / pass 7 / fail 0 / skip 1`（skip 项为暗色，由独立实例证据覆盖）
+- 暗色实例：`tests 8 / pass 8 / fail 0 / skip 0`
+
+证据 manifest（`docs/praxis/evidence/manifest.json`）：`ok=true`、`buildChecked=true`、25 张截图（light 13 / dark 12，均 `themeApplied`）、`unexpectedMetricViolations=0`、`expectedMetricViolations=2`（drawer primary 规则）、`signoff.signed=7`、`compat=12`、`unverified=3`。
+逐对 WCAG：light 正文最小 5.8:1、非文本最小 5.31:1；dark 正文 5.55:1、非文本 9.47:1。选中节点与检查器交集 0（gap 16px）。700×600：`worldScale=0.686`、15/15 可见、页面横向溢出 0。
 
 ## 3. 手工端到端场景（CDP 脚本，可复跑）
 
@@ -106,7 +113,8 @@ Host：/praxis/api/state 200，wireVersion 2
 | 项 | 原因 | 处置 |
 |---|---|---|
 | Dock chip 的视觉验证 | `conversation.composer.dock` 作用域是 `session`，无活动会话时不渲染；headless 新 profile 没有会话 | 已确认 slot 注册代码存在；需在有会话的实例里人工确认 |
-| 1024 全应用下的有效字号下限 | 宿主侧栏 280px 使画布只有 744×840、world scale 0.762；64px 冻结节点高放不下达标字号 | 按 D5-1 记为“不可判定”；插件根 1024×840 下 scale=1.0 且全部达标 |
+| 1024 全应用下的有效字号下限 | 宿主侧栏 280px 使画布只有 744×840、world scale 0.798（r7 后）；64px 冻结节点高放不下达标字号 | 按 D5-1 记为“不可判定”；插件根 1024×840 下 scale=1.0 且全部达标 |
+| `error` / `stale` / 14 节点场景 | 需要 500 注入、409 触发与合法 14 节点夹具；capture 未实现 | manifest `unverifiedScenes` 如实登记，不记为通过 |
 | 暗色主题浏览器断言 | 主题由 profile patch 固定，运行时不可切换 | 由独立暗色实例验证（`capture.mjs` 管理实例）；同实例测试显式 skip |
 | 运行中 Playbook 迁移 | 当前策略是 Run 固定原 revision，不做自动迁移 | 设计决策，非缺陷 |
 | 真实 DSH 会话内 `rsi_run` 的工具调用 | 工具只在**新会话**出现；本轮未在对话中实际调用 | 需新会话人工验证 |

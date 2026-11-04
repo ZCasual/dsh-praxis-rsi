@@ -125,7 +125,7 @@ Edge  = { id, from, to, port: 'contract'|'artifact'|'evidence'|'veto' }
 |---|---|---|
 | 契约测试 | `node --test test/praxis/*.test.js` | 领域状态机、图模型与不变量、fork/迁移、wire 契约、store、HTTP、模块构建 |
 | 浏览器验收 | `node --test test/praxis/acceptance/*.test.js` | 真实 Chrome：可见节点比例、内容占比、唯一主按钮、内部码为 0、破坏性控件为 0、横向溢出为 0；全生命周期 start→…→DECISION 含角色委托审计 |
-| 证据采集 | `node tools/evidence/capture.mjs` | 截图 + `docs/praxis/evidence/manifest.json`（sha256、构建 hash、端口、视口、主题、场景、时间） |
+| 证据采集 | `node tools/evidence/capture.mjs --manage-server --theme light|dark` | 25 张截图 + `docs/praxis/evidence/manifest.json`：`ok=true`、`unexpectedMetricViolations=0`、逐对 WCAG 对比度（light text 5.8 / non-text 5.31；dark 5.55 / 9.47）、`signoff.signed/compat/unverified` 分级 |
 
 浏览器测试使用独立 profile 与独立 `statePath`（`/tmp/praxis-acceptance/`），不写用户的 `~/.dsh/praxis/state.json`。
 
@@ -152,8 +152,9 @@ node plugins/dsh-praxis/build-client.mjs --check  # 校验是否最新（测试�
 | 旧数据迁移 | v1 布局与脏 fork 记录自动对账，幂等 |
 | 图保存冲突 | 过期 `expectedRevision` → 409 + 当前图 |
 | 蓝图层保护 | 删除 `start/end/stage/gate` → `PROTECTED_NODE` |
-| 亮/暗主题 | 两套主题下节点、泳道、检查器、抽屉均正常 |
-| 窄屏 1024 | 无页面横向溢出；`world scale=0.762` 时显示“视口不足，可拖拽查看” |
+| 亮/暗主题 | 两套主题下节点、泳道、检查器、抽屉均正常；正文对比度 ≥5.55:1、非文本指示 ≥5.31:1 |
+| 1024 全应用（compat） | 744×840、无页面横向溢出、15/15 可见、显示“视口不足”提示 |
+| 700×600（compat） | canvas 644×540、`world scale=0.686`、15/15 完全可见、横向溢出 0 |
 
 未验证项写入 `docs/praxis/verification.md`，不在此处冒充通过。
 

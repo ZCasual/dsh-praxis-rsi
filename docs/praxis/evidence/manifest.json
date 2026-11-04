@@ -1,25 +1,25 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-04T18:17:35.302Z",
+  "generatedAt": "2026-11-04T18:53:43.633Z",
   "node": "v25.2.0",
   "packageVersion": "0.2.0",
-  "gitCommit": "3a720de",
-  "buildHash": "a9f55a48f3080249f650abf0fb844939385c13f1e2f4fc463d900d0ee8c37e7b",
-  "bundleSha256": "a9f55a48f3080249f650abf0fb844939385c13f1e2f4fc463d900d0ee8c37e7b",
+  "gitCommit": "7fc2181",
+  "buildHash": "17dc23af5f2e0a614662a5e269dd5f3d21e0c0bd29fe208e5392f842e0c061f6",
+  "bundleSha256": "17dc23af5f2e0a614662a5e269dd5f3d21e0c0bd29fe208e5392f842e0c061f6",
   "buildChecked": true,
-  "port": 33819,
-  "url": "http://127.0.0.1:33819/?token=qpkH…ctl4",
-  "statePath": "/tmp/praxis-acceptance/state-capture-147216-33819.json",
-  "chromeProfile": "/tmp/praxis-acceptance/chrome-profile-capture-147216-33819",
+  "port": 40345,
+  "url": "http://127.0.0.1:40345/?token=722O…4QMI",
+  "statePath": "/tmp/praxis-acceptance/state-capture-157219-40345.json",
+  "chromeProfile": "/tmp/praxis-acceptance/chrome-profile-capture-157219-40345",
   "server": {
     "reused": false,
-    "port": 33819,
-    "pid": 147236,
-    "statePath": "/tmp/praxis-acceptance/state-capture-147216-33819.json",
+    "port": 40345,
+    "pid": 157239,
+    "statePath": "/tmp/praxis-acceptance/state-capture-157219-40345.json",
     "theme": "dark",
-    "command": "dsh web --patch /tmp/praxis-acceptance/patch-33819.yml --port 33819 --no-open",
-    "patch": "/tmp/praxis-acceptance/patch-33819.yml",
-    "log": "/tmp/praxis-acceptance/server-33819.log",
+    "command": "dsh web --patch /tmp/praxis-acceptance/patch-40345.yml --port 40345 --no-open",
+    "patch": "/tmp/praxis-acceptance/patch-40345.yml",
+    "log": "/tmp/praxis-acceptance/server-40345.log",
     "probeStatus": 200,
     "stopped": true
   },
@@ -37,78 +37,19 @@
     {
       "scenario": "frozen",
       "status": "seeded",
-      "runId": "run_9e797771",
+      "runId": "run_a9e63f99",
       "expected": "PREREG_FROZEN"
     }
   ],
   "screenshots": [
     {
-      "file": "docs/praxis/screenshots/v2/blueprint-dark-1024x900.png",
-      "sha256": "5f12f85ffa2df591f542c828b624498c467e2f8c9c6adfcce82af1b9f9885437",
-      "viewport": "1024x900",
-      "theme": "dark",
-      "themeApplied": true,
-      "scenario": "blueprint:frozen",
-      "capturedAt": "2026-11-04T18:18:18.470Z",
-      "metrics": {
-        "available": true,
-        "scenario": null,
-        "viewport": {
-          "width": 1024,
-          "height": 900
-        },
-        "canvas": {
-          "width": 744,
-          "height": 840
-        },
-        "nodeTotal": 15,
-        "nodeVisible": 15,
-        "visibleNodeRatio": 1,
-        "contentBBoxRatio": 0.2506186614252685,
-        "bboxWidthRatio": 0.9111827727287046,
-        "bboxHeightRatio": 0.2750476292201451,
-        "bboxAreaRatio": 0.2506186614252685,
-        "shellWidth": 744,
-        "shellHeight": 900,
-        "shellOverflow": 0,
-        "fontSizeMinRaw": 10,
-        "fontSizeMin": 7.62,
-        "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "sampled"
-        },
-        "drawerPrimaryCount": 0,
-        "primarySelector": "data-testid=primary",
-        "primaryCount": 1,
-        "primaryTexts": [
-          "保存蓝图"
-        ],
-        "primaryClassNames": [
-          "px-btn primary"
-        ],
-        "contractPrimaryClassPresent": false,
-        "internalCodeCount": 0,
-        "destructiveControlCount": 0,
-        "horizontalOverflow": 0,
-        "worldScale": 0.762,
-        "viewportHint": true,
-        "themeSource": "dark",
-        "bodyBackground": "rgb(21, 21, 23)",
-        "pageScrollHeight": 900
-      },
-      "violations": [],
-      "expectedViolations": [],
-      "note": "蓝图模态（拓扑编辑草稿/diff，1024x900）"
-    },
-    {
       "file": "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
-      "sha256": "1c9745dfac920089c037744f123e6b8a95847a5f25f273d44a349d08aaa83ba1",
+      "sha256": "60c85836b65870ec1540250f2dea10de8cfea752d1d0b0e4509e0b2b56077c71",
       "viewport": "1440x1000",
       "theme": "dark",
       "themeApplied": true,
       "scenario": "blueprint:frozen",
-      "capturedAt": "2026-11-04T18:18:16.096Z",
+      "capturedAt": "2026-11-04T18:54:27.426Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -132,10 +73,156 @@
         "shellOverflow": 0,
         "fontSizeMinRaw": 10,
         "fontSizeMin": 10,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "fg": [
+              249,
+              250,
+              251
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 15.03,
+            "status": "sampled"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 10.42,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 10.42,
+            "status": "sampled"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              21,
+              21,
+              23
+            ],
+            "ratio": 12.11,
+            "status": "sampled"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              249,
+              250,
+              251
+            ],
+            "bg": [
+              21,
+              21,
+              23
+            ],
+            "ratio": 17.45,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              21,
+              21,
+              23
+            ],
+            "bg": [
+              249,
+              250,
+              251
+            ],
+            "ratio": 17.45,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "fg": [
+              138.4859614711194,
+              218.67806921063465,
+              155.42047015259195
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 9.47,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 10.42,
+            "status": "sampled"
+          }
+        ],
         "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "sampled"
+          "textMin": 10.42,
+          "nonTextMin": 9.47,
+          "textStatus": "sampled",
+          "nonTextStatus": "sampled",
+          "violations": []
         },
         "drawerPrimaryCount": 0,
         "primarySelector": "data-testid=primary",
@@ -146,7 +233,7 @@
         "primaryClassNames": [
           "px-btn primary"
         ],
-        "contractPrimaryClassPresent": false,
+        "contractPrimaryClassPresent": true,
         "internalCodeCount": 0,
         "destructiveControlCount": 0,
         "horizontalOverflow": 0,
@@ -155,78 +242,38 @@
         "themeSource": "dark",
         "bodyBackground": "rgb(21, 21, 23)",
         "pageScrollHeight": 1000
+      },
+      "sceneMetrics": {
+        "shellScene": "blueprint",
+        "shellMode": "blueprint",
+        "runbarText": "Praxis\n证据截图 · frozen\n预注册已冻结\nv3\n3/10\n运行\n蓝图\n更多\n▾",
+        "progress": "3/10",
+        "progressDone": 3,
+        "progressTotal": 10,
+        "worldScale": "1.000",
+        "selectedNodeId": "n_prereg",
+        "selectedRect": {
+          "x": 1150,
+          "y": 378,
+          "w": 156,
+          "h": 64
+        },
+        "inspectorRect": null,
+        "selectedOverlapArea": 0,
+        "inspectorVisible": false
       },
       "violations": [],
       "expectedViolations": [],
       "note": "蓝图模态（拓扑编辑草稿/diff，1440x1000）"
     },
     {
-      "file": "docs/praxis/screenshots/v2/blueprint-light-1024x900.png",
-      "sha256": "e9035d90771404341ffcb94d229918adbbd6ba9da59f36c5f8efdefde735622d",
-      "viewport": "1024x900",
-      "theme": "light",
-      "themeApplied": true,
-      "scenario": "blueprint:frozen",
-      "capturedAt": "2026-11-04T18:17:22.497Z",
-      "metrics": {
-        "available": true,
-        "scenario": null,
-        "viewport": {
-          "width": 1024,
-          "height": 900
-        },
-        "canvas": {
-          "width": 744,
-          "height": 840
-        },
-        "nodeTotal": 15,
-        "nodeVisible": 15,
-        "visibleNodeRatio": 1,
-        "contentBBoxRatio": 0.2506186614252685,
-        "bboxWidthRatio": 0.9111827727287046,
-        "bboxHeightRatio": 0.2750476292201451,
-        "bboxAreaRatio": 0.2506186614252685,
-        "shellWidth": 744,
-        "shellHeight": 900,
-        "shellOverflow": 0,
-        "fontSizeMinRaw": 10,
-        "fontSizeMin": 7.62,
-        "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "sampled"
-        },
-        "drawerPrimaryCount": 0,
-        "primarySelector": "data-testid=primary",
-        "primaryCount": 1,
-        "primaryTexts": [
-          "保存蓝图"
-        ],
-        "primaryClassNames": [
-          "px-btn primary"
-        ],
-        "contractPrimaryClassPresent": false,
-        "internalCodeCount": 0,
-        "destructiveControlCount": 0,
-        "horizontalOverflow": 0,
-        "worldScale": 0.762,
-        "viewportHint": true,
-        "themeSource": "light",
-        "bodyBackground": "rgb(255, 255, 255)",
-        "pageScrollHeight": 900
-      },
-      "violations": [],
-      "expectedViolations": [],
-      "note": "蓝图模态（拓扑编辑草稿/diff，1024x900）"
-    },
-    {
       "file": "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
-      "sha256": "e0912879e004979ee0e69cedc7c149917377d03313362d21bb74f188d850d105",
+      "sha256": "24dc605139ed916cbbcfc026c94e762e6f6553b956742dce471bcc8792218fb6",
       "viewport": "1440x1000",
       "theme": "light",
       "themeApplied": true,
       "scenario": "blueprint:frozen",
-      "capturedAt": "2026-11-04T18:17:20.081Z",
+      "capturedAt": "2026-11-04T18:53:24.722Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -250,10 +297,156 @@
         "shellOverflow": 0,
         "fontSizeMinRaw": 10,
         "fontSizeMin": 10,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              255,
+              255,
+              255
+            ],
+            "bg": [
+              15,
+              17,
+              21
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "fg": [
+              38.172048228330475,
+              122.0741187839774,
+              66.83931374824422
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.31,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          }
+        ],
         "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "sampled"
+          "textMin": 5.8,
+          "nonTextMin": 5.31,
+          "textStatus": "sampled",
+          "nonTextStatus": "sampled",
+          "violations": []
         },
         "drawerPrimaryCount": 0,
         "primarySelector": "data-testid=primary",
@@ -264,7 +457,7 @@
         "primaryClassNames": [
           "px-btn primary"
         ],
-        "contractPrimaryClassPresent": false,
+        "contractPrimaryClassPresent": true,
         "internalCodeCount": 0,
         "destructiveControlCount": 0,
         "horizontalOverflow": 0,
@@ -273,6 +466,25 @@
         "themeSource": "light",
         "bodyBackground": "rgb(255, 255, 255)",
         "pageScrollHeight": 1000
+      },
+      "sceneMetrics": {
+        "shellScene": "blueprint",
+        "shellMode": "blueprint",
+        "runbarText": "Praxis\n证据截图 · frozen\n预注册已冻结\nv3\n3/10\n运行\n蓝图\n更多\n▾",
+        "progress": "3/10",
+        "progressDone": 3,
+        "progressTotal": 10,
+        "worldScale": "1.000",
+        "selectedNodeId": "n_prereg",
+        "selectedRect": {
+          "x": 1150,
+          "y": 378,
+          "w": 156,
+          "h": 64
+        },
+        "inspectorRect": null,
+        "selectedOverlapArea": 0,
+        "inspectorVisible": false
       },
       "violations": [],
       "expectedViolations": [],
@@ -280,34 +492,12 @@
     },
     {
       "file": "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
-      "sha256": "87c88798cf7a9480abe71c948b2c16ad92ed148e8b696a4d8b01e49927ae4eeb",
+      "sha256": "b3d19640bff337d4b71c6a6617a5c185353454c051d32407c88b871549457453",
       "viewport": "1440x1000",
       "theme": "light",
       "themeApplied": true,
       "scenario": "clean:frozen",
-      "capturedAt": "2026-11-04T18:17:24.674Z",
-      "metrics": {
-        "available": false,
-        "reason": "no .px-shell (Praxis panel not mounted)"
-      },
-      "violations": [
-        {
-          "metric": "available",
-          "expected": true,
-          "actual": "no .px-shell (Praxis panel not mounted)"
-        }
-      ],
-      "expectedViolations": [],
-      "note": "canonical 干净运行态（无抽屉、无选中）"
-    },
-    {
-      "file": "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
-      "sha256": "809837c8552f274cbbbadef1c8ab971069c94993a123416358bf8231c74aa959",
-      "viewport": "1440x1000",
-      "theme": "dark",
-      "themeApplied": true,
-      "scenario": "map:frozen",
-      "capturedAt": "2026-11-04T18:18:26.524Z",
+      "capturedAt": "2026-11-04T18:53:27.111Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -331,10 +521,380 @@
         "shellOverflow": 0,
         "fontSizeMinRaw": 10,
         "fontSizeMin": 10,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              255,
+              255,
+              255
+            ],
+            "bg": [
+              15,
+              17,
+              21
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "fg": [
+              38.172048228330475,
+              122.0741187839774,
+              66.83931374824422
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.31,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          }
+        ],
         "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "sampled"
+          "textMin": 5.8,
+          "nonTextMin": 5.31,
+          "textStatus": "sampled",
+          "nonTextStatus": "sampled",
+          "violations": []
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "data-testid=primary",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "提交讨论"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": true,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 1,
+        "viewportHint": false,
+        "themeSource": "light",
+        "bodyBackground": "rgb(255, 255, 255)",
+        "pageScrollHeight": 1000
+      },
+      "sceneMetrics": {
+        "shellScene": "running",
+        "shellMode": "run",
+        "runbarText": "Praxis\n证据截图 · frozen\n预注册已冻结\nv3\n3/10\n运行\n蓝图\n提交讨论\n更多\n▾",
+        "progress": "3/10",
+        "progressDone": 3,
+        "progressTotal": 10,
+        "worldScale": "1.000",
+        "selectedNodeId": "n_prereg",
+        "selectedRect": {
+          "x": 1150,
+          "y": 378,
+          "w": 156,
+          "h": 64
+        },
+        "inspectorRect": null,
+        "selectedOverlapArea": 0,
+        "inspectorVisible": false
+      },
+      "violations": [],
+      "expectedViolations": [],
+      "note": "canonical 干净运行态（无抽屉、无选中）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
+      "sha256": "125157ed1842df89009e17b97351ec739d3f5a50bdd246be273b20f6be76e249",
+      "viewport": "1440x1000",
+      "theme": "dark",
+      "themeApplied": true,
+      "scenario": "map:frozen",
+      "capturedAt": "2026-11-04T18:54:37.495Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "canvas": {
+          "width": 1160,
+          "height": 940
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.24868672046955245,
+        "bboxWidthRatio": 0.7689655172413793,
+        "bboxHeightRatio": 0.32340425531914896,
+        "bboxAreaRatio": 0.24868672046955245,
+        "shellWidth": 1160,
+        "shellHeight": 1000,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 10,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "fg": [
+              249,
+              250,
+              251
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 15.03,
+            "status": "sampled"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 10.42,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 10.42,
+            "status": "sampled"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              21,
+              21,
+              23
+            ],
+            "ratio": 12.11,
+            "status": "sampled"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              249,
+              250,
+              251
+            ],
+            "bg": [
+              21,
+              21,
+              23
+            ],
+            "ratio": 17.45,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              21,
+              21,
+              23
+            ],
+            "bg": [
+              249,
+              250,
+              251
+            ],
+            "ratio": 17.45,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "fg": [
+              138.4859614711194,
+              218.67806921063465,
+              155.42047015259195
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 9.47,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 10.42,
+            "status": "sampled"
+          }
+        ],
+        "contrast": {
+          "textMin": 10.42,
+          "nonTextMin": 9.47,
+          "textStatus": "sampled",
+          "nonTextStatus": "sampled",
+          "violations": []
         },
         "drawerPrimaryCount": 1,
         "primarySelector": "class-fallback",
@@ -345,7 +905,7 @@
         "primaryClassNames": [
           "px-btn primary"
         ],
-        "contractPrimaryClassPresent": false,
+        "contractPrimaryClassPresent": true,
         "internalCodeCount": 0,
         "destructiveControlCount": 0,
         "horizontalOverflow": 0,
@@ -354,6 +914,25 @@
         "themeSource": "dark",
         "bodyBackground": "rgb(21, 21, 23)",
         "pageScrollHeight": 1000
+      },
+      "sceneMetrics": {
+        "shellScene": "running",
+        "shellMode": "run",
+        "runbarText": "Praxis\n证据截图 · frozen\n预注册已冻结\nv3\n3/10\n运行\n蓝图\n更多\n▾",
+        "progress": "3/10",
+        "progressDone": 3,
+        "progressTotal": 10,
+        "worldScale": "1.000",
+        "selectedNodeId": "n_prereg",
+        "selectedRect": {
+          "x": 1150,
+          "y": 378,
+          "w": 156,
+          "h": 64
+        },
+        "inspectorRect": null,
+        "selectedOverlapArea": 0,
+        "inspectorVisible": false
       },
       "violations": [],
       "expectedViolations": [],
@@ -361,12 +940,12 @@
     },
     {
       "file": "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
-      "sha256": "fafdf65573c9dfadf470b2d1da9e14401d30107a2a65d7b0248b2d309f6ef664",
+      "sha256": "60ec45c8e9046bbcd9ccdd8428b7a2488eaf0e3449a403a7d93809a3904d2df9",
       "viewport": "1440x1000",
       "theme": "light",
       "themeApplied": true,
       "scenario": "map:frozen",
-      "capturedAt": "2026-11-04T18:17:35.029Z",
+      "capturedAt": "2026-11-04T18:53:35.481Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -390,10 +969,156 @@
         "shellOverflow": 0,
         "fontSizeMinRaw": 10,
         "fontSizeMin": 10,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              255,
+              255,
+              255
+            ],
+            "bg": [
+              15,
+              17,
+              21
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "fg": [
+              38.172048228330475,
+              122.0741187839774,
+              66.83931374824422
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.31,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          }
+        ],
         "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "sampled"
+          "textMin": 5.8,
+          "nonTextMin": 5.31,
+          "textStatus": "sampled",
+          "nonTextStatus": "sampled",
+          "violations": []
         },
         "drawerPrimaryCount": 1,
         "primarySelector": "class-fallback",
@@ -404,7 +1129,7 @@
         "primaryClassNames": [
           "px-btn primary"
         ],
-        "contractPrimaryClassPresent": false,
+        "contractPrimaryClassPresent": true,
         "internalCodeCount": 0,
         "destructiveControlCount": 0,
         "horizontalOverflow": 0,
@@ -414,18 +1139,37 @@
         "bodyBackground": "rgb(255, 255, 255)",
         "pageScrollHeight": 1000
       },
+      "sceneMetrics": {
+        "shellScene": "running",
+        "shellMode": "run",
+        "runbarText": "Praxis\n证据截图 · frozen\n预注册已冻结\nv3\n3/10\n运行\n蓝图\n更多\n▾",
+        "progress": "3/10",
+        "progressDone": 3,
+        "progressTotal": 10,
+        "worldScale": "1.000",
+        "selectedNodeId": "n_prereg",
+        "selectedRect": {
+          "x": 1150,
+          "y": 378,
+          "w": 156,
+          "h": 64
+        },
+        "inspectorRect": null,
+        "selectedOverlapArea": 0,
+        "inspectorVisible": false
+      },
       "violations": [],
       "expectedViolations": [],
       "note": "认知地图"
     },
     {
       "file": "docs/praxis/screenshots/v2/drawer-source-dark-1440x1000.png",
-      "sha256": "362b17bc77fcab630ef983b5a2d33264fced10a5c05e62648be498a4ede5e07d",
+      "sha256": "069162653793ad974d55e62f88bc202eb14cbad5ca62b4f229088ca049569a9a",
       "viewport": "1440x1000",
       "theme": "dark",
       "themeApplied": true,
       "scenario": "drawer:source",
-      "capturedAt": "2026-11-04T18:18:21.211Z",
+      "capturedAt": "2026-11-04T18:54:30.816Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -449,10 +1193,156 @@
         "shellOverflow": 0,
         "fontSizeMinRaw": 10,
         "fontSizeMin": 10,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "fg": [
+              249,
+              250,
+              251
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 15.03,
+            "status": "sampled"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 10.42,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 10.42,
+            "status": "sampled"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              21,
+              21,
+              23
+            ],
+            "ratio": 12.11,
+            "status": "sampled"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              249,
+              250,
+              251
+            ],
+            "bg": [
+              21,
+              21,
+              23
+            ],
+            "ratio": 17.45,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              21,
+              21,
+              23
+            ],
+            "bg": [
+              249,
+              250,
+              251
+            ],
+            "ratio": 17.45,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "fg": [
+              138.4859614711194,
+              218.67806921063465,
+              155.42047015259195
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 9.47,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 10.42,
+            "status": "sampled"
+          }
+        ],
         "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "sampled"
+          "textMin": 10.42,
+          "nonTextMin": 9.47,
+          "textStatus": "sampled",
+          "nonTextStatus": "sampled",
+          "violations": []
         },
         "drawerPrimaryCount": 1,
         "primarySelector": "class-fallback",
@@ -463,7 +1353,7 @@
         "primaryClassNames": [
           "px-btn primary"
         ],
-        "contractPrimaryClassPresent": false,
+        "contractPrimaryClassPresent": true,
         "internalCodeCount": 0,
         "destructiveControlCount": 0,
         "horizontalOverflow": 0,
@@ -473,18 +1363,47 @@
         "bodyBackground": "rgb(21, 21, 23)",
         "pageScrollHeight": 1000
       },
+      "sceneMetrics": {
+        "shellScene": "running",
+        "shellMode": "run",
+        "runbarText": "Praxis\n证据截图 · frozen\n预注册已冻结\nv3\n3/10\n运行\n蓝图\n更多\n▾",
+        "progress": "3/10",
+        "progressDone": 3,
+        "progressTotal": 10,
+        "worldScale": "1.000",
+        "selectedNodeId": "n_prereg",
+        "selectedRect": {
+          "x": 1150,
+          "y": 378,
+          "w": 156,
+          "h": 64
+        },
+        "inspectorRect": null,
+        "selectedOverlapArea": 0,
+        "inspectorVisible": false
+      },
       "violations": [],
-      "expectedViolations": [],
+      "expectedViolations": [
+        {
+          "metric": "primaryCount",
+          "expected": 0,
+          "actual": 1,
+          "texts": [
+            "保存"
+          ],
+          "reason": "B-V03 抽屉规则：drawer primary 不计"
+        }
+      ],
       "note": "源码抽屉（modal）"
     },
     {
       "file": "docs/praxis/screenshots/v2/drawer-source-light-1440x1000.png",
-      "sha256": "87ba7ae2b70ffd7f28cfd3b597a8c694e2753c0dda20de4a8b804dd10b12f983",
+      "sha256": "c4f49c91412b976c691a03c67b0fef11e44308234cf4ffae2e616e1d8b1ad2d2",
       "viewport": "1440x1000",
       "theme": "light",
       "themeApplied": true,
       "scenario": "drawer:source",
-      "capturedAt": "2026-11-04T18:05:41.798Z",
+      "capturedAt": "2026-11-04T18:53:28.872Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -508,10 +1427,156 @@
         "shellOverflow": 0,
         "fontSizeMinRaw": 10,
         "fontSizeMin": 10,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              255,
+              255,
+              255
+            ],
+            "bg": [
+              15,
+              17,
+              21
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "fg": [
+              38.172048228330475,
+              122.0741187839774,
+              66.83931374824422
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.31,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          }
+        ],
         "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "sampled"
+          "textMin": 5.8,
+          "nonTextMin": 5.31,
+          "textStatus": "sampled",
+          "nonTextStatus": "sampled",
+          "violations": []
         },
         "drawerPrimaryCount": 1,
         "primarySelector": "class-fallback",
@@ -522,7 +1587,7 @@
         "primaryClassNames": [
           "px-btn primary"
         ],
-        "contractPrimaryClassPresent": false,
+        "contractPrimaryClassPresent": true,
         "internalCodeCount": 0,
         "destructiveControlCount": 0,
         "horizontalOverflow": 0,
@@ -532,18 +1597,47 @@
         "bodyBackground": "rgb(255, 255, 255)",
         "pageScrollHeight": 1000
       },
+      "sceneMetrics": {
+        "shellScene": "running",
+        "shellMode": "run",
+        "runbarText": "Praxis\n证据截图 · frozen\n预注册已冻结\nv3\n3/10\n运行\n蓝图\n更多\n▾",
+        "progress": "3/10",
+        "progressDone": 3,
+        "progressTotal": 10,
+        "worldScale": "1.000",
+        "selectedNodeId": "n_prereg",
+        "selectedRect": {
+          "x": 1150,
+          "y": 378,
+          "w": 156,
+          "h": 64
+        },
+        "inspectorRect": null,
+        "selectedOverlapArea": 0,
+        "inspectorVisible": false
+      },
       "violations": [],
-      "expectedViolations": [],
+      "expectedViolations": [
+        {
+          "metric": "primaryCount",
+          "expected": 0,
+          "actual": 1,
+          "texts": [
+            "保存"
+          ],
+          "reason": "B-V03 抽屉规则：drawer primary 不计"
+        }
+      ],
       "note": "源码抽屉（modal）"
     },
     {
       "file": "docs/praxis/screenshots/v2/empty-dark-1024x900.png",
-      "sha256": "32f85e84bf7be68cf28fef0b50d108ad74bcc21005840e652215de330a9aaf9e",
+      "sha256": "ef8f23adb700c758634f28bdd766fc6045d74feedfc8b156103e5510f2194db3",
       "viewport": "1024x900",
       "theme": "dark",
       "themeApplied": true,
       "scenario": "empty",
-      "capturedAt": "2026-11-04T18:18:07.866Z",
+      "capturedAt": "2026-11-04T18:54:22.346Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -567,10 +1661,90 @@
         "shellOverflow": 0,
         "fontSizeMinRaw": 13,
         "fontSizeMin": 13,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              249,
+              250,
+              251
+            ],
+            "bg": [
+              21,
+              21,
+              23
+            ],
+            "ratio": 17.45,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              21,
+              21,
+              23
+            ],
+            "bg": [
+              249,
+              250,
+              251
+            ],
+            "ratio": 17.45,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "status": "missing"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "status": "missing"
+          }
+        ],
         "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "未测"
+          "textMin": 17.45,
+          "nonTextMin": null,
+          "textStatus": "sampled",
+          "nonTextStatus": "未测",
+          "violations": []
         },
         "drawerPrimaryCount": 0,
         "primarySelector": "class-fallback",
@@ -581,7 +1755,7 @@
         "primaryClassNames": [
           "px-btn primary"
         ],
-        "contractPrimaryClassPresent": false,
+        "contractPrimaryClassPresent": true,
         "internalCodeCount": 0,
         "destructiveControlCount": 0,
         "horizontalOverflow": 0,
@@ -591,18 +1765,32 @@
         "bodyBackground": "rgb(21, 21, 23)",
         "pageScrollHeight": 900
       },
+      "sceneMetrics": {
+        "shellScene": "empty",
+        "shellMode": "run",
+        "runbarText": "Praxis\n未选择运行\n运行\n蓝图\n更多\n▾",
+        "progress": null,
+        "progressDone": null,
+        "progressTotal": null,
+        "worldScale": null,
+        "selectedNodeId": null,
+        "selectedRect": null,
+        "inspectorRect": null,
+        "selectedOverlapArea": 0,
+        "inspectorVisible": false
+      },
       "violations": [],
       "expectedViolations": [],
       "note": "空态（无 Run，1024x900）"
     },
     {
       "file": "docs/praxis/screenshots/v2/empty-dark-1440x1000.png",
-      "sha256": "d59eea9d3ea568be3c459943347789fe04853cd0bc089ea2b5589b5ad221c0ee",
+      "sha256": "989aa486192536881f9bf32a1d38eabbed9b7dcbc8deeba7e2a5dc4df783878a",
       "viewport": "1440x1000",
       "theme": "dark",
       "themeApplied": true,
       "scenario": "empty",
-      "capturedAt": "2026-11-04T18:18:07.284Z",
+      "capturedAt": "2026-11-04T18:54:21.769Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -626,10 +1814,90 @@
         "shellOverflow": 0,
         "fontSizeMinRaw": 13,
         "fontSizeMin": 13,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              249,
+              250,
+              251
+            ],
+            "bg": [
+              21,
+              21,
+              23
+            ],
+            "ratio": 17.45,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              21,
+              21,
+              23
+            ],
+            "bg": [
+              249,
+              250,
+              251
+            ],
+            "ratio": 17.45,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "status": "missing"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "status": "missing"
+          }
+        ],
         "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "未测"
+          "textMin": 17.45,
+          "nonTextMin": null,
+          "textStatus": "sampled",
+          "nonTextStatus": "未测",
+          "violations": []
         },
         "drawerPrimaryCount": 0,
         "primarySelector": "class-fallback",
@@ -640,7 +1908,7 @@
         "primaryClassNames": [
           "px-btn primary"
         ],
-        "contractPrimaryClassPresent": false,
+        "contractPrimaryClassPresent": true,
         "internalCodeCount": 0,
         "destructiveControlCount": 0,
         "horizontalOverflow": 0,
@@ -650,18 +1918,32 @@
         "bodyBackground": "rgb(21, 21, 23)",
         "pageScrollHeight": 1000
       },
+      "sceneMetrics": {
+        "shellScene": "empty",
+        "shellMode": "run",
+        "runbarText": "Praxis\n未选择运行\n运行\n蓝图\n更多\n▾",
+        "progress": null,
+        "progressDone": null,
+        "progressTotal": null,
+        "worldScale": null,
+        "selectedNodeId": null,
+        "selectedRect": null,
+        "inspectorRect": null,
+        "selectedOverlapArea": 0,
+        "inspectorVisible": false
+      },
       "violations": [],
       "expectedViolations": [],
       "note": "空态（无 Run，1440x1000）"
     },
     {
       "file": "docs/praxis/screenshots/v2/empty-dark-700x600.png",
-      "sha256": "de2e285c3e2c02d4a65fe5a6352e68c2a10f646d198e333b25e6726866c90622",
+      "sha256": "7f3360ff73691a8961d2e69391ef12af549348f5d4765ff1b6b5a1f1dd24a8a6",
       "viewport": "700x600",
       "theme": "dark",
       "themeApplied": true,
       "scenario": "empty",
-      "capturedAt": "2026-11-04T18:18:08.433Z",
+      "capturedAt": "2026-11-04T18:54:22.903Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -685,10 +1967,90 @@
         "shellOverflow": 0,
         "fontSizeMinRaw": 13,
         "fontSizeMin": 13,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              249,
+              250,
+              251
+            ],
+            "bg": [
+              21,
+              21,
+              23
+            ],
+            "ratio": 17.45,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              21,
+              21,
+              23
+            ],
+            "bg": [
+              249,
+              250,
+              251
+            ],
+            "ratio": 17.45,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "status": "missing"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "status": "missing"
+          }
+        ],
         "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "未测"
+          "textMin": 17.45,
+          "nonTextMin": null,
+          "textStatus": "sampled",
+          "nonTextStatus": "未测",
+          "violations": []
         },
         "drawerPrimaryCount": 0,
         "primarySelector": "class-fallback",
@@ -699,7 +2061,7 @@
         "primaryClassNames": [
           "px-btn primary"
         ],
-        "contractPrimaryClassPresent": false,
+        "contractPrimaryClassPresent": true,
         "internalCodeCount": 0,
         "destructiveControlCount": 0,
         "horizontalOverflow": 0,
@@ -709,18 +2071,32 @@
         "bodyBackground": "rgb(21, 21, 23)",
         "pageScrollHeight": 600
       },
+      "sceneMetrics": {
+        "shellScene": "empty",
+        "shellMode": "run",
+        "runbarText": "未选择运行\n更多\n▾",
+        "progress": null,
+        "progressDone": null,
+        "progressTotal": null,
+        "worldScale": null,
+        "selectedNodeId": null,
+        "selectedRect": null,
+        "inspectorRect": null,
+        "selectedOverlapArea": 0,
+        "inspectorVisible": false
+      },
       "violations": [],
       "expectedViolations": [],
       "note": "空态（无 Run，700x600）"
     },
     {
       "file": "docs/praxis/screenshots/v2/empty-light-1024x900.png",
-      "sha256": "bcc42f4e6c84d54c474e4fe51893406ef25d3b22fcae4dd41c6a45ca04375d2a",
+      "sha256": "7ebcd1bb56b8ae7d39a53f2db84c3f0b8afaa6489fe1c81ce62a78ce61ade1ee",
       "viewport": "1024x900",
       "theme": "light",
       "themeApplied": true,
       "scenario": "empty",
-      "capturedAt": "2026-11-04T18:17:02.743Z",
+      "capturedAt": "2026-11-04T18:53:11.377Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -744,10 +2120,90 @@
         "shellOverflow": 0,
         "fontSizeMinRaw": 13,
         "fontSizeMin": 13,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              255,
+              255,
+              255
+            ],
+            "bg": [
+              15,
+              17,
+              21
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "status": "missing"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "status": "missing"
+          }
+        ],
         "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "未测"
+          "textMin": 18.9,
+          "nonTextMin": null,
+          "textStatus": "sampled",
+          "nonTextStatus": "未测",
+          "violations": []
         },
         "drawerPrimaryCount": 0,
         "primarySelector": "class-fallback",
@@ -758,7 +2214,7 @@
         "primaryClassNames": [
           "px-btn primary"
         ],
-        "contractPrimaryClassPresent": false,
+        "contractPrimaryClassPresent": true,
         "internalCodeCount": 0,
         "destructiveControlCount": 0,
         "horizontalOverflow": 0,
@@ -768,18 +2224,32 @@
         "bodyBackground": "rgb(255, 255, 255)",
         "pageScrollHeight": 900
       },
+      "sceneMetrics": {
+        "shellScene": "empty",
+        "shellMode": "run",
+        "runbarText": "Praxis\n未选择运行\n运行\n蓝图\n更多\n▾",
+        "progress": null,
+        "progressDone": null,
+        "progressTotal": null,
+        "worldScale": null,
+        "selectedNodeId": null,
+        "selectedRect": null,
+        "inspectorRect": null,
+        "selectedOverlapArea": 0,
+        "inspectorVisible": false
+      },
       "violations": [],
       "expectedViolations": [],
       "note": "空态（无 Run，1024x900）"
     },
     {
       "file": "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
-      "sha256": "d779b44848c866ba4c0fd798406ba18b5b02a9c5ed89d294a7c9c09ed8d16062",
+      "sha256": "43b25edfe1200046a7678aa39576f26da536ea328aa2760eac8631fbc52262b7",
       "viewport": "1440x1000",
       "theme": "light",
       "themeApplied": true,
       "scenario": "empty",
-      "capturedAt": "2026-11-04T18:17:02.162Z",
+      "capturedAt": "2026-11-04T18:53:10.800Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -803,10 +2273,90 @@
         "shellOverflow": 0,
         "fontSizeMinRaw": 13,
         "fontSizeMin": 13,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              255,
+              255,
+              255
+            ],
+            "bg": [
+              15,
+              17,
+              21
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "status": "missing"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "status": "missing"
+          }
+        ],
         "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "未测"
+          "textMin": 18.9,
+          "nonTextMin": null,
+          "textStatus": "sampled",
+          "nonTextStatus": "未测",
+          "violations": []
         },
         "drawerPrimaryCount": 0,
         "primarySelector": "class-fallback",
@@ -817,7 +2367,7 @@
         "primaryClassNames": [
           "px-btn primary"
         ],
-        "contractPrimaryClassPresent": false,
+        "contractPrimaryClassPresent": true,
         "internalCodeCount": 0,
         "destructiveControlCount": 0,
         "horizontalOverflow": 0,
@@ -826,6 +2376,20 @@
         "themeSource": "light",
         "bodyBackground": "rgb(255, 255, 255)",
         "pageScrollHeight": 1000
+      },
+      "sceneMetrics": {
+        "shellScene": "empty",
+        "shellMode": "run",
+        "runbarText": "Praxis\n未选择运行\n运行\n蓝图\n更多\n▾",
+        "progress": null,
+        "progressDone": null,
+        "progressTotal": null,
+        "worldScale": null,
+        "selectedNodeId": null,
+        "selectedRect": null,
+        "inspectorRect": null,
+        "selectedOverlapArea": 0,
+        "inspectorVisible": false
       },
       "violations": [],
       "expectedViolations": [],
@@ -838,7 +2402,7 @@
       "theme": "light",
       "themeApplied": true,
       "scenario": "empty",
-      "capturedAt": "2026-11-04T18:17:03.310Z",
+      "capturedAt": "2026-11-04T18:53:11.942Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -862,10 +2426,90 @@
         "shellOverflow": 0,
         "fontSizeMinRaw": 13,
         "fontSizeMin": 13,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              255,
+              255,
+              255
+            ],
+            "bg": [
+              15,
+              17,
+              21
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "status": "missing"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "status": "missing"
+          }
+        ],
         "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "未测"
+          "textMin": 18.9,
+          "nonTextMin": null,
+          "textStatus": "sampled",
+          "nonTextStatus": "未测",
+          "violations": []
         },
         "drawerPrimaryCount": 0,
         "primarySelector": "class-fallback",
@@ -876,7 +2520,7 @@
         "primaryClassNames": [
           "px-btn primary"
         ],
-        "contractPrimaryClassPresent": false,
+        "contractPrimaryClassPresent": true,
         "internalCodeCount": 0,
         "destructiveControlCount": 0,
         "horizontalOverflow": 0,
@@ -886,64 +2530,286 @@
         "bodyBackground": "rgb(255, 255, 255)",
         "pageScrollHeight": 600
       },
+      "sceneMetrics": {
+        "shellScene": "empty",
+        "shellMode": "run",
+        "runbarText": "未选择运行\n更多\n▾",
+        "progress": null,
+        "progressDone": null,
+        "progressTotal": null,
+        "worldScale": null,
+        "selectedNodeId": null,
+        "selectedRect": null,
+        "inspectorRect": null,
+        "selectedOverlapArea": 0,
+        "inspectorVisible": false
+      },
       "violations": [],
       "expectedViolations": [],
       "note": "空态（无 Run，700x600）"
     },
     {
       "file": "docs/praxis/screenshots/v2/loading-dark-1440x1000.png",
-      "sha256": "75f32ca3bff32bb8502998120c9258e4ca52e6ce461fdbc11e55a5b975b6acab",
+      "sha256": "e989829173466a204d9197fb4c332bd9e2b3155e7d58ea77389a199aa1076eae",
       "viewport": "1440x1000",
       "theme": "dark",
       "themeApplied": true,
       "scenario": "loading",
-      "capturedAt": "2026-11-04T18:18:22.374Z",
+      "capturedAt": "2026-11-04T18:54:32.202Z",
       "metrics": {
-        "available": false,
-        "reason": "no .px-shell (Praxis panel not mounted)"
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "canvas": {
+          "width": 1440,
+          "height": 1000
+        },
+        "nodeTotal": 0,
+        "nodeVisible": 0,
+        "visibleNodeRatio": 0,
+        "contentBBoxRatio": 0,
+        "bboxWidthRatio": 0,
+        "bboxHeightRatio": 0,
+        "bboxAreaRatio": 0,
+        "shellWidth": 1160,
+        "shellHeight": 1000,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": null,
+        "fontSizeMin": null,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "status": "missing"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "status": "missing"
+          }
+        ],
+        "contrast": {
+          "textMin": null,
+          "nonTextMin": null,
+          "textStatus": "未测",
+          "nonTextStatus": "未测",
+          "violations": []
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "class-fallback",
+        "primaryCount": 0,
+        "primaryTexts": [],
+        "primaryClassNames": [],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": null,
+        "viewportHint": false,
+        "themeSource": "dark",
+        "bodyBackground": "rgb(21, 21, 23)",
+        "pageScrollHeight": 1000
+      },
+      "sceneMetrics": {
+        "shellScene": "loading",
+        "shellMode": "run",
+        "runbarText": "",
+        "progress": null,
+        "progressDone": null,
+        "progressTotal": null,
+        "worldScale": null,
+        "selectedNodeId": null,
+        "selectedRect": null,
+        "inspectorRect": null,
+        "selectedOverlapArea": 0,
+        "inspectorVisible": false
       },
       "violations": [],
-      "expectedViolations": [
-        {
-          "metric": "available",
-          "expected": true,
-          "actual": "no .px-shell (Praxis panel not mounted)",
-          "reason": "loading 无 .px-shell 是预期"
-        }
-      ],
-      "note": "加载态（重载瞬间）"
+      "expectedViolations": [],
+      "note": "Praxis loading 骨架（state 请求延迟 1.5s）"
     },
     {
       "file": "docs/praxis/screenshots/v2/loading-light-1440x1000.png",
-      "sha256": "33dc070d8540686750e71e61836394bce626973de204b37ecb14b2c17d4e31a4",
+      "sha256": "527c15f86de24e9c13c492514252c4017c0f9f94ce661af157f6511e34835edf",
       "viewport": "1440x1000",
       "theme": "light",
       "themeApplied": true,
       "scenario": "loading",
-      "capturedAt": "2026-11-04T18:17:30.831Z",
+      "capturedAt": "2026-11-04T18:53:30.119Z",
       "metrics": {
-        "available": false,
-        "reason": "no .px-shell (Praxis panel not mounted)"
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "canvas": {
+          "width": 1440,
+          "height": 1000
+        },
+        "nodeTotal": 0,
+        "nodeVisible": 0,
+        "visibleNodeRatio": 0,
+        "contentBBoxRatio": 0,
+        "bboxWidthRatio": 0,
+        "bboxHeightRatio": 0,
+        "bboxAreaRatio": 0,
+        "shellWidth": 1160,
+        "shellHeight": 1000,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": null,
+        "fontSizeMin": null,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "status": "missing"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "status": "missing"
+          }
+        ],
+        "contrast": {
+          "textMin": null,
+          "nonTextMin": null,
+          "textStatus": "未测",
+          "nonTextStatus": "未测",
+          "violations": []
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "class-fallback",
+        "primaryCount": 0,
+        "primaryTexts": [],
+        "primaryClassNames": [],
+        "contractPrimaryClassPresent": false,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": null,
+        "viewportHint": false,
+        "themeSource": "light",
+        "bodyBackground": "rgb(255, 255, 255)",
+        "pageScrollHeight": 1000
+      },
+      "sceneMetrics": {
+        "shellScene": "loading",
+        "shellMode": "run",
+        "runbarText": "",
+        "progress": null,
+        "progressDone": null,
+        "progressTotal": null,
+        "worldScale": null,
+        "selectedNodeId": null,
+        "selectedRect": null,
+        "inspectorRect": null,
+        "selectedOverlapArea": 0,
+        "inspectorVisible": false
       },
       "violations": [],
-      "expectedViolations": [
-        {
-          "metric": "available",
-          "expected": true,
-          "actual": "no .px-shell (Praxis panel not mounted)",
-          "reason": "loading 无 .px-shell 是预期"
-        }
-      ],
-      "note": "加载态（重载瞬间）"
+      "expectedViolations": [],
+      "note": "Praxis loading 骨架（state 请求延迟 1.5s）"
     },
     {
       "file": "docs/praxis/screenshots/v2/running-dark-1024x900.png",
-      "sha256": "fab176a9b8f515389e8d29ef29deef0307fd3383dce3614d0e1045a150ecda8f",
+      "sha256": "09ddb97b7094b5c9bb4d2a5914fb0cec6755d0e5193f17fb97292e48896fb3c9",
       "viewport": "1024x900",
       "theme": "dark",
       "themeApplied": true,
       "scenario": "running:frozen",
-      "capturedAt": "2026-11-04T18:18:17.026Z",
+      "capturedAt": "2026-11-04T18:54:28.379Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -958,38 +2824,203 @@
         "nodeTotal": 15,
         "nodeVisible": 15,
         "visibleNodeRatio": 1,
-        "contentBBoxRatio": 0.2506186614252685,
-        "bboxWidthRatio": 0.9111827727287046,
-        "bboxHeightRatio": 0.2750476292201451,
-        "bboxAreaRatio": 0.2506186614252685,
+        "contentBBoxRatio": 0.27769382071702603,
+        "bboxWidthRatio": 0.9591397931498866,
+        "bboxHeightRatio": 0.2895238240559896,
+        "bboxAreaRatio": 0.27769382071702603,
         "shellWidth": 744,
         "shellHeight": 900,
         "shellOverflow": 0,
         "fontSizeMinRaw": 10,
-        "fontSizeMin": 7.62,
+        "fontSizeMin": 7.98,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "fg": [
+              249,
+              250,
+              251
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 15.03,
+            "status": "sampled"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 10.42,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 10.42,
+            "status": "sampled"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              21,
+              21,
+              23
+            ],
+            "ratio": 12.11,
+            "status": "sampled"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              249,
+              250,
+              251
+            ],
+            "bg": [
+              21,
+              21,
+              23
+            ],
+            "ratio": 17.45,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              21,
+              21,
+              23
+            ],
+            "bg": [
+              249,
+              250,
+              251
+            ],
+            "ratio": 17.45,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "fg": [
+              138.4859614711194,
+              218.67806921063465,
+              155.42047015259195
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 9.47,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 10.42,
+            "status": "sampled"
+          }
+        ],
         "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "sampled"
+          "textMin": 10.42,
+          "nonTextMin": 9.47,
+          "textStatus": "sampled",
+          "nonTextStatus": "sampled",
+          "violations": []
         },
         "drawerPrimaryCount": 0,
         "primarySelector": "data-testid=primary",
         "primaryCount": 1,
         "primaryTexts": [
-          "记录研究问题"
+          "提交讨论"
         ],
         "primaryClassNames": [
           "px-btn primary"
         ],
-        "contractPrimaryClassPresent": false,
+        "contractPrimaryClassPresent": true,
         "internalCodeCount": 0,
         "destructiveControlCount": 0,
         "horizontalOverflow": 0,
-        "worldScale": 0.762,
+        "worldScale": 0.798,
         "viewportHint": true,
         "themeSource": "dark",
         "bodyBackground": "rgb(21, 21, 23)",
         "pageScrollHeight": 900
+      },
+      "sceneMetrics": {
+        "shellScene": "running",
+        "shellMode": "run",
+        "runbarText": "Praxis\n证据截图 · frozen\n预注册已冻结\n3/10\n运行\n蓝图\n提交讨论\n更多\n▾",
+        "progress": "3/10",
+        "progressDone": 3,
+        "progressTotal": 10,
+        "worldScale": "0.798",
+        "selectedNodeId": "n_prereg",
+        "selectedRect": {
+          "x": 884.8400268554688,
+          "y": 358.739990234375,
+          "w": 124.79998779296875,
+          "h": 51.20001220703125
+        },
+        "inspectorRect": null,
+        "selectedOverlapArea": 0,
+        "inspectorVisible": false
       },
       "violations": [],
       "expectedViolations": [],
@@ -997,12 +3028,12 @@
     },
     {
       "file": "docs/praxis/screenshots/v2/running-dark-1440x1000.png",
-      "sha256": "446aaad07295ff12882746e85f071dcea4fcee87f5d98e15bd21d58002bca5f0",
+      "sha256": "f0c53682692bfd1f3678e4efdf2079db6aa5a1ee2e27bc5ee969163ffc03a4b5",
       "viewport": "1440x1000",
       "theme": "dark",
       "themeApplied": true,
       "scenario": "running:frozen",
-      "capturedAt": "2026-11-04T18:18:14.621Z",
+      "capturedAt": "2026-11-04T18:54:25.910Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -1026,21 +3057,167 @@
         "shellOverflow": 0,
         "fontSizeMinRaw": 10,
         "fontSizeMin": 10,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "fg": [
+              249,
+              250,
+              251
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 15.03,
+            "status": "sampled"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 10.42,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 10.42,
+            "status": "sampled"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              21,
+              21,
+              23
+            ],
+            "ratio": 12.11,
+            "status": "sampled"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              249,
+              250,
+              251
+            ],
+            "bg": [
+              21,
+              21,
+              23
+            ],
+            "ratio": 17.45,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              21,
+              21,
+              23
+            ],
+            "bg": [
+              249,
+              250,
+              251
+            ],
+            "ratio": 17.45,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "fg": [
+              138.4859614711194,
+              218.67806921063465,
+              155.42047015259195
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 9.47,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 10.42,
+            "status": "sampled"
+          }
+        ],
         "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "sampled"
+          "textMin": 10.42,
+          "nonTextMin": 9.47,
+          "textStatus": "sampled",
+          "nonTextStatus": "sampled",
+          "violations": []
         },
         "drawerPrimaryCount": 0,
         "primarySelector": "data-testid=primary",
         "primaryCount": 1,
         "primaryTexts": [
-          "记录研究问题"
+          "提交讨论"
         ],
         "primaryClassNames": [
           "px-btn primary"
         ],
-        "contractPrimaryClassPresent": false,
+        "contractPrimaryClassPresent": true,
         "internalCodeCount": 0,
         "destructiveControlCount": 0,
         "horizontalOverflow": 0,
@@ -1049,6 +3226,25 @@
         "themeSource": "dark",
         "bodyBackground": "rgb(21, 21, 23)",
         "pageScrollHeight": 1000
+      },
+      "sceneMetrics": {
+        "shellScene": "running",
+        "shellMode": "run",
+        "runbarText": "Praxis\n证据截图 · frozen\n预注册已冻结\nv3\n3/10\n运行\n蓝图\n提交讨论\n更多\n▾",
+        "progress": "3/10",
+        "progressDone": 3,
+        "progressTotal": 10,
+        "worldScale": "1.000",
+        "selectedNodeId": "n_prereg",
+        "selectedRect": {
+          "x": 1150,
+          "y": 378,
+          "w": 156,
+          "h": 64
+        },
+        "inspectorRect": null,
+        "selectedOverlapArea": 0,
+        "inspectorVisible": false
       },
       "violations": [],
       "expectedViolations": [],
@@ -1056,12 +3252,12 @@
     },
     {
       "file": "docs/praxis/screenshots/v2/running-dark-700x600.png",
-      "sha256": "2890e152aa207e7f814d3a0cbe150118d7ab4164c838bf899d98f28c47b2b871",
+      "sha256": "7cc9bb9b416388e84722b3a0f3d1be963b540f9f2a4b978c9db4148771492eab",
       "viewport": "700x600",
       "theme": "dark",
       "themeApplied": true,
       "scenario": "running:frozen",
-      "capturedAt": "2026-11-04T18:18:19.384Z",
+      "capturedAt": "2026-11-04T18:54:28.987Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -1076,19 +3272,165 @@
         "nodeTotal": 15,
         "nodeVisible": 15,
         "visibleNodeRatio": 1,
-        "contentBBoxRatio": 0.4386128364389234,
-        "bboxWidthRatio": 1.0388198757763976,
-        "bboxHeightRatio": 0.4222222222222222,
-        "bboxAreaRatio": 0.4386128364389234,
+        "contentBBoxRatio": 0.37124190166655024,
+        "bboxWidthRatio": 0.9557143027738014,
+        "bboxHeightRatio": 0.3884444342719184,
+        "bboxAreaRatio": 0.37124190166655024,
         "shellWidth": 644,
         "shellHeight": 600,
         "shellOverflow": 0,
         "fontSizeMinRaw": 10,
-        "fontSizeMin": 7.5,
+        "fontSizeMin": 6.86,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "fg": [
+              249,
+              250,
+              251
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 15.03,
+            "status": "sampled"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 10.42,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 10.42,
+            "status": "sampled"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              21,
+              21,
+              23
+            ],
+            "ratio": 12.11,
+            "status": "sampled"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              249,
+              250,
+              251
+            ],
+            "bg": [
+              21,
+              21,
+              23
+            ],
+            "ratio": 17.45,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              21,
+              21,
+              23
+            ],
+            "bg": [
+              249,
+              250,
+              251
+            ],
+            "ratio": 17.45,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "fg": [
+              138.4859614711194,
+              218.67806921063465,
+              155.42047015259195
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 9.47,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 10.42,
+            "status": "sampled"
+          }
+        ],
         "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "sampled"
+          "textMin": 10.42,
+          "nonTextMin": 9.47,
+          "textStatus": "sampled",
+          "nonTextStatus": "sampled",
+          "violations": []
         },
         "drawerPrimaryCount": 0,
         "primarySelector": "data-testid=primary",
@@ -1099,15 +3441,34 @@
         "primaryClassNames": [
           "px-btn primary"
         ],
-        "contractPrimaryClassPresent": false,
+        "contractPrimaryClassPresent": true,
         "internalCodeCount": 0,
         "destructiveControlCount": 0,
         "horizontalOverflow": 0,
-        "worldScale": 0.75,
+        "worldScale": 0.686,
         "viewportHint": true,
         "themeSource": "dark",
         "bodyBackground": "rgb(21, 21, 23)",
         "pageScrollHeight": 600
+      },
+      "sceneMetrics": {
+        "shellScene": "running",
+        "shellMode": "run",
+        "runbarText": "证据截图 · frozen\n预注册已冻结\n提交讨论\n更多\n▾",
+        "progress": null,
+        "progressDone": null,
+        "progressTotal": null,
+        "worldScale": "0.686",
+        "selectedNodeId": "n_prereg",
+        "selectedRect": {
+          "x": 579.9300537109375,
+          "y": 225.87001037597656,
+          "w": 107.63995361328125,
+          "h": 44.15998840332031
+        },
+        "inspectorRect": null,
+        "selectedOverlapArea": 0,
+        "inspectorVisible": false
       },
       "violations": [],
       "expectedViolations": [],
@@ -1115,12 +3476,12 @@
     },
     {
       "file": "docs/praxis/screenshots/v2/running-light-1024x900.png",
-      "sha256": "8184f6d008bcdefe9ba5eb85a1ce6c064878fe67fd91dc0e0944be70bfb60afd",
+      "sha256": "b80952d6d700a294084e1ece3e773e24321c75097b496190035335260c572bfb",
       "viewport": "1024x900",
       "theme": "light",
       "themeApplied": true,
       "scenario": "running:frozen",
-      "capturedAt": "2026-11-04T18:17:21.030Z",
+      "capturedAt": "2026-11-04T18:53:25.665Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -1135,19 +3496,165 @@
         "nodeTotal": 15,
         "nodeVisible": 15,
         "visibleNodeRatio": 1,
-        "contentBBoxRatio": 0.2506186614252685,
-        "bboxWidthRatio": 0.9111827727287046,
-        "bboxHeightRatio": 0.2750476292201451,
-        "bboxAreaRatio": 0.2506186614252685,
+        "contentBBoxRatio": 0.27769382071702603,
+        "bboxWidthRatio": 0.9591397931498866,
+        "bboxHeightRatio": 0.2895238240559896,
+        "bboxAreaRatio": 0.27769382071702603,
         "shellWidth": 744,
         "shellHeight": 900,
         "shellOverflow": 0,
         "fontSizeMinRaw": 10,
-        "fontSizeMin": 7.62,
+        "fontSizeMin": 7.98,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              255,
+              255,
+              255
+            ],
+            "bg": [
+              15,
+              17,
+              21
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "fg": [
+              38.172048228330475,
+              122.0741187839774,
+              66.83931374824422
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.31,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          }
+        ],
         "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "sampled"
+          "textMin": 5.8,
+          "nonTextMin": 5.31,
+          "textStatus": "sampled",
+          "nonTextStatus": "sampled",
+          "violations": []
         },
         "drawerPrimaryCount": 0,
         "primarySelector": "data-testid=primary",
@@ -1158,15 +3665,34 @@
         "primaryClassNames": [
           "px-btn primary"
         ],
-        "contractPrimaryClassPresent": false,
+        "contractPrimaryClassPresent": true,
         "internalCodeCount": 0,
         "destructiveControlCount": 0,
         "horizontalOverflow": 0,
-        "worldScale": 0.762,
+        "worldScale": 0.798,
         "viewportHint": true,
         "themeSource": "light",
         "bodyBackground": "rgb(255, 255, 255)",
         "pageScrollHeight": 900
+      },
+      "sceneMetrics": {
+        "shellScene": "running",
+        "shellMode": "run",
+        "runbarText": "Praxis\n证据截图 · frozen\n预注册已冻结\n3/10\n运行\n蓝图\n提交讨论\n更多\n▾",
+        "progress": "3/10",
+        "progressDone": 3,
+        "progressTotal": 10,
+        "worldScale": "0.798",
+        "selectedNodeId": "n_prereg",
+        "selectedRect": {
+          "x": 884.8400268554688,
+          "y": 358.739990234375,
+          "w": 124.79998779296875,
+          "h": 51.20001220703125
+        },
+        "inspectorRect": null,
+        "selectedOverlapArea": 0,
+        "inspectorVisible": false
       },
       "violations": [],
       "expectedViolations": [],
@@ -1174,12 +3700,12 @@
     },
     {
       "file": "docs/praxis/screenshots/v2/running-light-1440x1000.png",
-      "sha256": "8d15faf9e9aaba6a4ef3927c7af75df340c8bb4b251dca513abd9db061095d04",
+      "sha256": "c7d4d98ef17f65d1fde8cc936898f8dbbd9aa0cd14188fa471591643f9b0c0ec",
       "viewport": "1440x1000",
       "theme": "light",
       "themeApplied": true,
       "scenario": "running:frozen",
-      "capturedAt": "2026-11-04T18:17:18.575Z",
+      "capturedAt": "2026-11-04T18:53:23.188Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -1203,10 +3729,156 @@
         "shellOverflow": 0,
         "fontSizeMinRaw": 10,
         "fontSizeMin": 10,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              255,
+              255,
+              255
+            ],
+            "bg": [
+              15,
+              17,
+              21
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "fg": [
+              38.172048228330475,
+              122.0741187839774,
+              66.83931374824422
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.31,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          }
+        ],
         "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "sampled"
+          "textMin": 5.8,
+          "nonTextMin": 5.31,
+          "textStatus": "sampled",
+          "nonTextStatus": "sampled",
+          "violations": []
         },
         "drawerPrimaryCount": 0,
         "primarySelector": "data-testid=primary",
@@ -1217,7 +3889,7 @@
         "primaryClassNames": [
           "px-btn primary"
         ],
-        "contractPrimaryClassPresent": false,
+        "contractPrimaryClassPresent": true,
         "internalCodeCount": 0,
         "destructiveControlCount": 0,
         "horizontalOverflow": 0,
@@ -1227,18 +3899,37 @@
         "bodyBackground": "rgb(255, 255, 255)",
         "pageScrollHeight": 1000
       },
+      "sceneMetrics": {
+        "shellScene": "running",
+        "shellMode": "run",
+        "runbarText": "Praxis\n证据截图 · frozen\n预注册已冻结\nv3\n3/10\n运行\n蓝图\n提交讨论\n更多\n▾",
+        "progress": "3/10",
+        "progressDone": 3,
+        "progressTotal": 10,
+        "worldScale": "1.000",
+        "selectedNodeId": "n_prereg",
+        "selectedRect": {
+          "x": 1150,
+          "y": 378,
+          "w": 156,
+          "h": 64
+        },
+        "inspectorRect": null,
+        "selectedOverlapArea": 0,
+        "inspectorVisible": false
+      },
       "violations": [],
       "expectedViolations": [],
       "note": "运行态画布（1440x1000）"
     },
     {
       "file": "docs/praxis/screenshots/v2/running-light-700x600.png",
-      "sha256": "b1e9b4999ede6c96862169c997942ecf234f354db009c94fddc2fd56fde295dc",
+      "sha256": "6d87682ab2cca5568ddbc850c42985f48c62ff9bda70dafd4ae4700f371c3b13",
       "viewport": "700x600",
       "theme": "light",
       "themeApplied": true,
       "scenario": "running:frozen",
-      "capturedAt": "2026-11-04T18:17:23.427Z",
+      "capturedAt": "2026-11-04T18:53:26.282Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -1253,19 +3944,165 @@
         "nodeTotal": 15,
         "nodeVisible": 15,
         "visibleNodeRatio": 1,
-        "contentBBoxRatio": 0.4386128364389234,
-        "bboxWidthRatio": 1.0388198757763976,
-        "bboxHeightRatio": 0.4222222222222222,
-        "bboxAreaRatio": 0.4386128364389234,
+        "contentBBoxRatio": 0.37124190166655024,
+        "bboxWidthRatio": 0.9557143027738014,
+        "bboxHeightRatio": 0.3884444342719184,
+        "bboxAreaRatio": 0.37124190166655024,
         "shellWidth": 644,
         "shellHeight": 600,
         "shellOverflow": 0,
         "fontSizeMinRaw": 10,
-        "fontSizeMin": 7.5,
+        "fontSizeMin": 6.86,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              255,
+              255,
+              255
+            ],
+            "bg": [
+              15,
+              17,
+              21
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "fg": [
+              38.172048228330475,
+              122.0741187839774,
+              66.83931374824422
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.31,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          }
+        ],
         "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "sampled"
+          "textMin": 5.8,
+          "nonTextMin": 5.31,
+          "textStatus": "sampled",
+          "nonTextStatus": "sampled",
+          "violations": []
         },
         "drawerPrimaryCount": 0,
         "primarySelector": "data-testid=primary",
@@ -1276,87 +4113,47 @@
         "primaryClassNames": [
           "px-btn primary"
         ],
-        "contractPrimaryClassPresent": false,
+        "contractPrimaryClassPresent": true,
         "internalCodeCount": 0,
         "destructiveControlCount": 0,
         "horizontalOverflow": 0,
-        "worldScale": 0.75,
+        "worldScale": 0.686,
         "viewportHint": true,
         "themeSource": "light",
         "bodyBackground": "rgb(255, 255, 255)",
         "pageScrollHeight": 600
+      },
+      "sceneMetrics": {
+        "shellScene": "running",
+        "shellMode": "run",
+        "runbarText": "证据截图 · frozen\n预注册已冻结\n提交讨论\n更多\n▾",
+        "progress": null,
+        "progressDone": null,
+        "progressTotal": null,
+        "worldScale": "0.686",
+        "selectedNodeId": "n_prereg",
+        "selectedRect": {
+          "x": 579.9300537109375,
+          "y": 225.87001037597656,
+          "w": 107.63995361328125,
+          "h": 44.15998840332031
+        },
+        "inspectorRect": null,
+        "selectedOverlapArea": 0,
+        "inspectorVisible": false
       },
       "violations": [],
       "expectedViolations": [],
       "note": "运行态画布（700x600）"
     },
     {
-      "file": "docs/praxis/screenshots/v2/selected-dark-1024x900.png",
-      "sha256": "68fc41d58b2a4003c8d1467648932a5b2781426bd25dc83ee89d7d70be00f678",
-      "viewport": "1024x900",
-      "theme": "dark",
-      "themeApplied": true,
-      "scenario": "selected:frozen",
-      "capturedAt": "2026-11-04T18:18:17.745Z",
-      "metrics": {
-        "available": true,
-        "scenario": null,
-        "viewport": {
-          "width": 1024,
-          "height": 900
-        },
-        "canvas": {
-          "width": 744,
-          "height": 840
-        },
-        "nodeTotal": 15,
-        "nodeVisible": 15,
-        "visibleNodeRatio": 1,
-        "contentBBoxRatio": 0.2506186614252685,
-        "bboxWidthRatio": 0.9111827727287046,
-        "bboxHeightRatio": 0.2750476292201451,
-        "bboxAreaRatio": 0.2506186614252685,
-        "shellWidth": 744,
-        "shellHeight": 900,
-        "shellOverflow": 0,
-        "fontSizeMinRaw": 10,
-        "fontSizeMin": 7.62,
-        "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "sampled"
-        },
-        "drawerPrimaryCount": 0,
-        "primarySelector": "data-testid=primary",
-        "primaryCount": 1,
-        "primaryTexts": [
-          "记录研究问题"
-        ],
-        "primaryClassNames": [
-          "px-btn primary"
-        ],
-        "contractPrimaryClassPresent": false,
-        "internalCodeCount": 0,
-        "destructiveControlCount": 0,
-        "horizontalOverflow": 0,
-        "worldScale": 0.762,
-        "viewportHint": true,
-        "themeSource": "dark",
-        "bodyBackground": "rgb(21, 21, 23)",
-        "pageScrollHeight": 900
-      },
-      "violations": [],
-      "expectedViolations": [],
-      "note": "节点选中态（检查器，1024x900）"
-    },
-    {
       "file": "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
-      "sha256": "39c5fef2ff14d8d3f69aab434132c64034f28814118ae47eb3733e18a3e812bb",
+      "sha256": "69c941359dccaf1fb57b5f8ede2dce61682b33441f3db01a70fa0d280f576f9f",
       "viewport": "1440x1000",
       "theme": "dark",
       "themeApplied": true,
       "scenario": "selected:frozen",
-      "capturedAt": "2026-11-04T18:18:15.365Z",
+      "capturedAt": "2026-11-04T18:54:26.679Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -1380,69 +4177,167 @@
         "shellOverflow": 0,
         "fontSizeMinRaw": 10,
         "fontSizeMin": 10,
-        "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "sampled"
-        },
-        "drawerPrimaryCount": 0,
-        "primarySelector": "data-testid=primary",
-        "primaryCount": 1,
-        "primaryTexts": [
-          "记录研究问题"
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "fg": [
+              249,
+              250,
+              251
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 15.03,
+            "status": "sampled"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 10.42,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 10.42,
+            "status": "sampled"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              21,
+              21,
+              23
+            ],
+            "ratio": 12.11,
+            "status": "sampled"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              249,
+              250,
+              251
+            ],
+            "bg": [
+              21,
+              21,
+              23
+            ],
+            "ratio": 17.45,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "fg": [
+              249,
+              250,
+              251
+            ],
+            "bg": [
+              97,
+              102,
+              107
+            ],
+            "ratio": 5.55,
+            "status": "sampled"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              21,
+              21,
+              23
+            ],
+            "bg": [
+              249,
+              250,
+              251
+            ],
+            "ratio": 17.45,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "fg": [
+              138.4859614711194,
+              218.67806921063465,
+              155.42047015259195
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 9.47,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 10.42,
+            "status": "sampled"
+          }
         ],
-        "primaryClassNames": [
-          "px-btn primary"
-        ],
-        "contractPrimaryClassPresent": false,
-        "internalCodeCount": 0,
-        "destructiveControlCount": 0,
-        "horizontalOverflow": 0,
-        "worldScale": 1,
-        "viewportHint": false,
-        "themeSource": "dark",
-        "bodyBackground": "rgb(21, 21, 23)",
-        "pageScrollHeight": 1000
-      },
-      "violations": [],
-      "expectedViolations": [],
-      "note": "节点选中态（检查器，1440x1000）"
-    },
-    {
-      "file": "docs/praxis/screenshots/v2/selected-light-1024x900.png",
-      "sha256": "95b595ecef172f3ff174bcc6fe3c9f39f86f2da027bbc0870c7421e1b1ab3aa5",
-      "viewport": "1024x900",
-      "theme": "light",
-      "themeApplied": true,
-      "scenario": "selected:frozen",
-      "capturedAt": "2026-11-04T18:17:21.767Z",
-      "metrics": {
-        "available": true,
-        "scenario": null,
-        "viewport": {
-          "width": 1024,
-          "height": 900
-        },
-        "canvas": {
-          "width": 744,
-          "height": 840
-        },
-        "nodeTotal": 15,
-        "nodeVisible": 15,
-        "visibleNodeRatio": 1,
-        "contentBBoxRatio": 0.2506186614252685,
-        "bboxWidthRatio": 0.9111827727287046,
-        "bboxHeightRatio": 0.2750476292201451,
-        "bboxAreaRatio": 0.2506186614252685,
-        "shellWidth": 744,
-        "shellHeight": 900,
-        "shellOverflow": 0,
-        "fontSizeMinRaw": 10,
-        "fontSizeMin": 7.62,
         "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "sampled"
+          "textMin": 5.55,
+          "nonTextMin": 9.47,
+          "textStatus": "sampled",
+          "nonTextStatus": "sampled",
+          "violations": []
         },
         "drawerPrimaryCount": 0,
         "primarySelector": "data-testid=primary",
@@ -1453,28 +4348,52 @@
         "primaryClassNames": [
           "px-btn primary"
         ],
-        "contractPrimaryClassPresent": false,
+        "contractPrimaryClassPresent": true,
         "internalCodeCount": 0,
         "destructiveControlCount": 0,
         "horizontalOverflow": 0,
-        "worldScale": 0.762,
-        "viewportHint": true,
-        "themeSource": "light",
-        "bodyBackground": "rgb(255, 255, 255)",
-        "pageScrollHeight": 900
+        "worldScale": 1,
+        "viewportHint": false,
+        "themeSource": "dark",
+        "bodyBackground": "rgb(21, 21, 23)",
+        "pageScrollHeight": 1000
+      },
+      "sceneMetrics": {
+        "shellScene": "running",
+        "shellMode": "run",
+        "runbarText": "Praxis\n证据截图 · frozen\n预注册已冻结\nv3\n3/10\n运行\n蓝图\n收起面板\n更多\n▾",
+        "progress": "3/10",
+        "progressDone": 3,
+        "progressTotal": 10,
+        "worldScale": "1.000",
+        "selectedNodeId": "n_prereg",
+        "selectedRect": {
+          "x": 896,
+          "y": 378,
+          "w": 156,
+          "h": 64
+        },
+        "inspectorRect": {
+          "x": 1068,
+          "y": 72,
+          "w": 360,
+          "h": 916
+        },
+        "selectedOverlapArea": 0,
+        "inspectorVisible": true
       },
       "violations": [],
       "expectedViolations": [],
-      "note": "节点选中态（检查器，1024x900）"
+      "note": "current 节点选中态（检查器，1440x1000）"
     },
     {
       "file": "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
-      "sha256": "07db03e941205d46b4a7dd572e03cb35efad18650f09338cdd4c3e2c873272c9",
+      "sha256": "b83746d3e15f88f45b37d4221275ca6816697d87250ced7136ca12ea140805d3",
       "viewport": "1440x1000",
       "theme": "light",
       "themeApplied": true,
       "scenario": "selected:frozen",
-      "capturedAt": "2026-11-04T18:17:19.328Z",
+      "capturedAt": "2026-11-04T18:53:23.967Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -1498,10 +4417,167 @@
         "shellOverflow": 0,
         "fontSizeMinRaw": 10,
         "fontSizeMin": 10,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              233,
+              236,
+              242
+            ],
+            "ratio": 15.97,
+            "status": "sampled"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              255,
+              255,
+              255
+            ],
+            "bg": [
+              15,
+              17,
+              21
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "fg": [
+              38.172048228330475,
+              122.0741187839774,
+              66.83931374824422
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.31,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          }
+        ],
         "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "sampled"
+          "textMin": 5.8,
+          "nonTextMin": 5.31,
+          "textStatus": "sampled",
+          "nonTextStatus": "sampled",
+          "violations": []
         },
         "drawerPrimaryCount": 0,
         "primarySelector": "data-testid=primary",
@@ -1512,7 +4588,7 @@
         "primaryClassNames": [
           "px-btn primary"
         ],
-        "contractPrimaryClassPresent": false,
+        "contractPrimaryClassPresent": true,
         "internalCodeCount": 0,
         "destructiveControlCount": 0,
         "horizontalOverflow": 0,
@@ -1522,18 +4598,42 @@
         "bodyBackground": "rgb(255, 255, 255)",
         "pageScrollHeight": 1000
       },
+      "sceneMetrics": {
+        "shellScene": "running",
+        "shellMode": "run",
+        "runbarText": "Praxis\n证据截图 · frozen\n预注册已冻结\nv3\n3/10\n运行\n蓝图\n收起面板\n更多\n▾",
+        "progress": "3/10",
+        "progressDone": 3,
+        "progressTotal": 10,
+        "worldScale": "1.000",
+        "selectedNodeId": "n_prereg",
+        "selectedRect": {
+          "x": 896,
+          "y": 378,
+          "w": 156,
+          "h": 64
+        },
+        "inspectorRect": {
+          "x": 1068,
+          "y": 72,
+          "w": 360,
+          "h": 916
+        },
+        "selectedOverlapArea": 0,
+        "inspectorVisible": true
+      },
       "violations": [],
       "expectedViolations": [],
-      "note": "节点选中态（检查器，1440x1000）"
+      "note": "current 节点选中态（检查器，1440x1000）"
     },
     {
       "file": "docs/praxis/screenshots/v2/selected-noncurrent-dark-1440x1000.png",
-      "sha256": "ced2d6b28e66f79e002d8178a2b9f9ae0f367a8393cb3093f2d76d82831aaafc",
+      "sha256": "20d4e499c503285a3abb142f85b6ca39f0797c75f43c27f02f2f9831872a3a3d",
       "viewport": "1440x1000",
       "theme": "dark",
       "themeApplied": true,
       "scenario": "selected-noncurrent:frozen",
-      "capturedAt": "2026-11-04T18:18:20.198Z",
+      "capturedAt": "2026-11-04T18:54:29.797Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -1557,10 +4657,167 @@
         "shellOverflow": 0,
         "fontSizeMinRaw": 10,
         "fontSizeMin": 10,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "fg": [
+              249,
+              250,
+              251
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 15.03,
+            "status": "sampled"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 10.42,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 10.42,
+            "status": "sampled"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              21,
+              21,
+              23
+            ],
+            "ratio": 12.11,
+            "status": "sampled"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              249,
+              250,
+              251
+            ],
+            "bg": [
+              21,
+              21,
+              23
+            ],
+            "ratio": 17.45,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "fg": [
+              249,
+              250,
+              251
+            ],
+            "bg": [
+              97,
+              102,
+              107
+            ],
+            "ratio": 5.55,
+            "status": "sampled"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              21,
+              21,
+              23
+            ],
+            "bg": [
+              249,
+              250,
+              251
+            ],
+            "ratio": 17.45,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "fg": [
+              138.4859614711194,
+              218.67806921063465,
+              155.42047015259195
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 9.47,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "fg": [
+              207,
+              211,
+              214
+            ],
+            "bg": [
+              35,
+              35,
+              36
+            ],
+            "ratio": 10.42,
+            "status": "sampled"
+          }
+        ],
         "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "sampled"
+          "textMin": 5.55,
+          "nonTextMin": 9.47,
+          "textStatus": "sampled",
+          "nonTextStatus": "sampled",
+          "violations": []
         },
         "drawerPrimaryCount": 0,
         "primarySelector": "data-testid=primary",
@@ -1571,7 +4828,7 @@
         "primaryClassNames": [
           "px-btn primary"
         ],
-        "contractPrimaryClassPresent": false,
+        "contractPrimaryClassPresent": true,
         "internalCodeCount": 0,
         "destructiveControlCount": 0,
         "horizontalOverflow": 0,
@@ -1580,6 +4837,30 @@
         "themeSource": "dark",
         "bodyBackground": "rgb(21, 21, 23)",
         "pageScrollHeight": 1000
+      },
+      "sceneMetrics": {
+        "shellScene": "running",
+        "shellMode": "run",
+        "runbarText": "Praxis\n证据截图 · frozen\n预注册已冻结\nv3\n3/10\n运行\n蓝图\n收起面板\n提交讨论\n更多\n▾",
+        "progress": "3/10",
+        "progressDone": 3,
+        "progressTotal": 10,
+        "worldScale": "1.000",
+        "selectedNodeId": "n_intake",
+        "selectedRect": {
+          "x": 598,
+          "y": 378,
+          "w": 156,
+          "h": 64
+        },
+        "inspectorRect": {
+          "x": 1068,
+          "y": 72,
+          "w": 360,
+          "h": 916
+        },
+        "selectedOverlapArea": 0,
+        "inspectorVisible": true
       },
       "violations": [],
       "expectedViolations": [],
@@ -1587,12 +4868,12 @@
     },
     {
       "file": "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png",
-      "sha256": "f51d915edb7c5d103db7734012b17e396175cbad790bf0c9d67012d964b99625",
+      "sha256": "8675de5665dc1adeb7ab148504e3abd633ffade3861bc1e1dbe09ac5c024d7e7",
       "viewport": "1440x1000",
       "theme": "light",
       "themeApplied": true,
       "scenario": "selected-noncurrent:frozen",
-      "capturedAt": "2026-11-04T18:05:40.780Z",
+      "capturedAt": "2026-11-04T18:53:27.858Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -1616,10 +4897,167 @@
         "shellOverflow": 0,
         "fontSizeMinRaw": 10,
         "fontSizeMin": 10,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              233,
+              236,
+              242
+            ],
+            "ratio": 15.97,
+            "status": "sampled"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              255,
+              255,
+              255
+            ],
+            "bg": [
+              15,
+              17,
+              21
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "fg": [
+              38.172048228330475,
+              122.0741187839774,
+              66.83931374824422
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.31,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          }
+        ],
         "contrast": {
-          "text": null,
-          "nonText": null,
-          "status": "sampled"
+          "textMin": 5.8,
+          "nonTextMin": 5.31,
+          "textStatus": "sampled",
+          "nonTextStatus": "sampled",
+          "violations": []
         },
         "drawerPrimaryCount": 0,
         "primarySelector": "data-testid=primary",
@@ -1630,7 +5068,7 @@
         "primaryClassNames": [
           "px-btn primary"
         ],
-        "contractPrimaryClassPresent": false,
+        "contractPrimaryClassPresent": true,
         "internalCodeCount": 0,
         "destructiveControlCount": 0,
         "horizontalOverflow": 0,
@@ -1639,6 +5077,30 @@
         "themeSource": "light",
         "bodyBackground": "rgb(255, 255, 255)",
         "pageScrollHeight": 1000
+      },
+      "sceneMetrics": {
+        "shellScene": "running",
+        "shellMode": "run",
+        "runbarText": "Praxis\n证据截图 · frozen\n预注册已冻结\nv3\n3/10\n运行\n蓝图\n收起面板\n提交讨论\n更多\n▾",
+        "progress": "3/10",
+        "progressDone": 3,
+        "progressTotal": 10,
+        "worldScale": "1.000",
+        "selectedNodeId": "n_intake",
+        "selectedRect": {
+          "x": 598,
+          "y": 378,
+          "w": 156,
+          "h": 64
+        },
+        "inspectorRect": {
+          "x": 1068,
+          "y": 72,
+          "w": 360,
+          "h": 916
+        },
+        "selectedOverlapArea": 0,
+        "inspectorVisible": true
       },
       "violations": [],
       "expectedViolations": [],
@@ -1650,15 +5112,37 @@
   "errors": [],
   "ok": true,
   "stateRevision": 0,
+  "fixture": {
+    "runId": "run_a9e63f99",
+    "state": "PREREG_FROZEN",
+    "scenario": "frozen"
+  },
   "expectedViolations": [
     {
-      "file": "docs/praxis/screenshots/v2/loading-dark-1440x1000.png",
+      "file": "docs/praxis/screenshots/v2/drawer-source-dark-1440x1000.png",
       "violations": [
         {
-          "metric": "available",
-          "expected": true,
-          "actual": "no .px-shell (Praxis panel not mounted)",
-          "reason": "loading 无 .px-shell 是预期"
+          "metric": "primaryCount",
+          "expected": 0,
+          "actual": 1,
+          "texts": [
+            "保存"
+          ],
+          "reason": "B-V03 抽屉规则：drawer primary 不计"
+        }
+      ]
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/drawer-source-light-1440x1000.png",
+      "violations": [
+        {
+          "metric": "primaryCount",
+          "expected": 0,
+          "actual": 1,
+          "texts": [
+            "保存"
+          ],
+          "reason": "B-V03 抽屉规则：drawer primary 不计"
         }
       ]
     }
@@ -1681,15 +5165,14 @@
     "light": {
       "themeRequested": "light",
       "themeApplied": true,
-      "buildHash": "a9f55a48f3080249f650abf0fb844939385c13f1e2f4fc463d900d0ee8c37e7b",
-      "bundleSha256": "a9f55a48f3080249f650abf0fb844939385c13f1e2f4fc463d900d0ee8c37e7b",
+      "buildHash": "17dc23af5f2e0a614662a5e269dd5f3d21e0c0bd29fe208e5392f842e0c061f6",
+      "bundleSha256": "17dc23af5f2e0a614662a5e269dd5f3d21e0c0bd29fe208e5392f842e0c061f6",
       "server": {
-        "port": 35273,
-        "statePath": "/tmp/praxis-acceptance/state-capture-146963-35273.json",
-        "pid": 146983
+        "port": 33557,
+        "statePath": "/tmp/praxis-acceptance/state-capture-156799-33557.json",
+        "pid": 156819
       },
       "screenshots": [
-        "docs/praxis/screenshots/v2/blueprint-light-1024x900.png",
         "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
         "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
         "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
@@ -1701,12 +5184,10 @@
         "docs/praxis/screenshots/v2/running-light-1024x900.png",
         "docs/praxis/screenshots/v2/running-light-1440x1000.png",
         "docs/praxis/screenshots/v2/running-light-700x600.png",
-        "docs/praxis/screenshots/v2/selected-light-1024x900.png",
         "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
         "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png"
       ],
       "scenarios": [
-        "blueprint:frozen",
         "blueprint:frozen",
         "clean:frozen",
         "map:frozen",
@@ -1719,22 +5200,20 @@
         "running:frozen",
         "running:frozen",
         "selected:frozen",
-        "selected:frozen",
         "selected-noncurrent:frozen"
       ]
     },
     "dark": {
       "themeRequested": "dark",
       "themeApplied": true,
-      "buildHash": "a9f55a48f3080249f650abf0fb844939385c13f1e2f4fc463d900d0ee8c37e7b",
-      "bundleSha256": "a9f55a48f3080249f650abf0fb844939385c13f1e2f4fc463d900d0ee8c37e7b",
+      "buildHash": "17dc23af5f2e0a614662a5e269dd5f3d21e0c0bd29fe208e5392f842e0c061f6",
+      "bundleSha256": "17dc23af5f2e0a614662a5e269dd5f3d21e0c0bd29fe208e5392f842e0c061f6",
       "server": {
-        "port": 33819,
-        "statePath": "/tmp/praxis-acceptance/state-capture-147216-33819.json",
-        "pid": 147236
+        "port": 40345,
+        "statePath": "/tmp/praxis-acceptance/state-capture-157219-40345.json",
+        "pid": 157239
       },
       "screenshots": [
-        "docs/praxis/screenshots/v2/blueprint-dark-1024x900.png",
         "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
         "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
         "docs/praxis/screenshots/v2/drawer-source-dark-1440x1000.png",
@@ -1745,12 +5224,10 @@
         "docs/praxis/screenshots/v2/running-dark-1024x900.png",
         "docs/praxis/screenshots/v2/running-dark-1440x1000.png",
         "docs/praxis/screenshots/v2/running-dark-700x600.png",
-        "docs/praxis/screenshots/v2/selected-dark-1024x900.png",
         "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
         "docs/praxis/screenshots/v2/selected-noncurrent-dark-1440x1000.png"
       ],
       "scenarios": [
-        "blueprint:frozen",
         "blueprint:frozen",
         "map:frozen",
         "drawer:source",
@@ -1762,102 +5239,173 @@
         "running:frozen",
         "running:frozen",
         "selected:frozen",
-        "selected:frozen",
         "selected-noncurrent:frozen"
       ]
     }
   },
   "unexpectedMetricViolations": 0,
-  "expectedMetricViolations": 1,
+  "expectedMetricViolations": 2,
+  "sceneConsistency": {
+    "progressValues": [
+      "3/10"
+    ]
+  },
+  "signoff": {
+    "signed": [
+      {
+        "scene": "empty-light-1440x1000",
+        "theme": "light",
+        "file": "empty-light-1440x1000.png"
+      },
+      {
+        "scene": "running-light-1440x1000",
+        "theme": "light",
+        "file": "running-light-1440x1000.png"
+      },
+      {
+        "scene": "selected-light-1440x1000",
+        "theme": "light",
+        "file": "selected-light-1440x1000.png"
+      },
+      {
+        "scene": "blueprint-light-1440x1000",
+        "theme": "light",
+        "file": "blueprint-light-1440x1000.png"
+      },
+      {
+        "scene": "clean-light-1440x1000",
+        "theme": "light",
+        "file": "clean-light-1440x1000.png"
+      },
+      {
+        "scene": "running-dark-1440x1000",
+        "theme": "dark",
+        "file": "running-dark-1440x1000.png"
+      },
+      {
+        "scene": "selected-dark-1440x1000",
+        "theme": "dark",
+        "file": "selected-dark-1440x1000.png"
+      }
+    ],
+    "compat": [
+      {
+        "scene": "cognitive-map-dark-1440x1000",
+        "viewport": "1440x1000",
+        "theme": "dark",
+        "status": "compat-not-signed"
+      },
+      {
+        "scene": "cognitive-map-light-1440x1000",
+        "viewport": "1440x1000",
+        "theme": "light",
+        "status": "compat-not-signed"
+      },
+      {
+        "scene": "empty-dark-1024x900",
+        "viewport": "1024x900",
+        "theme": "dark",
+        "status": "compat-not-signed"
+      },
+      {
+        "scene": "empty-dark-700x600",
+        "viewport": "700x600",
+        "theme": "dark",
+        "status": "compat-not-signed"
+      },
+      {
+        "scene": "empty-light-1024x900",
+        "viewport": "1024x900",
+        "theme": "light",
+        "status": "compat-not-signed"
+      },
+      {
+        "scene": "empty-light-700x600",
+        "viewport": "700x600",
+        "theme": "light",
+        "status": "compat-not-signed"
+      },
+      {
+        "scene": "loading-dark-1440x1000",
+        "viewport": "1440x1000",
+        "theme": "dark",
+        "status": "compat-not-signed"
+      },
+      {
+        "scene": "loading-light-1440x1000",
+        "viewport": "1440x1000",
+        "theme": "light",
+        "status": "compat-not-signed"
+      },
+      {
+        "scene": "running-dark-1024x900",
+        "viewport": "1024x900",
+        "theme": "dark",
+        "status": "compat-not-signed"
+      },
+      {
+        "scene": "running-dark-700x600",
+        "viewport": "700x600",
+        "theme": "dark",
+        "status": "compat-not-signed"
+      },
+      {
+        "scene": "running-light-1024x900",
+        "viewport": "1024x900",
+        "theme": "light",
+        "status": "compat-not-signed"
+      },
+      {
+        "scene": "running-light-700x600",
+        "viewport": "700x600",
+        "theme": "light",
+        "status": "compat-not-signed"
+      }
+    ],
+    "unverified": [
+      {
+        "scene": "error",
+        "reason": "需注入接口 500/断网；当前 capture 未实现"
+      },
+      {
+        "scene": "stale",
+        "reason": "需客户端 StoreSend 触发 409；当前 capture 未实现"
+      },
+      {
+        "scene": "14-nodes",
+        "reason": "受保护节点约束下尚未定义合法 14 节点自定义图；待 Lead 提供夹具"
+      }
+    ]
+  },
+  "contrastSummary": {
+    "light": {
+      "textMin": 5.8,
+      "nonTextMin": 5.31,
+      "pairsSampled": 80,
+      "pairsMissing": 37
+    },
+    "dark": {
+      "textMin": 5.55,
+      "nonTextMin": 9.47,
+      "pairsSampled": 72,
+      "pairsMissing": 36
+    }
+  },
   "captures": [
     {
-      "at": "2026-11-04T17:48:41.653Z",
-      "theme": "dark",
-      "scenarios": [
-        "empty",
-        "frozen"
-      ],
-      "buildHash": "d129dd8838b5cf311418a97d10b48c94a99772086aa8f71c047aa75cb1c931ef",
-      "buildChecked": true,
-      "screenshots": [
-        "docs/praxis/screenshots/v2/blueprint-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/blueprint-light-1024x900.png",
-        "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/empty-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/empty-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/empty-light-1024x900.png",
-        "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/running-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/running-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/running-light-1024x900.png",
-        "docs/praxis/screenshots/v2/running-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-light-1024x900.png",
-        "docs/praxis/screenshots/v2/selected-light-1440x1000.png"
-      ],
-      "errors": [],
-      "ok": true
-    },
-    {
-      "at": "2026-11-04T17:57:54.328Z",
+      "at": "2026-11-04T18:34:13.331Z",
       "theme": "light",
       "scenarios": [
         "empty",
         "frozen"
       ],
-      "buildHash": "7b286197f2460b11bfbf972fd63fc6eb68ab2a85f6f9fc7a4c04a519dbf7090d",
+      "buildHash": "e616ce5110d23bd1a997c4978c94252d8fa176b33cd39fa9ef38cef577e1dec3",
       "buildChecked": true,
       "screenshots": [
         "docs/praxis/screenshots/v2/blueprint-dark-1024x900.png",
         "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
         "docs/praxis/screenshots/v2/blueprint-light-1024x900.png",
         "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/blueprint-light-700x600.png",
-        "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/drawer-source-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/empty-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/empty-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/empty-light-1024x900.png",
-        "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/empty-light-700x600.png",
-        "docs/praxis/screenshots/v2/loading-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/running-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/running-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/running-light-1024x900.png",
-        "docs/praxis/screenshots/v2/running-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/running-light-700x600.png",
-        "docs/praxis/screenshots/v2/selected-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-light-1024x900.png",
-        "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-light-700x600.png",
-        "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png"
-      ],
-      "errors": [],
-      "ok": true
-    },
-    {
-      "at": "2026-11-04T17:58:50.974Z",
-      "theme": "dark",
-      "scenarios": [
-        "empty",
-        "frozen"
-      ],
-      "buildHash": "7b286197f2460b11bfbf972fd63fc6eb68ab2a85f6f9fc7a4c04a519dbf7090d",
-      "buildChecked": true,
-      "screenshots": [
-        "docs/praxis/screenshots/v2/blueprint-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/blueprint-dark-700x600.png",
-        "docs/praxis/screenshots/v2/blueprint-light-1024x900.png",
-        "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/blueprint-light-700x600.png",
         "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
         "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
         "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
@@ -1879,32 +5427,30 @@
         "docs/praxis/screenshots/v2/running-light-700x600.png",
         "docs/praxis/screenshots/v2/selected-dark-1024x900.png",
         "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-dark-700x600.png",
         "docs/praxis/screenshots/v2/selected-light-1024x900.png",
         "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-light-700x600.png",
         "docs/praxis/screenshots/v2/selected-noncurrent-dark-1440x1000.png",
         "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png"
       ],
-      "errors": [],
-      "ok": true
+      "errors": [
+        "loading skeleton not verified: data-scene=null"
+      ],
+      "ok": false
     },
     {
-      "at": "2026-11-04T18:00:55.663Z",
+      "at": "2026-11-04T18:36:26.663Z",
       "theme": "light",
       "scenarios": [
         "empty",
         "frozen"
       ],
-      "buildHash": "7b286197f2460b11bfbf972fd63fc6eb68ab2a85f6f9fc7a4c04a519dbf7090d",
+      "buildHash": "e616ce5110d23bd1a997c4978c94252d8fa176b33cd39fa9ef38cef577e1dec3",
       "buildChecked": true,
       "screenshots": [
         "docs/praxis/screenshots/v2/blueprint-dark-1024x900.png",
         "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/blueprint-dark-700x600.png",
         "docs/praxis/screenshots/v2/blueprint-light-1024x900.png",
         "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/blueprint-light-700x600.png",
         "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
         "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
         "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
@@ -1926,10 +5472,8 @@
         "docs/praxis/screenshots/v2/running-light-700x600.png",
         "docs/praxis/screenshots/v2/selected-dark-1024x900.png",
         "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-dark-700x600.png",
         "docs/praxis/screenshots/v2/selected-light-1024x900.png",
         "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-light-700x600.png",
         "docs/praxis/screenshots/v2/selected-noncurrent-dark-1440x1000.png",
         "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png"
       ],
@@ -1937,60 +5481,13 @@
       "ok": true
     },
     {
-      "at": "2026-11-04T18:01:50.026Z",
-      "theme": "dark",
-      "scenarios": [
-        "empty",
-        "frozen"
-      ],
-      "buildHash": "7b286197f2460b11bfbf972fd63fc6eb68ab2a85f6f9fc7a4c04a519dbf7090d",
-      "buildChecked": true,
-      "screenshots": [
-        "docs/praxis/screenshots/v2/blueprint-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/blueprint-dark-700x600.png",
-        "docs/praxis/screenshots/v2/blueprint-light-1024x900.png",
-        "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/blueprint-light-700x600.png",
-        "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/drawer-source-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/drawer-source-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/empty-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/empty-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/empty-dark-700x600.png",
-        "docs/praxis/screenshots/v2/empty-light-1024x900.png",
-        "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/empty-light-700x600.png",
-        "docs/praxis/screenshots/v2/loading-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/loading-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/running-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/running-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/running-dark-700x600.png",
-        "docs/praxis/screenshots/v2/running-light-1024x900.png",
-        "docs/praxis/screenshots/v2/running-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/running-light-700x600.png",
-        "docs/praxis/screenshots/v2/selected-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-dark-700x600.png",
-        "docs/praxis/screenshots/v2/selected-light-1024x900.png",
-        "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-light-700x600.png",
-        "docs/praxis/screenshots/v2/selected-noncurrent-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png"
-      ],
-      "errors": [],
-      "ok": true
-    },
-    {
-      "at": "2026-11-04T18:04:11.301Z",
+      "at": "2026-11-04T18:38:04.947Z",
       "theme": "light",
       "scenarios": [
         "empty",
         "frozen"
       ],
-      "buildHash": "7b286197f2460b11bfbf972fd63fc6eb68ab2a85f6f9fc7a4c04a519dbf7090d",
+      "buildHash": "e616ce5110d23bd1a997c4978c94252d8fa176b33cd39fa9ef38cef577e1dec3",
       "buildChecked": true,
       "screenshots": [
         "docs/praxis/screenshots/v2/blueprint-dark-1024x900.png",
@@ -2027,56 +5524,13 @@
       "ok": true
     },
     {
-      "at": "2026-11-04T18:05:47.258Z",
-      "theme": "light",
-      "scenarios": [
-        "empty",
-        "frozen"
-      ],
-      "buildHash": "7b286197f2460b11bfbf972fd63fc6eb68ab2a85f6f9fc7a4c04a519dbf7090d",
-      "buildChecked": true,
-      "screenshots": [
-        "docs/praxis/screenshots/v2/blueprint-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/blueprint-light-1024x900.png",
-        "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/drawer-source-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/drawer-source-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/empty-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/empty-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/empty-dark-700x600.png",
-        "docs/praxis/screenshots/v2/empty-light-1024x900.png",
-        "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/empty-light-700x600.png",
-        "docs/praxis/screenshots/v2/loading-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/loading-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/running-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/running-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/running-dark-700x600.png",
-        "docs/praxis/screenshots/v2/running-light-1024x900.png",
-        "docs/praxis/screenshots/v2/running-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/running-light-700x600.png",
-        "docs/praxis/screenshots/v2/selected-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-light-1024x900.png",
-        "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-noncurrent-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png"
-      ],
-      "errors": [],
-      "ok": true
-    },
-    {
-      "at": "2026-11-04T18:06:58.752Z",
+      "at": "2026-11-04T18:39:00.023Z",
       "theme": "dark",
       "scenarios": [
         "empty",
         "frozen"
       ],
-      "buildHash": "7b286197f2460b11bfbf972fd63fc6eb68ab2a85f6f9fc7a4c04a519dbf7090d",
+      "buildHash": "e616ce5110d23bd1a997c4978c94252d8fa176b33cd39fa9ef38cef577e1dec3",
       "buildChecked": true,
       "screenshots": [
         "docs/praxis/screenshots/v2/blueprint-dark-1024x900.png",
@@ -2113,18 +5567,16 @@
       "ok": true
     },
     {
-      "at": "2026-11-04T18:17:35.246Z",
+      "at": "2026-11-04T18:42:33.730Z",
       "theme": "light",
       "scenarios": [
         "empty",
         "frozen"
       ],
-      "buildHash": "a9f55a48f3080249f650abf0fb844939385c13f1e2f4fc463d900d0ee8c37e7b",
+      "buildHash": "17dc23af5f2e0a614662a5e269dd5f3d21e0c0bd29fe208e5392f842e0c061f6",
       "buildChecked": true,
       "screenshots": [
-        "docs/praxis/screenshots/v2/blueprint-dark-1024x900.png",
         "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/blueprint-light-1024x900.png",
         "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
         "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
         "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
@@ -2145,9 +5597,7 @@
         "docs/praxis/screenshots/v2/running-light-1024x900.png",
         "docs/praxis/screenshots/v2/running-light-1440x1000.png",
         "docs/praxis/screenshots/v2/running-light-700x600.png",
-        "docs/praxis/screenshots/v2/selected-dark-1024x900.png",
         "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-light-1024x900.png",
         "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
         "docs/praxis/screenshots/v2/selected-noncurrent-dark-1440x1000.png",
         "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png"
@@ -2156,18 +5606,16 @@
       "ok": true
     },
     {
-      "at": "2026-11-04T18:18:26.739Z",
+      "at": "2026-11-04T18:43:29.549Z",
       "theme": "dark",
       "scenarios": [
         "empty",
         "frozen"
       ],
-      "buildHash": "a9f55a48f3080249f650abf0fb844939385c13f1e2f4fc463d900d0ee8c37e7b",
+      "buildHash": "17dc23af5f2e0a614662a5e269dd5f3d21e0c0bd29fe208e5392f842e0c061f6",
       "buildChecked": true,
       "screenshots": [
-        "docs/praxis/screenshots/v2/blueprint-dark-1024x900.png",
         "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/blueprint-light-1024x900.png",
         "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
         "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
         "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
@@ -2188,9 +5636,163 @@
         "docs/praxis/screenshots/v2/running-light-1024x900.png",
         "docs/praxis/screenshots/v2/running-light-1440x1000.png",
         "docs/praxis/screenshots/v2/running-light-700x600.png",
-        "docs/praxis/screenshots/v2/selected-dark-1024x900.png",
         "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-light-1024x900.png",
+        "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-noncurrent-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png"
+      ],
+      "errors": [],
+      "ok": true
+    },
+    {
+      "at": "2026-11-04T18:47:16.162Z",
+      "theme": "light",
+      "scenarios": [
+        "empty",
+        "frozen"
+      ],
+      "buildHash": "17dc23af5f2e0a614662a5e269dd5f3d21e0c0bd29fe208e5392f842e0c061f6",
+      "buildChecked": true,
+      "screenshots": [
+        "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/drawer-source-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/drawer-source-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-dark-700x600.png",
+        "docs/praxis/screenshots/v2/empty-light-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-light-700x600.png",
+        "docs/praxis/screenshots/v2/loading-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/loading-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/running-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-dark-700x600.png",
+        "docs/praxis/screenshots/v2/running-light-1024x900.png",
+        "docs/praxis/screenshots/v2/running-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-light-700x600.png",
+        "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-noncurrent-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png"
+      ],
+      "errors": [],
+      "ok": true
+    },
+    {
+      "at": "2026-11-04T18:48:10.926Z",
+      "theme": "dark",
+      "scenarios": [
+        "empty",
+        "frozen"
+      ],
+      "buildHash": "17dc23af5f2e0a614662a5e269dd5f3d21e0c0bd29fe208e5392f842e0c061f6",
+      "buildChecked": true,
+      "screenshots": [
+        "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/drawer-source-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/drawer-source-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-dark-700x600.png",
+        "docs/praxis/screenshots/v2/empty-light-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-light-700x600.png",
+        "docs/praxis/screenshots/v2/loading-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/loading-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/running-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-dark-700x600.png",
+        "docs/praxis/screenshots/v2/running-light-1024x900.png",
+        "docs/praxis/screenshots/v2/running-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-light-700x600.png",
+        "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-noncurrent-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png"
+      ],
+      "errors": [],
+      "ok": true
+    },
+    {
+      "at": "2026-11-04T18:53:35.696Z",
+      "theme": "light",
+      "scenarios": [
+        "empty",
+        "frozen"
+      ],
+      "buildHash": "17dc23af5f2e0a614662a5e269dd5f3d21e0c0bd29fe208e5392f842e0c061f6",
+      "buildChecked": true,
+      "screenshots": [
+        "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/drawer-source-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/drawer-source-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-dark-700x600.png",
+        "docs/praxis/screenshots/v2/empty-light-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-light-700x600.png",
+        "docs/praxis/screenshots/v2/loading-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/loading-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/running-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-dark-700x600.png",
+        "docs/praxis/screenshots/v2/running-light-1024x900.png",
+        "docs/praxis/screenshots/v2/running-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-light-700x600.png",
+        "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-noncurrent-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png"
+      ],
+      "errors": [],
+      "ok": true
+    },
+    {
+      "at": "2026-11-04T18:54:38.242Z",
+      "theme": "dark",
+      "scenarios": [
+        "empty",
+        "frozen"
+      ],
+      "buildHash": "17dc23af5f2e0a614662a5e269dd5f3d21e0c0bd29fe208e5392f842e0c061f6",
+      "buildChecked": true,
+      "screenshots": [
+        "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/drawer-source-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/drawer-source-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-dark-700x600.png",
+        "docs/praxis/screenshots/v2/empty-light-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-light-700x600.png",
+        "docs/praxis/screenshots/v2/loading-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/loading-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/running-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-dark-700x600.png",
+        "docs/praxis/screenshots/v2/running-light-1024x900.png",
+        "docs/praxis/screenshots/v2/running-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-light-700x600.png",
+        "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
         "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
         "docs/praxis/screenshots/v2/selected-noncurrent-dark-1440x1000.png",
         "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png"
@@ -2199,5 +5801,5 @@
       "ok": true
     }
   ],
-  "requiredShots": 22
+  "requiredShots": 18
 }

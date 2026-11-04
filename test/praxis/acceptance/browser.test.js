@@ -191,9 +191,11 @@ test('browser §5.7 @1440×1000: 15/15 可见、内容占比 ≥35%、唯一主�
     `scenario=1440x1000-run actual=${JSON.stringify(metrics)} violations=${JSON.stringify(violations)}`,
   );
   t.diagnostic(`§5.7 1440 metrics=${JSON.stringify({ bboxW: metrics.bboxWidthRatio, bboxH: metrics.bboxHeightRatio, area: metrics.bboxAreaRatio, fontSizeMin: metrics.fontSizeMin, contrast: metrics.contrast })}`);
-  if (metrics.contrast?.status === 'sampled' && metrics.contrast.text !== null) {
-    assert.ok(metrics.contrast.text >= 4.5, `scenario=1440-contrast 正文对比度 actual=${metrics.contrast.text}`);
-    assert.ok(metrics.contrast.nonText === null || metrics.contrast.nonText >= 3.0, `scenario=1440-contrast 非文本 actual=${metrics.contrast.nonText}`);
+  if (metrics.contrast?.textStatus === 'sampled' && metrics.contrast.textMin !== null) {
+    assert.ok(metrics.contrast.textMin >= 4.5, `scenario=1440-contrast 正文对比度 actual=${metrics.contrast.textMin}`);
+  }
+  if (metrics.contrast?.nonTextStatus === 'sampled' && metrics.contrast.nonTextMin !== null) {
+    assert.ok(metrics.contrast.nonTextMin >= 3.0, `scenario=1440-contrast 非文本指示 actual=${metrics.contrast.nonTextMin}`);
   }
 });
 
@@ -225,6 +227,8 @@ test('browser D5-1 @700×600（compat）: 15/15、viewport-hint、可拖拽', as
   assert.equal(metrics.available, true, `scenario=700x600 actual=${JSON.stringify(metrics)}`);
   assert.equal(metrics.nodeVisible, metrics.nodeTotal, `scenario=700x600 可见节点 actual=${metrics.nodeVisible}/${metrics.nodeTotal}`);
   assert.equal(metrics.viewportHint, true, `scenario=700x600 缺少 viewport-hint`);
+  assert.equal(metrics.horizontalOverflow, 0, `scenario=700x600 页面横向溢出 actual=${metrics.horizontalOverflow}`);
+  assert.equal(metrics.shellOverflow, 0, `scenario=700x600 根横向溢出 actual=${metrics.shellOverflow}`);
   const drag = await dragCanvas(40, 20);
   assert.equal(drag.changed, true, `scenario=700x600 画布不可拖拽 transform=${JSON.stringify(drag)}`);
   await browser.setViewport({ width: 1440, height: 1000 });

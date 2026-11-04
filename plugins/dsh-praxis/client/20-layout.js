@@ -27,7 +27,10 @@ const LayoutLanes = Object.freeze([
 
 const LayoutLanePadY = 14;          // 泳道带上下留白（band 高度 = nodeH + 2*pad）
 const LayoutLaneRightPad = 24;      // 泳道带右侧留白
-const LayoutFitMinScale = 0.75;     // D5-2 缩放下限：raw<0.75 进入“视口不足”降级（不缩字，画布内拖动）
+const LayoutFitMinScale = 0.75;     // D5-2 宽画布（≥900）缩放下限
+const LayoutFitNarrowBreakpoint = 900;   // canvasWidth < 900 视为窄画布
+const LayoutFitNarrowMinScale = 0.62;    // 窄画布下限（700×600 静止 15/15 可见）
+const LayoutFitNarrowPadding = 16;       // 窄画布适配时每侧留白（对应 (W-32)）
 const LayoutFitMaxScale = 1.0;      // 适配缩放上限：默认 100% 清晰
 const LayoutFitDefaultPadding = 32;
 const LayoutDefaultViewport = Object.freeze({ width: 1160, height: 640 });
@@ -219,7 +222,8 @@ function LayoutFit(boundsOrGraph, viewport, padding) {
   const availableW = Math.max(1, view.width - pad * 2);
   const availableH = Math.max(1, view.height - pad * 2);
   const rawScale = Math.min(availableW / contentW, availableH / contentH);
-  const scale = LayoutClamp(rawScale, LayoutFitMinScale, LayoutFitMaxScale);
+  const minScale = view.width < LayoutFitNarrowBreakpoint ? LayoutFitNarrowMinScale : LayoutFitMinScale;
+  const scale = LayoutClamp(rawScale, minScale, LayoutFitMaxScale);
   const x = (view.width - contentW * scale) / 2 - bounds.minX * scale;
   const y = (view.height - contentH * scale) / 2 - bounds.minY * scale;
   return { scale: scale, x: x, y: y };

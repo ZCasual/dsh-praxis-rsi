@@ -201,6 +201,11 @@ async function openPraxis(browser, timeoutMs) {
   throw new Error('Praxis panel did not mount (.px-shell missing) after sidebar click');
 }
 
+async function ensurePraxis(browser, timeoutMs) {
+  if (await browser.evaluate('!!document.querySelector(".px-shell")')) return;
+  await openPraxis(browser, timeoutMs);
+}
+
 async function seedScenario(browser, scenario, stateResponse) {
   const command = async (action, payload = {}, runId = undefined) => {
     const response = await browser.api('/praxis/api/command', {
@@ -277,14 +282,22 @@ function splitViolations(metrics, expectedMetrics, scenario) {
     const isExpected =
       (!metrics.available && /^loading/.test(String(scenario)))
       || (/^map:/.test(String(scenario)) && violation.metric === 'primaryCount')
-      || (expectedMetrics?.allowUnavailable && violation.metric === 'available');
-    if (isExpected) expected.push({ ...violation, reason: /^loading/.test(String(scenario)) ? 'loading 无 .px-shell 是预期' : (/^map:/.test(String(scenario)) ? 'B-V03 抽屉/地图规则：drawer 内 primary 不计' : '允许不可用') });
+      || (expectedMetrics?.allowUnavailable && violation.metric === 'available')
+      || (/^drawer:/.test(String(scenario)) && violation.metric === 'primaryCount');
+    const reason = /^loading/.test(String(scenario))
+      ? 'loading 无 .px-shell 是预期'
+      : /^drawer:/.test(String(scenario)) && violation.metric === 'primaryCount'
+        ? 'B-V03 抽屉规则：drawer primary 不计'
+        : /^map:/.test(String(scenario)) && violation.metric === 'primaryCount'
+          ? 'B-V03 地图规则：drawer 内 primary 不计'
+          : '允许不可用';
+    if (isExpected) expected.push({ ...violation, reason });
     else unexpected.push(violation);
   }
   return { expected, unexpected };
 }
 
-function registerShot(manifest, { file, viewport, theme, scenario, metrics, themeApplied, note, expectedMetrics = null }) {
+function registerShot(manifest, { file, viewport, theme, scenario, metrics, themeApplied, note, expectedMetrics = null, sceneMetrics = null }) {
   const absolute = resolve(file);
   const relativePath = relative(ROOT, absolute);
   const sha256 = sha256File(absolute);
@@ -297,14 +310,65 @@ function registerShot(manifest, { file, viewport, theme, scenario, metrics, them
     scenario,
     capturedAt: new Date().toISOString(),
     metrics,
+    sceneMetrics,
     ...(() => {
       const split = splitViolations(metrics, expectedMetrics, scenario);
-      return { violations: split.unexpected, expectedViolations: split.expected };
+      const violations = [...split.unexpected];
+      if (sceneMetrics && Number.isFinite(sceneMetrics.selectedOverlapArea) && sceneMetrics.selectedOverlapArea > 0.5 && expectedMetrics?.enforceOverlap) {
+        violations.push({ metric: 'selectedOverlap', expected: 0, actual: sceneMetrics.selectedOverlapArea, selected: sceneMetrics.selectedNodeId });
+      }
+      return { violations, expectedViolations: split.expected };
     })(),
     note: note ?? null,
   };
   manifest.screenshots = [...(manifest.screenshots ?? []).filter((item) => item.file !== relativePath), entry];
   return entry;
+}
+
+async function collectSceneMetrics(browser, selectedNodeId = null) {
+  return browser.evaluate(`(() => {
+    const shell = document.querySelector('.px-shell');
+    const runbar = document.querySelector('.px-runbar');
+    const runbarText = runbar ? runbar.innerText : '';
+    const progressLine = runbarText.split('\\n').map((line) => line.trim()).find((line) => line.length <= 8 && line.includes('/'));
+    const progressParts = progressLine ? progressLine.split('/').map((value) => Number(value)) : [];
+    const world = document.querySelector('.px-canvas-world[data-testid="world"]') ?? document.querySelector('.px-canvas-world');
+    const targetNodeId = ${JSON.stringify(selectedNodeId)};
+    const selectedNode = (targetNodeId ? document.querySelector('[data-node-id="' + targetNodeId + '"]') : null)
+      ?? document.querySelector('[data-node-id][data-current="true"]')
+      ?? document.querySelector('[data-current="true"]');
+    const inspector = document.querySelector('.px-inspector');
+    let selectedRect = null;
+    let inspectorRect = null;
+    let intersectionArea = 0;
+    if (selectedNode) {
+      const r = selectedNode.getBoundingClientRect();
+      selectedRect = { x: r.x, y: r.y, w: r.width, h: r.height };
+    }
+    if (inspector) {
+      const r = inspector.getBoundingClientRect();
+      inspectorRect = { x: r.x, y: r.y, w: r.width, h: r.height };
+    }
+    if (selectedRect && inspectorRect) {
+      const overlapW = Math.max(0, Math.min(selectedRect.x + selectedRect.w, inspectorRect.x + inspectorRect.w) - Math.max(selectedRect.x, inspectorRect.x));
+      const overlapH = Math.max(0, Math.min(selectedRect.y + selectedRect.h, inspectorRect.y + inspectorRect.h) - Math.max(selectedRect.y, inspectorRect.y));
+      intersectionArea = Number((overlapW * overlapH).toFixed(2));
+    }
+    return {
+      shellScene: shell ? shell.getAttribute('data-scene') : null,
+      shellMode: shell ? shell.getAttribute('data-mode') : null,
+      runbarText: runbarText.slice(0, 200),
+      progress: progressLine || null,
+      progressDone: progressParts.length === 2 ? progressParts[0] : null,
+      progressTotal: progressParts.length === 2 ? progressParts[1] : null,
+      worldScale: world ? world.getAttribute('data-scale') : null,
+      selectedNodeId: selectedNode ? selectedNode.getAttribute('data-node-id') : null,
+      selectedRect,
+      inspectorRect,
+      selectedOverlapArea: intersectionArea,
+      inspectorVisible: !!inspector,
+    };
+  })()`);
 }
 
 async function captureAt(browser, options, target, manifest, context) {
@@ -313,6 +377,7 @@ async function captureAt(browser, options, target, manifest, context) {
   await browser.setViewport(viewport);
   await new Promise((resolvePromise) => setTimeout(resolvePromise, 250));
   const metrics = await collectMetrics(browser);
+  const sceneMetrics = await collectSceneMetrics(browser, target.selectedNodeId ?? null);
   const file = join(options.outDir, `${name}.png`);
   await browser.screenshot(file);
   const entry = registerShot(manifest, {
@@ -324,6 +389,7 @@ async function captureAt(browser, options, target, manifest, context) {
     themeApplied: context.themeApplied,
     note,
     expectedMetrics: target.expectedMetrics ?? null,
+    sceneMetrics,
   });
   const violations = entry.violations;
   process.stdout.write(
@@ -503,6 +569,12 @@ async function main(argv = process.argv.slice(2)) {
       const mainScenario = options.scenarios.includes('frozen') ? 'frozen' : options.scenarios[0] ?? 'frozen';
       const seeded = await seedScenario(browser, mainScenario, { json: browserState.json });
       manifest.scenarios.push({ scenario: mainScenario, ...seeded });
+      const fixtureState = await browser.api('/praxis/api/state');
+      manifest.fixture = {
+        runId: fixtureState.json?.view?.active?.id ?? seeded.runId ?? null,
+        state: fixtureState.json?.view?.active?.state ?? null,
+        scenario: mainScenario,
+      };
       // 客户端 4s 轮询：等真实 Run 投影到画布后再截图，避免拍到上一帧/空态。
       try {
         await browser.waitFor('document.querySelectorAll(".px-node").length > 0', { timeout: 15000, label: 'seed projected to canvas' });
@@ -525,16 +597,21 @@ async function main(argv = process.argv.slice(2)) {
         }, manifest, context);
 
         if (vp.width < 1024) continue; // 700×600 仅兼容性 running 截图（compat）
-        // selected：点选第一个节点并等检查器滑出
+        if (vp.width < 1440) continue; // selected 只在 1440 签收；1024 全应用为 compat
+        // selected：点选 current 节点（frozen 夹具 n_prereg，3/10）并等检查器滑出
+        let clickedNodeId = null;
         try {
           const clicked = await browser.evaluate(`(() => {
-            const node = document.querySelector('.px-node');
+            const node = document.querySelector('[data-node-id="n_prereg"][data-current="true"]')
+              ?? document.querySelector('[data-current="true"]')
+              ?? document.querySelector('.px-node');
             if (!node) return null;
             node.scrollIntoView({ block: 'center', inline: 'center' });
             const rect = node.getBoundingClientRect();
-            return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+            return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, id: node.getAttribute('data-node-id') };
           })()`);
           if (clicked) {
+            clickedNodeId = clicked.id;
             await browser.clickAt(clicked.x, clicked.y);
             await new Promise((resolvePromise) => setTimeout(resolvePromise, 400));
           }
@@ -543,8 +620,9 @@ async function main(argv = process.argv.slice(2)) {
             scenario: `selected:${mainScenario}`,
             viewport: vp,
             theme: options.theme,
-            note: `节点选中态（检查器，${tagOf(vp)}）`,
-            expectedMetrics: viewportExpected,
+            note: `current 节点选中态（检查器，${tagOf(vp)}）`,
+            expectedMetrics: vp.width >= 1440 ? { enforceOverlap: true } : viewportExpected,
+            selectedNodeId: clickedNodeId,
           }, manifest, context);
         } catch (error) {
           manifest.errors.push(`selected screenshot unavailable (${tagOf(vp)}): ${error instanceof Error ? error.message : String(error)}`);
@@ -577,13 +655,14 @@ async function main(argv = process.argv.slice(2)) {
       // designer canonical：干净 1440 light，无抽屉/无选中污染
       try {
         await browser.setViewport(viewport);
-        if (!(await browser.evaluate('!!document.querySelector(".px-shell")'))) await openPraxis(browser, options.timeoutMs);
+        await ensurePraxis(browser, options.timeoutMs);
         if (options.theme === 'light') {
           try {
             const corner = await browser.evaluate(`(() => { const c = document.querySelector('.px-canvas'); const r = c.getBoundingClientRect(); return { x: r.left + 20, y: r.top + 20 }; })()`);
             await browser.clickAt(corner.x, corner.y);
           } catch {}
           await new Promise((resolvePromise) => setTimeout(resolvePromise, 350));
+          await ensurePraxis(browser, options.timeoutMs);
           await captureAt(browser, options, {
             name: `clean-${options.theme}-1440x1000`,
             scenario: `clean:${mainScenario}`,
@@ -598,12 +677,13 @@ async function main(argv = process.argv.slice(2)) {
 
       // selected 非 current 节点（只读动作）
       try {
+        await ensurePraxis(browser, options.timeoutMs);
         const clicked = await browser.evaluate(`(() => {
           const nodes = [...document.querySelectorAll('.px-node')];
-          const target = nodes.find((node) => !node.classList.contains('is-current')) ?? nodes[1] ?? nodes[0];
+          const target = nodes.find((node) => node.dataset.current !== 'true' && node.dataset.nodeId !== 'start') ?? nodes[1] ?? nodes[0];
           if (!target) return null;
           const rect = target.getBoundingClientRect();
-          return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+          return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, id: target.getAttribute('data-node-id') };
         })()`);
         if (clicked) {
           await browser.clickAt(clicked.x, clicked.y);
@@ -614,6 +694,7 @@ async function main(argv = process.argv.slice(2)) {
             viewport,
             theme: options.theme,
             note: '选中的非 current 节点（只读动作/证据）',
+            selectedNodeId: clicked.id,
           }, manifest, context);
         }
       } catch (error) {
@@ -623,6 +704,7 @@ async function main(argv = process.argv.slice(2)) {
       // drawer/modal
       try {
         await browser.press('Escape').catch(() => {});
+        await ensurePraxis(browser, options.timeoutMs);
         await browser.clickText('更多', { timeout: 5000, selector: 'button, [role="button"], .px-btn, [class*="menu"]' });
         await new Promise((resolvePromise) => setTimeout(resolvePromise, 250));
         await browser.clickText('源码', { timeout: 5000, selector: 'button, [role="menuitem"], [class*="item"], a, li, div' });
@@ -633,27 +715,49 @@ async function main(argv = process.argv.slice(2)) {
           viewport,
           theme: options.theme,
           note: '源码抽屉（modal）',
+          expectedMetrics: { allowUnavailable: true, visibleNodeRatio: 0, nodeVisible: 0, bboxWidthRatio: 0, bboxHeightRatio: 0, bboxAreaRatio: 0, primaryCount: 0, internalCodeCount: 0, destructiveControlCount: 0, horizontalOverflow: 0 },
         }, manifest, context);
         await browser.press('Escape').catch(() => {});
+        await ensurePraxis(browser, options.timeoutMs);
       } catch (error) {
         manifest.warnings = [...(manifest.warnings ?? []), `drawer screenshot optional: ${error instanceof Error ? error.message : String(error)}`];
       }
 
-      // loading 态（重载瞬间的骨架/加载）
+      // loading 态：在新文档里给 /praxis/api/state 的 fetch 注入 1.5s 延迟，在骨架期间截图。
       try {
+        const injectionId = (await browser.send('Page.addScriptToEvaluateOnNewDocument', {
+          source: `(() => {
+            const original = window.fetch;
+            window.fetch = (...args) => {
+              const target = args[0] && args[0].url ? args[0].url : args[0];
+              if (String(target).includes('/praxis/api/state')) {
+                return new Promise((resolve) => setTimeout(() => resolve(original.apply(window, args)), 1500));
+              }
+              return original.apply(window, args);
+            };
+          })();`,
+        })).identifier;
         await browser.navigate(tokenUrl);
-        await new Promise((resolvePromise) => setTimeout(resolvePromise, 120));
+        // 面板挂载后才会发起被延迟的 /praxis/api/state；此时应显示 loading 骨架。
+        await browser.clickText('Praxis', { timeout: 8000, selector: 'button, a, [role="button"], li, div' }).catch(() => {});
+        await browser.waitFor(`!!document.querySelector('.px-shell[data-scene="loading"]')`, { timeout: 5000, label: 'loading skeleton' }).catch(() => null);
+        const loadingScene = await browser.evaluate(`document.querySelector('.px-shell') ? document.querySelector('.px-shell').getAttribute('data-scene') : null`);
         await captureAt(browser, options, {
           name: `loading-${options.theme}-1440x1000`,
           scenario: 'loading',
           viewport,
           theme: options.theme,
-          note: '加载态（重载瞬间）',
-          expectedMetrics: { ...COMPAT_THRESHOLDS, allowUnavailable: true, visibleNodeRatio: 0, nodeVisible: 0, bboxWidthRatio: 0, bboxHeightRatio: 0, bboxAreaRatio: 0, primaryCount: 0 },
+          note: 'Praxis loading 骨架（state 请求延迟 1.5s）',
+          expectedMetrics: { visibleNodeRatio: 0, nodeVisible: 0, bboxWidthRatio: 0, bboxHeightRatio: 0, bboxAreaRatio: 0, primaryCount: 0, internalCodeCount: 0, destructiveControlCount: 0, horizontalOverflow: 0 },
         }, manifest, context);
+        if (loadingScene !== 'loading') {
+          manifest.errors.push(`loading skeleton not verified: data-scene=${loadingScene}`);
+        }
+        await browser.send('Page.removeScriptToEvaluateOnNewDocument', { identifier: injectionId }).catch(() => {});
         await openPraxis(browser, options.timeoutMs);
+        await browser.waitFor('document.querySelectorAll(".px-node").length > 0', { timeout: 15000, label: 'running after loading' }).catch(() => null);
       } catch (error) {
-        manifest.warnings = [...(manifest.warnings ?? []), `loading screenshot optional: ${error instanceof Error ? error.message : String(error)}`];
+        manifest.errors.push(`loading screenshot failed: ${error instanceof Error ? error.message : String(error)}`);
       }
 
       // 未测场景登记（不写“通过”）
@@ -694,8 +798,10 @@ async function main(argv = process.argv.slice(2)) {
 
     // 合并历史截图：亮/暗、不同场景的多次 capture 累加到同一 manifest。
     const INAPPLICABLE_700 = /(selected|blueprint)-[^/]*700x600\.png$/;
+    // 允许矩阵之外的历史截图一律移除，避免旧口径污染 aggregate manifest。
+    const ALLOWED = /(?:^|\/)(?:empty-(?:light|dark)-(?:1440x1000|1024x900|700x600)|running-(?:light|dark)-(?:1440x1000|1024x900|700x600)|selected-(?:light|dark)-1440x1000|blueprint-(?:light|dark)-1440x1000|selected-noncurrent-(?:light|dark)-1440x1000|drawer-source-(?:light|dark)-1440x1000|clean-light-1440x1000|loading-(?:light|dark)-1440x1000|cognitive-map-(?:light|dark)-1440x1000)\.png$/;
     for (const [file, entry] of previousShots) {
-      if (INAPPLICABLE_700.test(entry.file)) {
+      if (INAPPLICABLE_700.test(entry.file) || !ALLOWED.test(entry.file)) {
         try { unlinkSync(resolve(ROOT, entry.file)); } catch {}
         continue;
       }
@@ -712,8 +818,59 @@ async function main(argv = process.argv.slice(2)) {
       screenshots: manifest.screenshots.filter((item) => item.theme === options.theme).map((item) => item.file),
       scenarios: manifest.screenshots.filter((item) => item.theme === options.theme).map((item) => item.scenario),
     };
-    manifest.unexpectedMetricViolations = (manifest.metricViolations ?? []).reduce((sum, item) => sum + item.violations.length, 0);
-    manifest.expectedMetricViolations = (manifest.expectedViolations ?? []).reduce((sum, item) => sum + item.violations.length, 0);
+    // 从合并后的截图重新汇总 violations（避免 dark run 覆盖掉 light 的未解决违规）。
+    manifest.metricViolations = manifest.screenshots
+      .filter((item) => (item.violations ?? []).length > 0)
+      .map((item) => ({ file: item.file, violations: item.violations }));
+    manifest.expectedViolations = manifest.screenshots
+      .filter((item) => (item.expectedViolations ?? []).length > 0)
+      .map((item) => ({ file: item.file, violations: item.expectedViolations }));
+    manifest.unexpectedMetricViolations = manifest.metricViolations.reduce((sum, item) => sum + item.violations.length, 0);
+    manifest.expectedMetricViolations = manifest.expectedViolations.reduce((sum, item) => sum + item.violations.length, 0);
+    // 场景状态一致性检查（合并后）。
+    const progressValues = [...new Set(manifest.screenshots
+      .filter((item) => /^(running|selected|blueprint|clean|selected-noncurrent)/.test(String(item.scenario)))
+      .map((item) => item.sceneMetrics?.progress)
+      .filter(Boolean))];
+    manifest.sceneConsistency = { progressValues };
+    if (progressValues.length > 1) {
+      manifest.metricViolations = [...(manifest.metricViolations ?? []), { file: 'scene-consistency', violations: [{ metric: 'sceneProgressMismatch', expected: 1, actual: progressValues }] }];
+      manifest.unexpectedMetricViolations += 1;
+    }
+    // 签收 / compat / 未验证拆分；ok 不掩盖 unverified。
+    const themes = Object.keys(manifest.themes ?? {});
+    const themeList = themes.length > 0 ? themes : [options.theme];
+    const signed = [];
+    const compat = [];
+    const unverified = [...(manifest.unverifiedScenes ?? [])];
+    const requiredFor = (theme) => (theme === 'light'
+      ? ['empty', 'running', 'selected', 'blueprint', 'clean'].map((scene) => `${scene}-${theme}-1440x1000.png`)
+      : ['running', 'selected'].map((scene) => `${scene}-${theme}-1440x1000.png`));
+    const files = new Set(manifest.screenshots.map((item) => String(item.file).split('/').pop()));
+    for (const theme of themeList) {
+      for (const file of requiredFor(theme)) {
+        if (files.has(file)) signed.push({ scene: file.replace(/\.png$/, ''), theme, file });
+        else unverified.push({ scene: file.replace(/\.png$/, ''), reason: 'missing evidence (signed scene)' });
+      }
+    }
+    for (const item of manifest.screenshots) {
+      const base = String(item.file).split('/').pop() ?? '';
+      if (!/1440x1000/.test(base) || !/^(empty|running|selected|blueprint|selected-noncurrent|drawer-source|clean)-/.test(base)) {
+        compat.push({ scene: base.replace(/\.png$/, ''), viewport: item.viewport, theme: item.theme, status: 'compat-not-signed' });
+      }
+    }
+    manifest.signoff = { signed, compat, unverified };
+    manifest.contrastSummary = Object.fromEntries(themeList.map((theme) => {
+      const shots = manifest.screenshots.filter((item) => item.theme === theme && item.metrics?.contrast);
+      const text = shots.map((item) => item.metrics.contrast.textMin).filter((value) => typeof value === 'number');
+      const nonText = shots.map((item) => item.metrics.contrast.nonTextMin).filter((value) => typeof value === 'number');
+      return [theme, {
+        textMin: text.length ? Math.min(...text) : null,
+        nonTextMin: nonText.length ? Math.min(...nonText) : null,
+        pairsSampled: shots.reduce((sum, item) => sum + (item.metrics.contrastPairs?.filter((pair) => pair.status === 'sampled').length ?? 0), 0),
+        pairsMissing: shots.reduce((sum, item) => sum + (item.metrics.contrastPairs?.filter((pair) => pair.status === 'missing').length ?? 0), 0),
+      }];
+    }));
     manifest.captures = [
       ...(previousManifest?.captures ?? []),
       {
@@ -735,8 +892,8 @@ async function main(argv = process.argv.slice(2)) {
     );
     manifest.requiredShots = requiredShots.length;
     manifest.ok = manifest.errors.length === 0
-      && requiredShots.length >= 8
       && manifest.unexpectedMetricViolations === 0
+      && manifest.signoff.unverified.filter((item) => /missing evidence/.test(item.reason ?? '')).length === 0
       && !(manifest.theme && !manifest.theme.applied);
     mkdirSync(dirname(options.manifest), { recursive: true });
     writeFileSync(options.manifest, `${JSON.stringify(manifest, null, 2)}\n`);
