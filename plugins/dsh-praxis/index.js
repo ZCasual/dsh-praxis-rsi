@@ -9,6 +9,7 @@ const ACTIONS = [
   'start', 'prereg_freeze', 'discussion', 'pin_persona', 'experiment', 'review',
   'stage4', 'eval_report', 'eval_read', 'memory_propose', 'memory_commit',
   'map_claim', 'map_edge', 'decision', 'promote', 'set_knobs', 'gate', 'map', 'snapshot', 'activate',
+  'graph', 'graph_save', 'layout_save',
 ];
 
 const PARAMETERS = {
@@ -97,7 +98,9 @@ export async function apply(ctx, config = {}) {
   ctx.effect(() => ctx.tools.guard((execution) => {
     if (execution.name !== 'rsi_run') return undefined;
     const action = execution.arguments?.action;
-    if (action === 'memory_commit' || action === 'set_knobs') return 'user-only action: open the Observatory or use the praxis command';
+    if (action === 'memory_commit' || action === 'set_knobs' || action === 'graph_save' || action === 'layout_save') {
+      return 'user-only action: open the Observatory or use the praxis command';
+    }
     return undefined;
   }));
 

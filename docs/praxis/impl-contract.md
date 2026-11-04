@@ -72,7 +72,8 @@ export function createEngine({knobs}) => {
 | decision | ✓ | ✓ | | | |
 | promote | ✓ | | | | |
 | set_knobs | ✓ | | | | |
-| activate / gate / map / snapshot | 只读，任何 actor | | | | |
+| activate / gate / map / snapshot / graph | 只读，任何 actor | | | | |
+| graph_save / layout_save | ✓（仅 user） | | | | |
 
 状态机：`INTAKE → QUESTION → PREREG_FROZEN → DISCUSSION → SYNTHESIS → EXEC_READY → EXECUTING → REVIEW → STAGE4 → EVAL → MEMORY → DECISION → CLOSED`；旁路 `DRIFT_DETECTED`、`BLOCKED`。
 
@@ -114,6 +115,11 @@ MapView = {runId,nodes[],edges[],frontier[],blindSpots[],contradictions[],meanRe
 - `GET /praxis/api/state` → `{...view, view, runs, knobs, defaults, knobFields, playbooks, map?, durability:'file'|'durable'|'memory', product:'Praxis', wireVersion:1}`
 - `POST /praxis/api/command` body `{command}` → `{receipt, view}`；header `x-praxis-request: 1`；仅 127.0.0.1/localhost；Origin 必须同源或缺失；否则 403。
 - `GET /praxis/api/map?runId=` → `{map}`。
+- `GET /praxis/api/graph?runId=` → `{graph,states,current,runId,version,availableCommands}`。
+- `POST /praxis/api/graph` → `{graph,receipt}`；非法 400 `INVALID_GRAPH + errors[V码]`。
+- `POST /praxis/api/layout` → 只合并 position；非法 400。
+
+图模型细节见 `docs/praxis/redesign/07-graph-contract.md`。
 - 错误：`{error, code, blockers?, receipt?}` + 4xx/5xx。
 
 ## 5. Client（`client.js`）

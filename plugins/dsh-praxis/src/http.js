@@ -56,6 +56,40 @@ export async function handleApi(host, { method, pathname, search = '', body = {}
   if (route === 'health' && method === 'GET') {
     return { status: 200, value: { ok: true, product: 'Praxis', wireVersion: 1, durability: host.view().durability } };
   }
+  if (route === 'graph' && method === 'GET') {
+    const params = new URLSearchParams(search);
+    try {
+      return { status: 200, value: host.engine.graphView(params.get('runId') ?? undefined, params.get('playbookId') ?? 'scientific-loop') };
+    } catch (error) {
+      return { status: 400, value: { error: error.message, code: 'UNKNOWN_PLAYBOOK' } };
+    }
+  }
+  if (route === 'graph' && method === 'POST') {
+    const receipt = host.execute({
+      action: 'graph_save',
+      commandId: `graph-${Date.now()}`,
+      actor: body?.actor,
+      payload: { playbookId: body?.playbookId, graph: body?.graph },
+    }, 'ui');
+    await host.flush();
+    if (receipt.status === 'rejected') {
+      return { status: 400, value: { error: receipt.reasonCode, code: receipt.reasonCode, errors: receipt.errors ?? [] } };
+    }
+    return { status: 200, value: { graph: receipt.graph, receipt } };
+  }
+  if (route === 'layout' && method === 'POST') {
+    const receipt = host.execute({
+      action: 'layout_save',
+      commandId: `layout-${Date.now()}`,
+      actor: body?.actor,
+      payload: { playbookId: body?.playbookId, positions: body?.positions },
+    }, 'ui');
+    await host.flush();
+    if (receipt.status === 'rejected') {
+      return { status: 400, value: { error: receipt.reasonCode, code: receipt.reasonCode, errors: receipt.errors ?? [] } };
+    }
+    return { status: 200, value: { graph: receipt.graph, receipt } };
+  }
   if (route === 'map' && method === 'GET') {
     const runId = new URLSearchParams(search).get('runId') ?? undefined;
     try {

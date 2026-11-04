@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { buildDefaultGraph, validateGraph, graphStates, cloneGraph } from './graph.js';
 
 export const KERNEL_PATHS = [
   'evaluator', 'stop', 'permissions', 'approval', 'data-boundary',
@@ -210,6 +211,7 @@ export function createEngine(options = {}) {
   const knobs = { ...DEFAULT_KNOBS, ...(options.knobs ?? {}) };
   const runs = new Map();
   const receipts = new Map();
+  const graphs = new Map();
   const children = new Map();
   let runCounter = 0;
   let seq = 0;
@@ -699,6 +701,75 @@ export function createEngine(options = {}) {
     };
   }
 
+  function getGraph(playbookId) {
+    const playbook = PLAYBOOKS[playbookId];
+    if (!playbook) return null;
+    const stored = graphs.get(playbookId);
+    return stored ? cloneGraph(stored) : buildDefaultGraph(playbook);
+  }
+
+  function saveGraph(playbookId, graph, actorKind = 'user') {
+    if (actorKind !== 'user') return receipt({ reasonCode: 'USER_ONLY' });
+    const playbook = PLAYBOOKS[playbookId];
+    if (!playbook) return receipt({ reasonCode: 'UNKNOWN_PLAYBOOK' });
+    const validation = validateGraph(graph, playbook);
+    if (!validation.ok) return receipt({ reasonCode: 'INVALID_GRAPH', errors: validation.errors });
+    const previous = graphs.get(playbookId);
+    const version = (previous?.version ?? 0) + 1;
+    const next = {
+      ...cloneGraph(graph),
+      id: `${playbookId}:v${version}`,
+      playbookId,
+      version,
+      updatedAt: nowIso(),
+      contentHash: hashJson(graph),
+    };
+    graphs.set(playbookId, next);
+    return { status: 'committed', graph: cloneGraph(next), version };
+  }
+
+  function saveLayout(playbookId, positions, actorKind = 'user') {
+    if (actorKind !== 'user') return receipt({ reasonCode: 'USER_ONLY' });
+    const playbook = PLAYBOOKS[playbookId];
+    if (!playbook) return receipt({ reasonCode: 'UNKNOWN_PLAYBOOK' });
+    const current = graphs.get(playbookId) ?? buildDefaultGraph(playbook);
+    const next = cloneGraph(current);
+    for (const [id, position] of Object.entries(positions ?? {})) {
+      const target = next.nodes.find((item) => item.id === id);
+      if (target && Number.isFinite(position?.x) && Number.isFinite(position?.y)) {
+        target.position = { x: position.x, y: position.y };
+      }
+    }
+    const validation = validateGraph(next, playbook);
+    if (!validation.ok) return receipt({ reasonCode: 'INVALID_GRAPH', errors: validation.errors });
+    next.updatedAt = nowIso();
+    next.contentHash = hashJson(next);
+    graphs.set(playbookId, next);
+    return { status: 'committed', graph: cloneGraph(next) };
+  }
+
+  function graphView(runId, playbookId) {
+    const run = runId ? runs.get(runId) : null;
+    const target = playbookId ?? run?.playbookId;
+    const graph = target ? getGraph(target) : null;
+    if (!graph) {
+      const error = new Error(`unknown playbook ${target}`);
+      error.code = 'UNKNOWN_PLAYBOOK';
+      throw error;
+    }
+    const overlay = run ? graphStates(run, graph) : { states: {}, current: null };
+    return {
+      graph,
+      states: overlay.states,
+      current: overlay.current,
+      runId: run?.id ?? null,
+      version: run?.version ?? 0,
+      availableCommands: graph.nodes
+        .filter((item) => item.config?.action)
+        .map((item) => ({ nodeId: item.id, action: item.config.action })),
+    };
+  }
+
   function snapshot() {
     return {
       runs: [...runs.values()].map((run) => publicRun(run)),
@@ -721,6 +792,7 @@ export function createEngine(options = {}) {
       knobs: { ...knobs },
       runs: [...runs.values()].map((run) => structuredClone(run)),
       receipts: [...receipts.entries()].map(([key, value]) => ({ key, value })),
+      graphs: Object.fromEntries(graphs.entries()),
     };
   }
 
@@ -737,6 +809,7 @@ export function createEngine(options = {}) {
       }
     }
     for (const entry of dumpValue.receipts ?? []) receipts.set(entry.key, entry.value);
+    for (const [playbookId, graph] of Object.entries(dumpValue.graphs ?? {})) graphs.set(playbookId, graph);
     let maxSeq = 0;
     for (const run of runs.values()) {
       const last = run.events?.at?.(-1)?.seq ?? 0;
@@ -751,6 +824,7 @@ export function createEngine(options = {}) {
   return {
     execute, gate, getRun, snapshot, runView, map, cognitiveMap: map,
     dump, load, knobs, lineageChildren,
+    getGraph, saveGraph, saveLayout, graphView,
   };
 }
 

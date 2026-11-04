@@ -4,6 +4,7 @@ const ACTIONS = [
   'start', 'prereg_freeze', 'discussion', 'pin_persona', 'experiment', 'review',
   'stage4', 'eval_report', 'eval_read', 'memory_propose', 'memory_commit',
   'map_claim', 'map_edge', 'decision', 'promote', 'set_knobs', 'gate', 'map', 'snapshot', 'activate',
+  'graph', 'graph_save', 'layout_save',
 ];
 
 const READ_ONLY = new Set(['gate', 'map', 'snapshot']);
@@ -48,6 +49,23 @@ export function createHost(options = {}) {
       if (!runId) return { status: 'rejected', reasonCode: 'NO_RUN', retry: 'none' };
       return { status: 'committed', gate: engine.gate(runId, input.payload?.target ?? 'experiment') };
     }
+    if (action === 'graph') {
+      const runId = input.runId ?? current.runId;
+      try {
+        return { status: 'committed', graph: engine.graphView(runId, input.payload?.playbookId), retry: 'none' };
+      } catch (error) {
+        return { status: 'rejected', reasonCode: 'UNKNOWN_PLAYBOOK', retry: 'none' };
+      }
+    }
+    if (action === 'graph_save' || action === 'layout_save') {
+      const actor = input.actor ?? actorFor(source);
+      const payload = input.payload ?? {};
+      const result = action === 'graph_save'
+        ? engine.saveGraph(payload.playbookId, payload.graph, actor.kind)
+        : engine.saveLayout(payload.playbookId, payload.positions, actor.kind);
+      if (result.status === 'committed') void persist();
+      return result;
+    }
     if (action === 'map') {
       const runId = input.runId ?? current.runId;
       if (!runId) return { status: 'rejected', reasonCode: 'NO_RUN', retry: 'none' };
@@ -82,6 +100,23 @@ export function createHost(options = {}) {
     return null;
   }
 
+  function safeGraph(runId) {
+    try {
+      return engine.graphView(runId);
+    } catch {
+      try {
+        return engine.graphView(undefined, snapshotPlaybookId());
+      } catch {
+        return null;
+      }
+    }
+  }
+
+  function snapshotPlaybookId() {
+    const playbooks = engine.snapshot().playbooks ?? [];
+    return playbooks[0]?.id;
+  }
+
   function mapView(runId) {
     try {
       return engine.map(runId);
@@ -106,6 +141,7 @@ export function createHost(options = {}) {
       defaults: snapshot.defaults ?? DEFAULT_KNOBS,
       knobFields: snapshot.knobFields ?? knobFields(),
       map: activeId ? mapView(activeId) : null,
+      graph: activeId ? safeGraph(activeId) : (snapshot.playbooks?.[0] ? safeGraph(snapshot.playbooks[0].id) : null),
       durability: !store || store.durability === 'memory' ? 'memory' : 'durable',
     };
   }

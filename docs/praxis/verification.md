@@ -78,3 +78,51 @@ Host 侧同样已在 3080 进程内注册：Host `Tool.listTools` 返回 `rsi_ru
 [ ] 侧栏 Praxis → 主面板渲染
 [ ] node --test test/praxis/*.test.js → 70 pass
 ```
+
+---
+
+# 再设计验收（v2 画布，2026-11-04 16:20）
+
+## 1. 测试
+
+```text
+node --test test/praxis/*.test.js
+ℹ tests 99   ℹ pass 99   ℹ fail 0   ℹ skipped 0
+```
+
+新增 `graph.test.js`（21）与 `graph-api.test.js`（8）：默认图四剧本校验、V1–V9、状态叠加、GET/POST /graph、layout 合并、非 user actor USER_ONLY、dump 重启保留。
+
+## 2. 交互证据
+
+| 动作 | 证据 |
+|---|---|
+| 拖拽节点 | `state.json` 中 `n_intake {x:350,y:287}`；刷新/重启后保持 |
+| 连线 | Start→Question 新增边，DOM `.px-edge` 14→16；服务端 200 `{graph,receipt}` |
+| 源码编辑 | 修改 `name` 后保存，`graph.version` 递增；非法图返回 V 码列表 |
+| 新建 Run | 抽屉创建后运行条显示新标题、阶段 1/11、阻塞 1 |
+| 地图模式 | 3 个 claim 节点 + 2 条边；空态提示“还没有登记主张” |
+| 亮/暗 | 两套 token 下画布、检查器、地图均截图 |
+| 窄屏 1024 | 检查器下沉，画布保留 |
+
+## 3. 截图
+
+`canvas-flow-light/dark`、`canvas-inspector-light/dark`、`canvas-map-light/dark`、`canvas-runs-light`、`canvas-source-light`、`canvas-new-run-light`、`canvas-connect-light`、`canvas-narrow-dark`、`dock-dark`。
+
+## 4. 实现中修正的问题
+
+| 问题 | 修复 |
+|---|---|
+| 画布高度 0 | `.px-shell` 改为 `auto / 1fr` 两行，top 区独立 |
+| Client 改动不生效 | 每次改动 bump package version（bundle rev 由版本决定） |
+| 端口不可点击 | 改点击式连线 + 检查器 CONNECT |
+| 相机丢失上游 | 锚定当前节点前 3 个节点 |
+| 进度 1/11 错位 | `stageKeyFor` 归一化状态键 |
+| nextAction 原始码 | NEXT_LABEL 补全 + 回退聚焦决策节点 |
+| 地图页崩溃 | 补 `num` 定义 |
+
+## 5. 未验证
+
+- 调色板拖入生成节点；
+- 路径回放（已走过节点回看）；
+- Dock chip 点击聚焦画布；
+- 3080 实例的实时页面（需重启或 HMR 成功），Client Inspect 可查 occupant。

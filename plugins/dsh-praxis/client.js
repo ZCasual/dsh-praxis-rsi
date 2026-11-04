@@ -6,29 +6,33 @@ window.__ModuleLoader__.load({
     const { useState, useEffect, useRef, useCallback } = React;
 
     const API = '/praxis/api';
-    const TABS = [
-      ['tower', '观测塔'],
-      ['map', '认知地图'],
-      ['contract', '契约'],
-      ['discuss', '讨论'],
-      ['experiment', '实验'],
-      ['eval', '评估'],
-      ['memory', '记忆'],
-      ['lineage', '谱系'],
-      ['audit', '审计'],
-      ['knobs', '旋钮'],
+    const STAGE_ORDER = [
+      ['INTAKE', 'Intake'], ['QUESTION', 'Question'], ['PREREG', 'Prereg'],
+      ['DISCUSSION', 'Discuss'], ['SYNTHESIS', 'Synthesis'], ['EXECUTING', 'Execute'],
+      ['REVIEW', 'Review'], ['STAGE4', 'Stage4'], ['EVAL', 'Eval'],
+      ['MEMORY', 'Memory'], ['DECISION', 'Decision'],
     ];
-    const STATE_TONE = {
-      INTAKE: 'idle', QUESTION: 'idle', PREREG_FROZEN: 'info', DISCUSSION: 'info',
-      SYNTHESIS: 'info', EXEC_READY: 'warn', EXECUTING: 'warn', REVIEW: 'warn',
-      STAGE4: 'info', EVAL: 'info', MEMORY: 'ok', DECISION: 'ok', CLOSED: 'ok',
-      DRIFT_DETECTED: 'bad', BLOCKED: 'bad',
+    const STATE_LABEL = {
+      INTAKE: 'Intake', QUESTION: 'Question', PREREG_DRAFT: 'Prereg', PREREG_FROZEN: 'Prereg',
+      DISCUSSION: 'Discuss', SYNTHESIS: 'Synthesis', EXEC_READY: 'Execute', EXECUTING: 'Execute',
+      REVIEW: 'Review', STAGE4: 'Stage4', EVAL: 'Eval', MEMORY: 'Memory', DECISION: 'Decision',
+      CLOSED: 'Closed', DRIFT_DETECTED: 'Drift',
     };
     const NEXT_LABEL = {
-      prereg_freeze: '冻结契约', discussion: '启动讨论', experiment: '执行实验',
-      review: '复核', stage4: '阶段四', eval_report: '提交评估', eval_read: '读评估',
-      memory_commit: '提交记忆', decision: '记录决策',
+      prereg_freeze: '冻结契约', discussion: '启动讨论', experiment: '执行实验', review: '复核',
+      stage4: '阶段四', eval_report: '提交评估', eval_read: '读评估', memory_commit: '提交记忆',
+      decision: '记录决策', close: '关闭', 'new-run': '新运行',
+      'close-or-new-run': '收束或新运行', 'pivot-or-stop': '转向或停止',
+      'register-unknown-on-map': '登记未知', 'complete-prereg': '补全契约',
+      'complete-topic-binding': '补全人格绑定', 'eval_report': '提交评估',
     };
+    function stageKeyFor(state) {
+      if (state === 'PREREG_DRAFT' || state === 'PREREG_FROZEN') return 'PREREG';
+      if (state === 'EXEC_READY') return 'EXECUTING';
+      if (state === 'CLOSED') return 'DECISION';
+      return state;
+    }
+    const TONE = { pending: 'idle', active: 'active', blocked: 'warn', done: 'ok', failed: 'bad', quarantined: 'bad' };
 
     async function api(path, init) {
       const headers = { 'x-praxis-request': '1', ...(init && init.headers) };
@@ -39,6 +43,7 @@ window.__ModuleLoader__.load({
       if (!response.ok) {
         const error = new Error(value.error ?? value.code ?? `HTTP ${response.status}`);
         error.code = value.code;
+        error.errors = value.errors;
         error.blockers = value.blockers;
         error.receipt = value.receipt;
         throw error;
@@ -86,7 +91,6 @@ window.__ModuleLoader__.load({
       const send = useCallback(async (action, payload, options = {}) => {
         setBusy(true);
         setError('');
-        let result = null;
         try {
           const command = {
             commandId: `${action}-${Date.now()}-${Math.floor(Math.random() * 1e6)}`,
@@ -101,615 +105,662 @@ window.__ModuleLoader__.load({
             body: JSON.stringify({ command }),
           });
           if (value.view) setView(value.view);
-          result = value.receipt ?? null;
-          setReceipt(result);
-          if (result && result.status === 'rejected') setError(`${result.reasonCode ?? 'REJECTED'}${result.nextAction ? ` → ${result.nextAction}` : ''}`);
+          setReceipt(value.receipt ?? null);
+          if (value.receipt?.status === 'rejected') {
+            setError(`${value.receipt.reasonCode ?? 'REJECTED'}${value.receipt.nextAction ? ` → ${value.receipt.nextAction}` : ''}`);
+          }
+          return value.receipt;
         } catch (cause) {
           setError(cause instanceof Error ? cause.message : String(cause));
           if (cause.receipt) setReceipt(cause.receipt);
-          result = cause.receipt ?? null;
+          return cause.receipt ?? null;
         } finally {
           setBusy(false);
         }
-        return result;
       }, []);
 
-      return { view, error, busy, lastAt, receipt, refresh, send };
+      return { view, setView, error, setError, busy, lastAt, receipt, refresh, send };
     }
 
-    function pill(tone, text) {
-      return h('span', { className: `px-pill ${tone}` }, text);
+    function Btn({ children, onClick, tone, disabled, title, type = 'button', className }) {
+      return h('button', {
+        type, title, disabled,
+        className: `px-btn${tone ? ` ${tone}` : ''}${className ? ` ${className}` : ''}`,
+        onClick,
+      }, children);
     }
-
-    function Card({ kicker, title, children, wide, actions }) {
-      return h('article', { className: `px-card${wide ? ' px-wide' : ''}` },
-        kicker ? h('p', { className: 'px-kicker' }, kicker) : null,
-        title ? h('h2', null, title) : null,
-        children,
-        actions ? h('div', { className: 'px-actions' }, actions) : null);
-    }
-
-    function Readout({ rows }) {
-      return h('dl', { className: 'px-readout' },
-        rows.filter(Boolean).map(([key, value]) => h('div', { key },
-          h('dt', null, key),
-          h('dd', null, value))));
-    }
-
-    function Bar({ value, tone }) {
-      const pct = Math.max(0, Math.min(1, Number(value) || 0)) * 100;
-      return h('div', { className: 'px-bar', role: 'meter', 'aria-valuenow': Math.round(pct), 'aria-valuemin': 0, 'aria-valuemax': 100 },
-        h('span', { className: tone ?? '', style: { width: `${pct}%` } }));
-    }
-
-    function Button({ children, onClick, tone, disabled, type = 'button', title }) {
-      return h('button', { type, className: `px-btn${tone ? ` ${tone}` : ''}`, onClick, disabled, title }, children);
-    }
-
     function Field({ label, hint, children }) {
       return h('label', { className: 'px-field' },
-        h('span', { className: 'px-field-label' }, label, hint ? h('em', null, hint) : null),
-        children);
+        h('span', { className: 'px-field-label' }, label, hint ? h('em', null, hint) : null), children);
     }
-
-    function Input(props) {
-      return h('input', { className: 'px-input', ...props });
-    }
-
-    function TextArea(props) {
-      return h('textarea', { className: 'px-input px-textarea', rows: 4, ...props });
-    }
-
+    function Input(props) { return h('input', { className: 'px-input', ...props }); }
+    function Area(props) { return h('textarea', { className: 'px-input px-area', ...props }); }
     function Select({ options, ...props }) {
       return h('select', { className: 'px-input', ...props },
         options.map(([value, label]) => h('option', { key: value, value }, label)));
     }
-
-    function Empty({ children }) {
-      return h('p', { className: 'px-empty' }, children);
-    }
-
     function Banner({ tone, children }) {
       return h('p', { className: `px-banner ${tone}`, role: tone === 'bad' ? 'alert' : 'status' }, children);
     }
-
+    function short(value, size = 10) {
+      const text = String(value ?? '');
+      return text.length > size ? `${text.slice(0, size)}…` : text;
+    }
     function num(value, digits = 2) {
       return typeof value === 'number' ? value.toFixed(digits) : '—';
     }
 
-    function json(value) {
-      try { return JSON.stringify(value, null, 2); } catch { return String(value); }
+    const NODE_W = 186;
+    const NODE_H = 78;
+    const PORT_Y = NODE_H / 2;
+
+    function edgePath(a, b) {
+      const x1 = a.x + NODE_W;
+      const y1 = a.y + PORT_Y;
+      const x2 = b.x;
+      const y2 = b.y + PORT_Y;
+      const dx = Math.max(40, Math.abs(x2 - x1) * 0.5);
+      return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
     }
 
-    function parseJson(text, fallback) {
-      if (!text || !text.trim()) return fallback;
-      return JSON.parse(text);
-    }
+    function Canvas({ graph, states, current, selectedId, onSelect, onLayout, onConnect, onDelete, scale, setScale, connectMode }) {
+      const [connectFrom, setConnectFrom] = useState(null);
+      const [camera, setCamera] = useState({ x: 40, y: 100 });
+      const [positions, setPositions] = useState({});
+      const [drag, setDrag] = useState(null);
+      const [pan, setPan] = useState(null);
+      const [link, setLink] = useState(null);
+      const [cursor, setCursor] = useState({ x: 0, y: 0 });
+      const worldRef = useRef(null);
+      const canvasRef = useRef(null);
+      const moved = useRef(false);
 
-    // ---------------------------------------------------------------- shell
+      useEffect(() => {
+        const list = graph?.nodes ?? [];
+        const next = {};
+        for (const node of list) next[node.id] = { ...node.position };
+        setPositions(next);
+        const focus = list.find((node) => node.id === current) ?? list[0];
+        const nextScale = 0.9;
+        const rect = canvasRef.current?.getBoundingClientRect();
+        const centerY = rect ? Math.max(60, (rect.height - NODE_H * nextScale) / 2) : 200;
+        const index = Math.max(0, list.findIndex((node) => node.id === focus.id));
+        const anchorNode = list[Math.max(0, index - 3)] ?? list[0];
+        const anchorX = anchorNode.position.x - 24;
+        setScale(nextScale);
+        setCamera({ x: 60 - anchorX * nextScale, y: centerY - focus.position.y * nextScale });
+      }, [graph?.contentHash, graph?.playbookId, graph?.version, current]);
 
-    function Header({ view, tab, setTab, onNewRun, lastAt, busy, onRefresh }) {
-      const stale = lastAt && Date.now() - lastAt > 12000;
-      return h('header', { className: 'px-head' },
-        h('div', { className: 'px-head-top' },
-          h('div', { className: 'px-brand' },
-            h('span', { className: 'px-mark', 'aria-hidden': true }),
-            h('div', null,
-              h('p', { className: 'px-kicker' }, 'OBSERVATORY · RESEARCH ENGINE'),
-              h('h1', null, 'Praxis'),
-              h('p', { className: 'px-sub' }, '先把未知放上地图，再决定要不要收束。')),
-          ),
-          h('div', { className: 'px-head-right' },
-          view ? pill(view.durability === 'durable' ? 'ok' : 'warn', view.durability === 'durable' ? '持久化' : '内存态') : null,
-          view && view.active ? pill(STATE_TONE[view.active.state] ?? 'idle', view.active.state) : pill('idle', 'IDLE'),
-          stale ? pill('warn', 'STALE') : null,
-            h(Button, { onClick: onRefresh, disabled: busy, title: '刷新快照' }, busy ? '刷新中' : '刷新'),
-            h(Button, { onClick: onNewRun, tone: 'primary' }, '新建运行'),
-          ),
-        ),
-        h('nav', { className: 'px-tabs', 'aria-label': 'Praxis 分区' },
-          TABS.map(([id, label]) => h('button', {
-            key: id, type: 'button', className: tab === id ? 'is-on' : '', 'aria-pressed': tab === id,
-            onClick: () => setTab(id),
-          }, label))),
-      );
-    }
+      const nodes = graph?.nodes ?? [];
+      const edges = graph?.edges ?? [];
+      const pos = (node) => positions[node.id] ?? node.position ?? { x: 0, y: 0 };
+      const toWorld = (clientX, clientY) => {
+        const rect = worldRef.current?.getBoundingClientRect();
+        const left = rect ? rect.left : 0;
+        const top = rect ? rect.top : 0;
+        return { x: (clientX - left) / scale, y: (clientY - top) / scale };
+      };
 
-    function RunRail({ view, onSelect, activeId }) {
-      const runs = view?.runs ?? [];
-      return h('aside', { className: 'px-rail', 'aria-label': '运行列表' },
-        h('p', { className: 'px-kicker' }, 'RUNS'),
-        runs.length === 0 ? h('p', { className: 'px-muted' }, '还没有运行。新建一个剧本。') : null,
-        h('ul', { className: 'px-runs' },
-          runs.slice().reverse().map((run) => h('li', { key: run.id },
-            h('button', {
-              type: 'button',
-              className: `px-run${run.id === activeId ? ' is-on' : ''}`,
-              onClick: () => onSelect(run),
-            },
-            h('span', { className: `px-dot ${STATE_TONE[run.state] ?? 'idle'}`, 'aria-hidden': true }),
-            h('span', { className: 'px-run-title' }, run.title),
-            h('span', { className: 'px-run-meta' }, `${run.state} · ${run.playbookId}`),
-            )))),
-        h('div', { className: 'px-rail-foot' },
-          h('p', { className: 'px-kicker' }, 'PLAYBOOKS'),
-          (view?.playbooks ?? []).map((playbook) => h('p', { key: playbook.id, className: 'px-playbook' },
-            h('strong', null, playbook.title),
-            h('span', null, playbook.intent ?? ''),
-          ))),
-      );
-    }
+      const onWheel = (event) => {
+        event.preventDefault();
+        setScale(Math.max(0.35, Math.min(1.6, scale * (event.deltaY > 0 ? 0.92 : 1.08))));
+      };
+      const onBackgroundDown = (event) => {
+        if (event.target !== event.currentTarget) return;
+        onSelect(null);
+        setPan({ x: event.clientX - camera.x, y: event.clientY - camera.y });
+      };
+      const onPointerMove = (event) => {
+        if (drag) {
+          const point = toWorld(event.clientX, event.clientY);
+          moved.current = true;
+          setPositions((value) => ({ ...value, [drag.id]: { x: Math.round(point.x - drag.dx), y: Math.round(point.y - drag.dy) } }));
+        }
+        if (pan) setCamera({ x: event.clientX - pan.x, y: event.clientY - pan.y });
+        if (link) setCursor(toWorld(event.clientX, event.clientY));
+      };
+      const onPointerUp = () => {
+        if (drag && moved.current) onLayout(positions);
+        setDrag(null);
+        setPan(null);
+        setLink(null);
+      };
 
-    // ---------------------------------------------------------------- pages
+      const onNodeDown = (event, node) => {
+        event.stopPropagation();
+        if (connectMode) {
+          if (!connectFrom) { setConnectFrom(node.id); onSelect(node.id); return; }
+          if (connectFrom !== node.id) { onConnect(connectFrom, node.id, 'artifact'); setConnectFrom(null); onSelect(node.id); return; }
+        }
+        onSelect(node.id);
+        const start = toWorld(event.clientX, event.clientY);
+        const origin = pos(node);
+        setDrag({ id: node.id, dx: start.x - origin.x, dy: start.y - origin.y });
+        moved.current = false;
+      };
+      const startLink = (event, node) => {
+        event.stopPropagation();
+        if (link) { setLink(null); return; }
+        setLink({ from: node.id });
+        setCursor(toWorld(event.clientX, event.clientY));
+      };
+      const finishLink = (event, node) => {
+        event.stopPropagation();
+        if (!link || link.from === node.id) { setLink(null); return; }
+        onConnect(link.from, node.id);
+        setLink(null);
+      };
 
-    function Tower({ view, active, send, setTab }) {
-      if (!active) return h(Empty, null, '没有活动运行。新建运行后，这里会显示门禁、下一动作与野心读数。');
-      const gate = active.blockers ?? [];
-      const corruption = active.ambition?.corruptionFlags ?? [];
-      const events = (active.events ?? []).slice(-9).reverse();
-      return h('div', { className: 'px-grid' },
-        h(Card, { kicker: 'CONTROL TOWER', title: active.title, wide: true },
-          h(Readout, {
-            rows: [
-              ['剧本', active.playbookId],
-              ['状态', active.state],
-              ['版本', String(active.version)],
-              ['旋钮哈希', active.knobHash],
-              ['判断模型', active.models?.judge ?? '—'],
-              ['评估模型', active.models?.evaluator ?? '—'],
-            ],
+      const from = link ? nodes.find((item) => item.id === link.from) : null;
+      return h('div', {
+        ref: canvasRef,
+        className: `px-canvas${drag ? ' is-dragging' : ''}`,
+        onPointerDown: onBackgroundDown,
+        onPointerMove,
+        onPointerUp,
+        onPointerLeave: onPointerUp,
+        onWheel,
+        tabIndex: 0,
+        onKeyDown: (event) => {
+          if (event.key === 'Escape') onSelect(null);
+          if (event.key === '+' || event.key === '=') setScale(Math.min(1.6, scale * 1.1));
+          if (event.key === '-') setScale(Math.max(0.35, scale / 1.1));
+        },
+      },
+      h('div', { className: `px-world${scale < 0.55 ? ' lod-far' : ''}`, ref: worldRef, style: { transform: `translate(${camera.x}px, ${camera.y}px) scale(${scale})`, '--px-scale': scale } },
+        h('svg', { className: 'px-edges', width: 3200, height: 1400 },
+          h('defs', null, h('marker', { id: 'px-arrow', viewBox: '0 0 8 8', refX: 7, refY: 4, markerWidth: 7, markerHeight: 7, orient: 'auto' },
+            h('path', { d: 'M0,0 L8,4 L0,8 z', className: 'px-arrow' }))),
+          edges.map((edge) => {
+            const a = nodes.find((item) => item.id === edge.from);
+            const b = nodes.find((item) => item.id === edge.to);
+            if (!a || !b) return null;
+            const tone = edge.port === 'contract' ? 'contract' : edge.port === 'evidence' ? 'evidence' : 'artifact';
+            return h('path', { key: edge.id, d: edgePath(pos(a), pos(b)), className: `px-edge ${tone}`, 'marker-end': 'url(#px-arrow)' });
           }),
-          ['DECISION', 'CLOSED', 'DRIFT_DETECTED'].includes(active.state)
-            ? h(Banner, { tone: active.state === 'DRIFT_DETECTED' ? 'bad' : 'ok' },
-              active.state === 'DRIFT_DETECTED' ? '同结论重复：必须转向、重定义或停止。' : '本轮已到决策点。下一轮从新问题开始。')
-            : gate.length
-              ? h(Banner, { tone: 'warn' }, `实验门关闭：${gate.join(', ')}`)
-              : h(Banner, { tone: 'ok' }, '实验门开放。冻结契约已生效。'),
-          h('div', { className: 'px-actions' },
-            active.state === 'INTAKE' ? h(Button, { tone: 'primary', onClick: () => setTab('contract') }, '去冻结契约') : null,
-            active.blockers?.length ? h('span', { className: 'px-muted' }, `下一动作：${NEXT_LABEL[active.nextAction] ?? active.nextAction ?? '—'}`) : null,
-          ),
-        ),
-        h(Card, { kicker: 'AMBITION', title: '野心读数' },
-          h(Readout, { rows: [
-            ['A_p 挑战', num(active.ambition?.A_p)],
-            ['E 兑现', num(active.ambition?.E)],
-            ['A_d 实际', num(active.ambition?.A_d)],
-            ['A_final', num(active.ambition?.A_final)],
-            ['通胀', active.ambition?.inflationFlag ? '是' : '否'],
-          ] }),
-          h(Bar, { value: active.ambition?.A_final ?? 0, tone: 'ok' }),
-          corruption.length ? h(Banner, { tone: 'bad' }, `腐化信号：${corruption.join(', ')}`) : h('p', { className: 'px-muted' }, '没有腐化信号，不等于有野心。'),
-        ),
-        h(Card, { kicker: 'TIMELINE', title: '最近事件', wide: true },
-          events.length ? h('ol', { className: 'px-events' }, events.map((event) => h('li', { key: event.seq },
-            h('span', { className: 'px-num' }, `#${event.seq}`),
-            h('span', { className: 'px-event-type' }, event.type),
-            h('span', { className: 'px-muted' }, event.at ? new Date(event.at).toLocaleTimeString('zh-CN', { hour12: false }) : ''),
-          ))) : h(Empty, null, '还没有事件。'),
-        ),
-      );
+          link && from ? h('path', { className: 'px-edge temp', d: edgePath(pos(from), { x: cursor.x - NODE_W, y: cursor.y - PORT_Y }) }) : null),
+        nodes.map((node) => {
+          const state = states?.[node.id] ?? 'pending';
+          const selected = selectedId === node.id;
+          const focused = current === node.id;
+          const real = pos(node);
+          const action = node.config?.action;
+          return h('div', {
+            key: node.id,
+            className: `px-node ${TONE[state] ?? 'idle'}${selected ? ' is-selected' : ''}${focused ? ' is-current' : ''}${node.type === 'gate' ? ' is-gate' : ''}`,
+            style: { transform: `translate(${real.x}px, ${real.y}px)` },
+            onPointerDown: (event) => onNodeDown(event, node),
+            onDoubleClick: () => { if (action) onSelect(node.id); },
+            tabIndex: 0,
+            role: 'button',
+            'aria-label': `${node.label} ${state}`,
+            onKeyDown: (event) => {
+              if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onSelect(node.id); }
+              if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); onDelete(node.id); }
+            },
+          },
+          h('div', { className: 'px-node-head' },
+            h('i', { className: 'px-node-dot', 'aria-hidden': true }),
+            h('span', { className: 'px-node-label' }, node.label),
+            focused ? h('span', { className: 'px-node-here' }, '当前') : null),
+          h('div', { className: 'px-node-meta' }, node.type === 'gate' ? `gate · ${node.config?.gate ?? ''}` : `${node.type}${node.stage ? ` · ${node.stage}` : ''}`),
+          h('div', { className: 'px-node-foot' }, state),
+          node.type !== 'start' ? h('button', {
+            className: 'px-port in', title: '输入端口',
+            onPointerDown: (event) => event.stopPropagation(),
+            onClick: (event) => finishLink(event, node),
+          }) : null,
+          node.type !== 'end' ? h('button', {
+            className: 'px-port out', title: '从右侧端口拖出连线',
+            onPointerDown: (event) => event.stopPropagation(),
+            onClick: (event) => startLink(event, node),
+          }) : null);
+        })),
+      h('div', { className: 'px-canvas-help' },
+        h('span', null, `节点 ${nodes.length} · 边 ${edges.length}`),
+        connectFrom ? h('span', { className: 'px-connect-hint' }, `连线起点 ${connectFrom}`) : null,
+        h('span', null, '滚轮缩放 · 拖背景平移 · 拖节点移动 · 拖右侧端口连线 · Delete 删除')),
+      h('div', { className: 'px-zoom' },
+        h(Btn, { onClick: () => setScale(Math.max(0.35, scale - 0.1)) }, '−'),
+        h('span', { className: 'px-num' }, `${Math.round(scale * 100)}%`),
+        h(Btn, { onClick: () => setScale(Math.min(1.6, scale + 0.1)) }, '+'),
+        h(Btn, { onClick: () => {
+          const el = canvasRef.current;
+          const list = graph?.nodes ?? [];
+          if (!el || !list.length) return;
+          const rect = el.getBoundingClientRect();
+          const minX = Math.min(...list.map((node) => node.position.x));
+          const maxX = Math.max(...list.map((node) => node.position.x + NODE_W));
+          const minY = Math.min(...list.map((node) => node.position.y));
+          const maxY = Math.max(...list.map((node) => node.position.y + NODE_H));
+          const fit = Math.max(0.25, Math.min(1, (rect.width - 90) / Math.max(1, maxX - minX), (rect.height - 110) / Math.max(1, maxY - minY)));
+          setScale(fit);
+          setCamera({ x: 42 - minX * fit, y: 40 - minY * fit });
+        } }, '适配')));
     }
 
-    function MapPage({ view, active, send }) {
-      if (!active) return h(Empty, null, '没有活动运行，地图为空。');
-      const map = view.map ?? { nodes: [], edges: [], frontier: [], blindSpots: [], contradictions: [], meanReversion: {} };
-      const [claim, setClaim] = useState('');
-      const [status, setStatus] = useState('unverified');
-      const [contradicts, setContradicts] = useState('');
-      const [from, setFrom] = useState('');
-      const [to, setTo] = useState('');
-      const [relation, setRelation] = useState('depends');
-      return h('div', { className: 'px-grid' },
-        h(Card, { kicker: 'COGNITIVE MAP', title: `节点 ${map.nodes.length} · 边 ${map.edges.length}`, wide: true },
-          map.nodes.length
-            ? h('ul', { className: 'px-nodes' }, map.nodes.map((node) => h('li', { key: node.id },
-              h('span', { className: `px-dot ${node.status === 'unverified' ? 'warn' : 'ok'}`, 'aria-hidden': true }),
-              h('strong', null, node.label),
-              h('span', { className: 'px-muted' }, `${node.status} · ${node.evidenceRefs?.length ?? 0} 证据`),
-            )))
-            : h(Empty, null, '地图为空。空地图不是共识。'),
-          map.edges.length
-            ? h('div', null,
-              h('p', { className: 'px-kicker' }, 'EDGES'),
-              h('ul', { className: 'px-list' }, map.edges.map((edge) => h('li', { key: edge.id },
-                h('span', { className: 'px-num' }, edge.from ?? '?'),
-                h('span', { className: 'px-muted' }, ` —${edge.kind}→ `),
-                h('span', { className: 'px-num' }, edge.to ?? '?')))))
-            : null,
-          map.contradictions.length
-            ? h('div', null,
-              h('p', { className: 'px-kicker' }, 'CONTRADICTIONS'),
-              h('ul', { className: 'px-pairs' }, map.contradictions.map((item) => h('li', { key: item.id ?? item.left },
-                `${item.left}  ≠  ${item.right}`))))
-            : null,
-        ),
-        h(Card, { kicker: 'FRONTIER', title: '已知的未知' },
-          map.frontier.length ? h('ul', { className: 'px-list' }, map.frontier.map((item) => h('li', { key: item.nodeId }, `${item.nodeId} · ${item.whyUnknown}`)))
-            : h(Empty, null, '还没有登记未知。没有未知，通常意味着问题被缩小了。'),
-          map.blindSpots.length ? h('ul', { className: 'px-list' }, map.blindSpots.map((item) => h('li', { key: item.area }, item.area))) : null,
-        ),
-        h(Card, { kicker: 'MEAN REVERSION', title: '均值回归检查' },
-          h(Readout, { rows: [
-            ['距离', num(map.meanReversion?.distance)],
-            ['居中', map.meanReversion?.centered ? '是' : '否'],
-            ['可疑', map.meanReversion?.suspect ? '是' : '否'],
-          ] }),
-        ),
-        h(Card, { kicker: 'ADD', title: '登记主张' },
-          h(Field, { label: '主张' }, h(Input, { value: claim, onChange: (event) => setClaim(event.target.value), placeholder: '结构在声明语料中可被主动提取' })),
-          h(Field, { label: '状态' }, h(Select, { value: status, onChange: (event) => setStatus(event.target.value), options: [['unverified', '未验证'], ['known', '已知'], ['contested', '有争议'], ['unknown', '未知']] })),
-          h(Field, { label: '与哪条矛盾（可选）' }, h(Select, { value: contradicts, onChange: (event) => setContradicts(event.target.value), options: [['', '无'], ...map.nodes.map((node) => [node.label, node.label])] })),
-          h(Button, { tone: 'primary', onClick: async () => {
-            if (!claim.trim()) return;
-            const result = await send('map_claim', { claim: claim.trim(), status, contradicts: contradicts || undefined, evidenceRefs: [] });
-            if (result && result.status === 'committed') setClaim('');
-          } }, '登记'),
-        ),
-        h(Card, { kicker: 'EDGE', title: '连接两个节点' },
-          h(Field, { label: '起点' }, h(Select, { value: from, onChange: (event) => setFrom(event.target.value), options: [['', '选择'], ...map.nodes.map((node) => [node.id, node.label])] })),
-          h(Field, { label: '终点' }, h(Select, { value: to, onChange: (event) => setTo(event.target.value), options: [['', '选择'], ...map.nodes.map((node) => [node.id, node.label])] })),
-          h(Field, { label: '关系' }, h(Select, { value: relation, onChange: (event) => setRelation(event.target.value), options: [['supports', '支持'], ['contradicts', '矛盾'], ['derives', '派生'], ['analogous', '类比'], ['depends', '依赖'], ['frontier', '前沿']] })),
-          h(Button, { onClick: () => send('map_edge', { from, to, relation }), disabled: !from || !to }, '连边'),
-        ),
-      );
+    function RunBar({ active, onAction, onSelect, onOpenRuns, onOpenSource, onOpenAudit, onOpenKnobs, mode, setMode, onNew, connectMode, setConnectMode }) {
+      if (!active) {
+        return h('div', { className: 'px-runbar px-empty-run' },
+          h('span', { className: 'px-kicker' }, 'CANVAS'),
+          h('span', { className: 'px-muted' }, '没有活动运行。新建一个剧本，或从运行列表选择。'),
+          h('div', { className: 'px-grow' }),
+          h(Btn, { onClick: onOpenRuns }, '运行列表'),
+          h(Btn, { tone: 'primary', onClick: onNew }, '新建运行'));
+      }
+      const blockers = active.blockers ?? [];
+      const next = active.nextAction;
+      const currentLabel = STATE_LABEL[active.state] ?? active.state;
+      const currentKey = stageKeyFor(active.state);
+      const currentIndex = Math.max(0, STAGE_ORDER.findIndex(([value]) => value === currentKey));
+      return h('div', { className: 'px-runbar' },
+        h('div', { className: 'px-runbar-main' },
+          h('span', { className: 'px-kicker' }, 'RUN'),
+          h('strong', { className: 'px-run-title' }, active.title),
+          h('span', { className: `px-state ${blockers.length ? 'warn' : ''}` }, blockers.length ? `${blockers.length} 阻塞` : currentLabel),
+          h('span', { className: 'px-num px-muted' }, `v${active.version}`)),
+        h('div', { className: 'px-progress' },
+          h('span', { className: 'px-muted' }, '阶段'),
+          h('span', { className: 'px-num' }, `${currentIndex + 1}/${STAGE_ORDER.length}`),
+          h('span', { className: 'px-progress-bar' },
+            h('i', { style: { width: `${Math.max(4, ((currentIndex + 1) / STAGE_ORDER.length) * 100)}%` } }))),
+        h('div', { className: 'px-runbar-actions' },
+          blockers.length
+            ? h(Btn, { tone: 'primary', onClick: () => onAction(next) }, `下一步：${NEXT_LABEL[next] ?? next}`)
+            : next ? h(Btn, { tone: 'primary', onClick: () => onAction(next) }, NEXT_LABEL[next] ?? next) : null,
+          h(Btn, { onClick: onOpenRuns }, '运行'),
+          h(Btn, { onClick: onOpenSource }, '源码'),
+          h(Btn, { onClick: onOpenAudit }, '审计'),
+          h(Btn, { onClick: onOpenKnobs }, '旋钮'),
+          h(Btn, { className: connectMode ? 'is-on' : '', onClick: () => setConnectMode(!connectMode) }, '连线'),
+          h('span', { className: 'px-sep' }),
+          h(Btn, { className: mode === 'flow' ? 'is-on' : '', onClick: () => { setMode('flow'); onSelect(null); } }, '流程'),
+          h(Btn, { className: mode === 'map' ? 'is-on' : '', onClick: () => { setMode('map'); onSelect(null); } }, '地图')));
     }
 
-    function ContractPage({ active, send }) {
-      if (!active) return h(Empty, null, '没有活动运行。');
-      const frozen = active.prereg?.frozen;
+
+    // ---------------------------------------------------------------- inspector
+
+    function Technical({ node, run }) {
+      const [open, setOpen] = useState(false);
+      return h('div', { className: 'px-tech' },
+        h('button', { className: 'px-disclose', onClick: () => setOpen(!open), 'aria-expanded': open },
+          open ? '▾ 技术细节' : '▸ 技术细节'),
+        open ? h('pre', { className: 'px-code' }, JSON.stringify({
+          node: { id: node.id, type: node.type, stage: node.stage, config: node.config },
+          run: run ? { id: run.id, version: run.version, knobHash: run.knobHash, models: run.models } : null,
+        }, null, 2)) : null);
+    }
+
+    function PreregForm({ send, active }) {
       const [form, setForm] = useState({
         question: active.title, prediction: '', acceptance: '', acceptableFailure: '',
         controls: 'shuffle, label-shuffle', primary: 'separation', threshold: '0.08', seeds: '3',
         source: 'declared-corpus', split: 'train', evalSplit: 'held-out', wallMin: '30', agents: '4',
       });
-      const update = (key) => (event) => setForm({ ...form, [key]: event.target.value });
-      const submit = () => send('prereg_freeze', {
-        prereg: {
-          question: form.question,
-          prediction: form.prediction,
-          acceptance: form.acceptance,
-          acceptableFailure: form.acceptableFailure,
-          controls: form.controls.split(',').map((item) => item.trim()).filter(Boolean),
-          metrics: { primary: form.primary, threshold: Number(form.threshold), seeds: Number(form.seeds) },
-          input: { source: form.source, split: form.split, evalSplit: form.evalSplit },
-          budget: { wallMin: Number(form.wallMin), agents: Number(form.agents) },
-          stop: { sameConclusion: 2 },
-        },
-      });
-      return h('div', { className: 'px-grid' },
-        h(Card, { kicker: 'PRE-REGISTRATION', title: frozen ? '已冻结' : '待冻结', wide: true },
-          frozen
-            ? h('div', null,
-              h(Banner, { tone: 'ok' }, `冻结哈希 ${active.prereg.hash}`),
-              h('pre', { className: 'px-code' }, json(active.prereg.contract)),
-              h(Banner, { tone: 'warn' }, '结果出现后改契约不会覆盖本运行；改动会要求新运行。'),
-            )
-            : h('div', null,
-              h(Field, { label: '问题' }, h(Input, { value: form.question, onChange: update('question') })),
-              h(Field, { label: '预测', hint: '具体数字/方向' }, h(Input, { value: form.prediction, onChange: update('prediction'), placeholder: '新表示使分离度高于冻结基线 0.08' })),
-              h(Field, { label: '验收' }, h(TextArea, { value: form.acceptance, onChange: update('acceptance'), placeholder: 'pass 当且仅当主指标超过基线且对照被破坏' })),
-              h(Field, { label: '可接受失败' }, h(TextArea, { value: form.acceptableFailure, onChange: update('acceptableFailure'), placeholder: '若对照未被破坏，接受该表示无效' })),
-              h(Field, { label: '对照', hint: '逗号分隔' }, h(Input, { value: form.controls, onChange: update('controls') })),
-              h('div', { className: 'px-row3' },
-                h(Field, { label: '主指标' }, h(Input, { value: form.primary, onChange: update('primary') })),
-                h(Field, { label: '阈值' }, h(Input, { value: form.threshold, onChange: update('threshold'), inputMode: 'decimal' })),
-                h(Field, { label: '种子' }, h(Input, { value: form.seeds, onChange: update('seeds'), inputMode: 'numeric' })),
-              ),
-              h('div', { className: 'px-row3' },
-                h(Field, { label: '数据源' }, h(Input, { value: form.source, onChange: update('source') })),
-                h(Field, { label: '训练切分' }, h(Input, { value: form.split, onChange: update('split') })),
-                h(Field, { label: '评估切分' }, h(Input, { value: form.evalSplit, onChange: update('evalSplit') })),
-              ),
-              h('div', { className: 'px-row3' },
-                h(Field, { label: '时限(分)' }, h(Input, { value: form.wallMin, onChange: update('wallMin'), inputMode: 'numeric' })),
-                h(Field, { label: '代理数' }, h(Input, { value: form.agents, onChange: update('agents'), inputMode: 'numeric' })),
-              ),
-              h(Button, { tone: 'primary', onClick: submit }, '冻结契约'),
-              h('p', { className: 'px-muted' }, '缺任一字段会被拒绝，并列出 blockers。'),
-            ),
-        ),
-      );
+      const upd = (key) => (event) => setForm({ ...form, [key]: event.target.value });
+      return h('div', { className: 'px-form' },
+        h(Field, { label: '预测', hint: '具体数字/方向' }, h(Input, { value: form.prediction, onChange: upd('prediction'), placeholder: '略高于基线 0.08' })),
+        h(Field, { label: '验收' }, h(Area, { rows: 2, value: form.acceptance, onChange: upd('acceptance'), placeholder: 'pass 当且仅当主指标超过基线且对照被破坏' })),
+        h(Field, { label: '可接受失败' }, h(Area, { rows: 2, value: form.acceptableFailure, onChange: upd('acceptableFailure'), placeholder: '若对照无效，接受假设不成立' })),
+        h(Field, { label: '对照', hint: '逗号分隔' }, h(Input, { value: form.controls, onChange: upd('controls') })),
+        h('div', { className: 'px-row2' },
+          h(Field, { label: '主指标' }, h(Input, { value: form.primary, onChange: upd('primary') })),
+          h(Field, { label: '阈值' }, h(Input, { value: form.threshold, onChange: upd('threshold'), inputMode: 'decimal' }))),
+        h('div', { className: 'px-row2' },
+          h(Field, { label: '数据源' }, h(Input, { value: form.source, onChange: upd('source') })),
+          h(Field, { label: '评估切分' }, h(Input, { value: form.evalSplit, onChange: upd('evalSplit') }))),
+        h(Btn, {
+          tone: 'primary',
+          onClick: () => send('prereg_freeze', {
+            prereg: {
+              question: form.question, prediction: form.prediction, acceptance: form.acceptance,
+              acceptableFailure: form.acceptableFailure,
+              controls: form.controls.split(',').map((item) => item.trim()).filter(Boolean),
+              metrics: { primary: form.primary, threshold: Number(form.threshold), seeds: Number(form.seeds) },
+              input: { source: form.source, split: form.split, evalSplit: form.evalSplit },
+              budget: { wallMin: Number(form.wallMin), agents: Number(form.agents) },
+              stop: { sameConclusion: 2 },
+            },
+          }),
+        }, '冻结契约'));
     }
 
-    function DiscussPage({ active, send }) {
-      if (!active) return h(Empty, null, '没有活动运行。');
-      const [packages, setPackages] = useState('');
-      const [persona, setPersona] = useState('');
-      const heterogeneity = active.discussion?.heterogeneity;
+    function DiscussionForm({ send, active }) {
+      const [text, setText] = useState('');
       const sample = JSON.stringify([
-        { persona: 'theorist', claim: '未知结构可以被主动提取', assumptions: ['信号存在于声明的语料'], evidence: ['derivation:1'], style: 'theoretical', minority: true, retained: true },
-        { persona: 'empiricist', claim: '当前语料只支持均值回归', assumptions: ['噪声解释全部方差'], evidence: ['data:2'], style: 'empirical', minority: false, retained: true },
+        { persona: 'mechanist', claim: '增益来自算子结构', assumptions: ['容量匹配后仍增益'], evidence: ['derivation:1', 'data:4'], style: 'theoretical', minority: true, retained: true },
+        { persona: 'scaling', claim: '增益来自容量', assumptions: ['容量解释全部增益'], evidence: ['data:5'], style: 'empirical', minority: false, retained: true },
+        { persona: 'cross-domain', claim: '用可辨识性重写算子', assumptions: ['可辨识性先于容量'], evidence: ['analogy:2'], style: 'analogical', minority: true, retained: true },
       ], null, 2);
-      const personaSample = JSON.stringify({
-        role: 'devil',
-        topicBinding: { defaultAssumptionToAttack: '熟悉路径足够', expectedCounterexample: '跨域反例', falsifiableDisagreement: '若对照被破坏则承认' },
-        symptomProfile: { blindSpots: ['锚定'], attractors: ['论文'], antiPatterns: ['附和'] },
-        sinthome: { strategy: '先写反例再写结论', observableWorkProduct: 'counterexample' },
-        stance: { claim: '未知不是风险，退回已知才是', scope: '本议题', prior: 0.6 },
-        evidenceStandard: { allowed: ['data', 'derivation'], minIndependentSources: 2, requiresControl: true, forbidsDomains: [] },
-        taboos: ['不改冻结判据'],
-      }, null, 2);
-      return h('div', { className: 'px-grid' },
-        h(Card, { kicker: 'DISCUSSION', title: '异质讨论', wide: true },
-          h('p', { className: 'px-muted' }, `轮次 ${active.discussion?.rounds ?? 0} · 观点包 ${active.discussion?.packages?.length ?? 0}`),
-          heterogeneity ? h('div', null,
-            h(Readout, { rows: [
-              ['D 异质度', num(heterogeneity.D)],
-              ['style-only', heterogeneity.styleOnly ? '是' : '否'],
-              ['增益', num(heterogeneity.gain)],
-              ['少数派保留', num(heterogeneity.minorityRetention)],
-            ] }),
-            h(Bar, { value: heterogeneity.D, tone: heterogeneity.D < 0.35 ? 'bad' : 'ok' }),
-            heterogeneity.styleOnly || heterogeneity.D < 0.35 ? h(Banner, { tone: 'bad' }, '讨论空转或人格通胀：只有措辞不同，没有证据路径差异。') : null,
-          ) : h(Empty, null, '还没有讨论。合成不压平，先让立场互相攻击。'),
-          h(Field, { label: '观点包 JSON' }, h(TextArea, { rows: 8, value: packages, onChange: (event) => setPackages(event.target.value), placeholder: '粘贴观点包数组' })),
-          h('div', { className: 'px-actions' },
-            h(Button, { onClick: () => setPackages(sample) }, '载入示例'),
-            h(Button, { tone: 'primary', onClick: async () => {
-              let parsed;
-              try { parsed = parseJson(packages, []); } catch { return; }
-              if (!Array.isArray(parsed) || parsed.length < 2) return;
-              const result = await send('discussion', { round: (active.discussion?.rounds ?? 0) + 1, packages: parsed });
-              if (result && result.status === 'committed') setPackages('');
-            } }, '提交讨论'),
-          ),
-        ),
-        h(Card, { kicker: 'PERSONA', title: '固定独立人格' },
-          h(Field, { label: '人格 JSON', hint: '必须带 topicBinding 与 sinthome.observableWorkProduct' }, h(TextArea, { rows: 8, value: persona, onChange: (event) => setPersona(event.target.value) })),
-          h('div', { className: 'px-actions' },
-            h(Button, { onClick: () => setPersona(personaSample) }, '载入示例'),
-            h(Button, { onClick: async () => {
-              let parsed;
-              try { parsed = parseJson(persona, null); } catch { return; }
-              if (!parsed) return;
-              const result = await send('pin_persona', { persona: parsed });
-              if (result && result.status === 'committed') setPersona('');
-            } }, '固定'),
-          ),
-          (active.personas ?? []).length ? h('ul', { className: 'px-list' }, active.personas.map((item) => h('li', { key: item.contentHash }, `${item.role ?? 'persona'} · ${item.contentHash}`))) : null,
-        ),
-      );
+      return h('div', { className: 'px-form' },
+        h(Field, { label: '观点包 JSON' }, h(Area, { rows: 7, value: text, onChange: (event) => setText(event.target.value) })),
+        h('div', { className: 'px-actions' },
+          h(Btn, { onClick: () => setText(sample) }, '载入示例'),
+          h(Btn, { tone: 'primary', onClick: () => {
+            let packages;
+            try { packages = JSON.parse(text || '[]'); } catch { return; }
+            if (!Array.isArray(packages) || packages.length < 2) return;
+            send('discussion', { round: (active.discussion?.rounds ?? 0) + 1, packages });
+          } }, '提交讨论')),
+        active.discussion?.heterogeneity ? h('p', { className: 'px-muted' }, `D ${num(active.discussion.heterogeneity.D)} · style-only ${active.discussion.heterogeneity.styleOnly ? '是' : '否'}`) : null);
     }
 
-    function ExperimentPage({ active, send }) {
-      if (!active) return h(Empty, null, '没有活动运行。');
+    function ExperimentForm({ send }) {
       const [command, setCommand] = useState('');
-      const [artifactHash, setArtifactHash] = useState('');
+      const [hash, setHash] = useState('');
+      const [actor, setActor] = useState('coding');
+      return h('div', { className: 'px-form' },
+        h(Field, { label: '派工角色' }, h(Select, { value: actor, onChange: (event) => setActor(event.target.value), options: [['coding', 'coding'], ['worker', 'worker'], ['root', 'root'], ['user', 'user']] })),
+        h(Field, { label: '执行描述' }, h(Input, { value: command, onChange: (event) => setCommand(event.target.value), placeholder: 'capacity-matched ablation + held-out' })),
+        h(Field, { label: '产物哈希' }, h(Input, { value: hash, onChange: (event) => setHash(event.target.value) })),
+        h(Btn, { tone: 'primary', onClick: () => { if (command.trim()) send('experiment', { command: command.trim(), artifactHash: hash.trim() || null }, { actor: { kind: actor, id: `${actor}-ui` } }); } }, '记录实验'));
+    }
+
+    function ReviewForm({ send }) {
       const [verdict, setVerdict] = useState('pass');
       const [items, setItems] = useState('对照被破坏\n主指标超过基线');
-      const [stage4, setStage4] = useState('');
-      const [actor, setActor] = useState('coding');
-      return h('div', { className: 'px-grid' },
-        h(Card, { kicker: 'EXECUTE', title: '实验执行', wide: true },
-          h(Field, { label: '派工角色' }, h(Select, { value: actor, onChange: (event) => setActor(event.target.value), options: [['coding', 'coding'], ['worker', 'worker'], ['root', 'root'], ['user', 'user']] })),
-          h(Field, { label: '执行描述' }, h(Input, { value: command, onChange: (event) => setCommand(event.target.value), placeholder: 'train + held-out probe' })),
-          h(Field, { label: '产物哈希' }, h(Input, { value: artifactHash, onChange: (event) => setArtifactHash(event.target.value), placeholder: 'artifact-sha' })),
-          h(Button, { tone: 'primary', onClick: async () => {
-            if (!command.trim()) return;
-            const result = await send('experiment', { command: command.trim(), artifactHash: artifactHash.trim() || null }, { actor: { kind: actor, id: `${actor}-ui` } });
-            if (result && result.status === 'committed') { setCommand(''); setArtifactHash(''); }
-          } }, '记录实验'),
-          (active.experiments ?? []).length
-            ? h('table', { className: 'px-table' },
-              h('thead', null, h('tr', null, ['ID', '命令', '产物', '状态'].map((label) => h('th', { key: label }, label)))),
-              h('tbody', null, active.experiments.map((item) => h('tr', { key: item.id },
-                h('td', { className: 'px-num' }, item.id),
-                h('td', null, item.command),
-                h('td', { className: 'px-num' }, item.artifactHash ?? '—'),
-                h('td', null, item.resultState)))))
-            : h(Empty, null, '还没有实验记录。'),
-        ),
-        h(Card, { kicker: 'REVIEW', title: '关键判据复核' },
-          h(Field, { label: '结论' }, h(Select, { value: verdict, onChange: (event) => setVerdict(event.target.value), options: [['pass', 'pass'], ['suspect', 'suspect'], ['fail', 'fail']] })),
-          h(Field, { label: '逐项' }, h(TextArea, { value: items, onChange: (event) => setItems(event.target.value) })),
-          h(Button, { onClick: () => send('review', { verdict, items: items.split('\n').map((line) => line.trim()).filter(Boolean) }, { actor: { kind: 'reviewer', id: 'reviewer-ui' } }) }, '记录复核'),
-        ),
-        h(Card, { kicker: 'STAGE 4', title: '阶段四（root 亲写）', wide: true },
-          h(Field, { label: '解读 / 追问 / 认知 / 决策 / 野心自省' }, h(TextArea, { rows: 5, value: stage4, onChange: (event) => setStage4(event.target.value), placeholder: '结果是什么；为什么；改变了什么认知；下一步；是否在投机' })),
-          h(Button, { onClick: () => send('stage4', { text: stage4 }) }, '记录阶段四'),
-        ),
-      );
+      return h('div', { className: 'px-form' },
+        h(Field, { label: '结论' }, h(Select, { value: verdict, onChange: (event) => setVerdict(event.target.value), options: [['pass', 'pass'], ['suspect', 'suspect'], ['fail', 'fail']] })),
+        h(Field, { label: '逐项' }, h(Area, { rows: 3, value: items, onChange: (event) => setItems(event.target.value) })),
+        h(Btn, { onClick: () => send('review', { verdict, items: items.split('\n').map((line) => line.trim()).filter(Boolean) }, { actor: { kind: 'reviewer', id: 'reviewer-ui' } }) }, '记录复核'));
     }
 
-    function EvalPage({ active, send }) {
-      if (!active) return h(Empty, null, '没有活动运行。');
-      const [reportHash, setReportHash] = useState('');
+    function Stage4Form({ send }) {
+      const [text, setText] = useState('');
+      return h('div', { className: 'px-form' },
+        h(Field, { label: '解读 / 追问 / 认知 / 决策 / 野心自省' }, h(Area, { rows: 5, value: text, onChange: (event) => setText(event.target.value) })),
+        h(Btn, { onClick: () => send('stage4', { text }) }, '记录阶段四'));
+    }
+
+    function EvalForm({ send, active }) {
+      const [hash, setHash] = useState('');
       const [verdict, setVerdict] = useState('pass');
       const [seeds, setSeeds] = useState('3');
-      const evalState = active.eval ?? {};
-      return h('div', { className: 'px-grid' },
-        h(Card, { kicker: 'EVALUATION', title: '独立评估', wide: true },
-          h(Banner, { tone: evalState.readAt ? 'ok' : 'warn' }, evalState.readAt ? `已读：${evalState.readAt}` : '评估报告尚未被读；promotion 会被拒绝。'),
-          h(Readout, { rows: [
-            ['报告哈希', evalState.reportHash ?? '—'],
-            ['结论', evalState.verdict ?? '—'],
-            ['种子', String(evalState.seeds ?? '—')],
-            ['读取人', evalState.readBy ?? '—'],
-          ] }),
-          h(Field, { label: '报告哈希' }, h(Input, { value: reportHash, onChange: (event) => setReportHash(event.target.value), placeholder: 'eval-report-sha' })),
-          h('div', { className: 'px-row3' },
-            h(Field, { label: '结论' }, h(Select, { value: verdict, onChange: (event) => setVerdict(event.target.value), options: [['pass', 'pass'], ['suspect', 'suspect'], ['fail', 'fail']] })),
-            h(Field, { label: '种子' }, h(Input, { value: seeds, onChange: (event) => setSeeds(event.target.value), inputMode: 'numeric' })),
-          ),
-          h('div', { className: 'px-actions' },
-            h(Button, { onClick: () => send('eval_report', { reportHash: reportHash.trim() || null, verdict, seeds: Number(seeds) || 3 }, { actor: { kind: 'evaluator', id: 'evaluator-ui' } }) }, '提交评估报告'),
-            h(Button, { tone: 'primary', onClick: () => send('eval_read', { reportHash: reportHash.trim() || evalState.reportHash }) }, '我读过报告（eval.read）'),
-          ),
-        ),
-        h(Card, { kicker: 'PROMOTION', title: '候选晋升' },
-          h('p', { className: 'px-muted' }, 'kernel 路径（evaluator/stop/permissions/hidden-tests）任何候选都不可触碰。'),
-          h(Button, { onClick: () => send('promote', { candidateId: 'candidate-ui', touches: ['system_prompt'] }) }, '提交候选（system_prompt）'),
-        ),
-      );
+      return h('div', { className: 'px-form' },
+        active.eval?.readAt ? h(Banner, { tone: 'ok' }, `已读 ${active.eval.readAt}`) : h(Banner, { tone: 'warn' }, '未读评估；promotion 会被拒绝'),
+        h(Field, { label: '报告哈希' }, h(Input, { value: hash, onChange: (event) => setHash(event.target.value) })),
+        h('div', { className: 'px-row2' },
+          h(Field, { label: '结论' }, h(Select, { value: verdict, onChange: (event) => setVerdict(event.target.value), options: [['pass', 'pass'], ['suspect', 'suspect'], ['fail', 'fail']] })),
+          h(Field, { label: '种子' }, h(Input, { value: seeds, onChange: (event) => setSeeds(event.target.value), inputMode: 'numeric' }))),
+        h('div', { className: 'px-actions' },
+          h(Btn, { onClick: () => send('eval_report', { reportHash: hash.trim() || null, verdict, seeds: Number(seeds) || 3 }, { actor: { kind: 'evaluator', id: 'evaluator-ui' } }) }, '提交报告'),
+          h(Btn, { tone: 'primary', onClick: () => send('eval_read', { reportHash: hash.trim() || active.eval?.reportHash }) }, '我读过（eval.read）')));
     }
 
-    function MemoryPage({ active, send }) {
-      if (!active) return h(Empty, null, '没有活动运行。');
+    function MemoryForm({ send, active }) {
       const [claim, setClaim] = useState('');
       const [evidence, setEvidence] = useState('');
-      const selected = useRef(null);
+      const [selected, setSelected] = useState('');
       const proposals = active.memory?.proposals ?? [];
-      return h('div', { className: 'px-grid' },
-        h(Card, { kicker: 'MEMORY', title: '记忆提案与提交', wide: true },
-          h(Field, { label: '主张' }, h(Input, { value: claim, onChange: (event) => setClaim(event.target.value), placeholder: '在声明语料上，主动提取优于均值基线' })),
-          h(Field, { label: '证据引用', hint: '逗号分隔' }, h(Input, { value: evidence, onChange: (event) => setEvidence(event.target.value), placeholder: 'artifact-sha, eval-report-sha' })),
-          h(Button, { onClick: async () => {
-            if (!claim.trim()) return;
-            const result = await send('memory_propose', { claim: claim.trim(), evidenceRefs: evidence.split(',').map((item) => item.trim()).filter(Boolean) });
-            if (result && result.status === 'committed') setClaim('');
-          } }, '提出记忆'),
-          proposals.length ? h('ul', { className: 'px-list' }, proposals.map((item) => h('li', { key: item.id },
-            h('span', { className: `px-dot ${item.status === 'committed' ? 'ok' : 'warn'}`, 'aria-hidden': true }),
-            `${item.id} · ${item.claim} · ${item.status}`,
-          ))) : h(Empty, null, '没有提案。'),
-        ),
-        h(Card, { kicker: 'COMMIT', title: '用户提交（仅用户）' },
-          h(Select, { value: selected.current ?? '', onChange: (event) => { selected.current = event.target.value; } , options: [['', '选择提案'], ...proposals.filter((item) => item.status !== 'committed').map((item) => [item.id, `${item.id} · ${item.claim}`])] }),
-          h(Button, { tone: 'primary', onClick: () => { if (selected.current) send('memory_commit', { proposalId: selected.current }); } }, '提交到长期记忆'),
-          h('p', { className: 'px-muted' }, 'agent 不能提交记忆；未提交的提案不是记忆。'),
-        ),
-      );
+      return h('div', { className: 'px-form' },
+        h(Field, { label: '主张' }, h(Input, { value: claim, onChange: (event) => setClaim(event.target.value) })),
+        h(Field, { label: '证据引用' }, h(Input, { value: evidence, onChange: (event) => setEvidence(event.target.value), placeholder: 'artifact-sha, eval-report-sha' })),
+        h(Btn, { onClick: () => { if (claim.trim()) send('memory_propose', { claim: claim.trim(), evidenceRefs: evidence.split(',').map((item) => item.trim()).filter(Boolean) }); } }, '提出记忆'),
+        h('div', { className: 'px-rule' }),
+        h(Field, { label: '提交到长期记忆（仅用户）' }, h(Select, { value: selected, onChange: (event) => setSelected(event.target.value), options: [['', '选择提案'], ...proposals.filter((item) => item.status !== 'committed').map((item) => [item.id, `${item.id} · ${item.claim}`])] })),
+        h(Btn, { tone: 'primary', onClick: () => { if (selected) send('memory_commit', { proposalId: selected }); } }, '提交'));
     }
 
-    function LineagePage({ view, active }) {
-      const runs = view?.runs ?? [];
-      return h('div', { className: 'px-grid' },
-        h(Card, { kicker: 'LINEAGE', title: '运行谱系', wide: true },
-          runs.length ? h('ul', { className: 'px-tree' }, runs.map((run) => h('li', { key: run.id },
-            h('span', { className: `px-dot ${STATE_TONE[run.state] ?? 'idle'}`, 'aria-hidden': true }),
-            h('strong', null, run.title),
-            h('span', { className: 'px-num' }, run.id),
-            run.parentId ? h('span', { className: 'px-muted' }, `← ${run.parentId}`) : h('span', { className: 'px-muted' }, 'root'),
-            h('span', { className: 'px-muted' }, `${run.state} · v${run.version}`),
-          ))) : h(Empty, null, '还没有运行。'),
-        ),
-        h(Card, { kicker: 'CHILDREN', title: '当前运行子代' },
-          active ? (active.lineage?.children?.length ? h('ul', { className: 'px-list' }, active.lineage.children.map((id) => h('li', { key: id }, id))) : h('p', { className: 'px-muted' }, '没有子运行。改旋钮会产生 fork。')) : h(Empty, null, '无活动运行。'),
-        ),
-      );
+    function DecisionForm({ send }) {
+      const [conclusion, setConclusion] = useState('');
+      const [next, setNext] = useState('new-run');
+      const [ambition, setAmbition] = useState('0.7');
+      return h('div', { className: 'px-form' },
+        h(Field, { label: '结论' }, h(Area, { rows: 3, value: conclusion, onChange: (event) => setConclusion(event.target.value) })),
+        h('div', { className: 'px-row2' },
+          h(Field, { label: '下一步' }, h(Select, { value: next, onChange: (event) => setNext(event.target.value), options: [['new-run', '新运行'], ['deepen', '深化'], ['pivot', '转向'], ['redefine', '重定义'], ['stop', '停止']] })),
+          h(Field, { label: '野心' }, h(Input, { value: ambition, onChange: (event) => setAmbition(event.target.value), inputMode: 'decimal' }))),
+        h(Btn, { tone: 'primary', onClick: () => send('decision', { conclusion, next, ambition: Number(ambition), evidenceRefs: [] }) }, '记录决策'));
     }
 
-    function AuditPage({ active }) {
-      if (!active) return h(Empty, null, '没有活动运行。');
-      const events = (active.events ?? []).slice().reverse();
-      const exportJson = () => {
-        const blob = new Blob([JSON.stringify(active, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const anchor = document.createElement('a');
-        anchor.href = url;
-        anchor.download = `${active.id}-audit.json`;
-        anchor.click();
-        setTimeout(() => URL.revokeObjectURL(url), 2000);
+    function Inspector({ node, active, send, selectedId, onDelete, graph, onConnect }) {
+      if (!node) {
+        return h('aside', { className: 'px-inspector px-inspector-empty' },
+          h('p', { className: 'px-kicker' }, 'INSPECTOR'),
+          h('p', { className: 'px-muted' }, '选择一个节点查看契约、产物与动作。'),
+          active ? h('div', { className: 'px-summary' },
+            h('p', { className: 'px-kicker' }, 'RUN'),
+            h('strong', null, active.title),
+            h('p', { className: 'px-muted' }, `${STATE_LABEL[active.state] ?? active.state} · v${active.version}`),
+            active.blockers?.length ? h(Banner, { tone: 'warn' }, `阻塞：${active.blockers.join(', ')}`) : null) : null);
+      }
+      const state = node.id === selectedId ? 'selected' : '';
+      const action = node.config?.action;
+      const form = node.type === 'gate' && node.config?.gate === 'prereg' ? h(PreregForm, { send, active })
+        : node.type === 'gate' && node.config?.gate === 'eval' ? h(EvalForm, { send, active })
+          : node.stage === 'discussion' ? h(DiscussionForm, { send, active })
+            : node.stage === 'experiment' ? h(ExperimentForm, { send })
+              : node.stage === 'review' ? h(ReviewForm, { send })
+                : node.stage === 'stage4' ? h(Stage4Form, { send })
+                  : node.stage === 'memory' ? h(MemoryForm, { send, active })
+                    : node.stage === 'decision' ? h(DecisionForm, { send }) : null;
+      const targets = (graph?.nodes ?? []).filter((item) => item.id !== node.id && ['stage', 'gate', 'end'].includes(item.type));
+      const [connectTo, setConnectTo] = useState('');
+      const [port, setPort] = useState('artifact');
+      return h('aside', { className: 'px-inspector' },
+        h('p', { className: 'px-kicker' }, node.type.toUpperCase()),
+        h('h2', null, node.label),
+        h('p', { className: 'px-muted' }, `${node.type}${node.stage ? ` · ${node.stage}` : ''}${node.config?.gate ? ` · gate:${node.config.gate}` : ''}`),
+        action ? h('p', { className: 'px-action-line' }, h('span', { className: 'px-muted' }, '可执行动作 '), h('code', null, action)) : null,
+        form,
+        node.type !== 'end' ? h('div', { className: 'px-connect' },
+          h('p', { className: 'px-kicker' }, 'CONNECT'),
+          h(Select, { value: port, onChange: (event) => setPort(event.target.value), options: [['artifact', 'artifact'], ['contract', 'contract'], ['evidence', 'evidence']] }),
+          h(Select, { value: connectTo, onChange: (event) => { const value = event.target.value; setConnectTo(value); if (value) onConnect(node.id, value, port); }, options: [['', '选择目标节点'], ...targets.map((item) => [item.id, item.label])] })) : null,
+        node.type !== 'start' && node.type !== 'end'
+          ? h(Btn, { className: 'px-danger', onClick: () => onDelete(node.id) }, '删除节点')
+          : null,
+        h(Technical, { node, run: active }));
+    }
+
+    // ---------------------------------------------------------------- drawers
+
+    function Drawer({ title, onClose, children, wide }) {
+      return h('div', { className: 'px-drawer-mask', onClick: onClose },
+        h('section', { className: `px-drawer${wide ? ' is-wide' : ''}`, onClick: (event) => event.stopPropagation(), role: 'dialog', 'aria-label': title },
+          h('header', null, h('h2', null, title), h(Btn, { onClick: onClose }, '关闭')), children));
+    }
+
+    function RunsDrawer({ view, active, send, onClose, onSelect }) {
+      const [playbook, setPlaybook] = useState('scientific-loop');
+      const [title, setTitle] = useState('');
+      return h(Drawer, { title: '运行', onClose },
+        h('div', { className: 'px-form' },
+          h(Field, { label: '剧本' }, h(Select, { value: playbook, onChange: (event) => setPlaybook(event.target.value), options: (view.playbooks ?? []).map((item) => [item.id, `${item.title} · ${item.domain}`]) })),
+          h(Field, { label: '标题' }, h(Input, { value: title, onChange: (event) => setTitle(event.target.value), placeholder: '这轮要回答什么' })),
+          h(Btn, { tone: 'primary', onClick: async () => { const receipt = await send('start', { playbookId: playbook, title: title.trim() || playbook }); if (receipt?.status === 'committed') { onClose(); onSelect(receipt.runId); } } }, '新建运行')),
+        h('div', { className: 'px-rule' }),
+        h('ul', { className: 'px-runs' }, (view.runs ?? []).map((run) => h('li', { key: run.id },
+          h('button', {
+            className: `px-run${run.id === active?.id ? ' is-on' : ''}`,
+            onClick: async () => { await send('activate', {}, { runId: run.id }); onClose(); },
+          },
+          h('i', { className: `px-dot ${run.blockers?.length ? 'warn' : 'ok'}`, 'aria-hidden': true }),
+          h('span', null, run.title),
+          h('span', { className: 'px-num px-muted' }, `${STATE_LABEL[run.state] ?? run.state} · v${run.version}`))))));
+    }
+
+    function SourceDrawer({ view, graph, send, onClose }) {
+      const initial = JSON.stringify(graph, null, 2);
+      const [text, setText] = useState(initial);
+      const [errors, setErrors] = useState([]);
+      const [saved, setSaved] = useState('');
+      useEffect(() => setText(initial), [graph?.contentHash]);
+      const apply = async () => {
+        let parsed;
+        try { parsed = JSON.parse(text); } catch (cause) { setErrors([{ code: 'JSON', message: String(cause.message) }]); return; }
+        const result = await send('graph_save', { playbookId: graph.playbookId, graph: parsed });
+        if (result?.status === 'committed') { setErrors([]); setSaved(`已保存 v${result.version}`); }
+        else setErrors(result?.errors ?? [{ code: result?.reasonCode ?? 'REJECTED', message: result?.reasonCode ?? 'rejected' }]);
       };
-      return h('div', { className: 'px-grid' },
-        h(Card, { kicker: 'AUDIT', title: `事件 ${events.length}`, wide: true, actions: h(Button, { onClick: exportJson }, '导出 JSON') },
-          events.length ? h('table', { className: 'px-table' },
-            h('thead', null, h('tr', null, ['seq', 'type', 'at', 'data'].map((label) => h('th', { key: label }, label)))),
-            h('tbody', null, events.map((event) => h('tr', { key: event.seq },
-              h('td', { className: 'px-num' }, event.seq),
-              h('td', null, event.type),
-              h('td', { className: 'px-num' }, event.at?.slice(11, 19) ?? ''),
-              h('td', { className: 'px-code-inline' }, JSON.stringify(event.data ?? {}).slice(0, 120))))))
-            : h(Empty, null, '没有事件。'),
-        ),
-      );
+      return h(Drawer, { title: '源码（JSON）', onClose, wide: true },
+        h('p', { className: 'px-muted' }, '与画布同 schema。改完校验后保存；非法图会返回 V 码。'),
+        h(Area, { className: 'px-source', rows: 18, value: text, onChange: (event) => setText(event.target.value), spellCheck: false }),
+        h('div', { className: 'px-actions' },
+          h(Btn, { onClick: () => setText(initial) }, '重载'),
+          h(Btn, { tone: 'primary', onClick: apply }, '校验并保存'),
+          saved ? h('span', { className: 'px-muted' }, saved) : null),
+        errors.length ? h('ul', { className: 'px-errors' }, errors.map((error, index) => h('li', { key: index }, `${error.code}: ${error.message}`))) : null);
     }
 
-    function KnobsPage({ view, active, send }) {
-      const fields = view?.knobFields ?? [];
-      const current = active?.knobs ?? view?.knobs ?? {};
+    function AuditDrawer({ active, onClose }) {
+      return h(Drawer, { title: '审计', onClose, wide: true },
+        active ? h('table', { className: 'px-table' },
+          h('thead', null, h('tr', null, ['seq', 'type', 'at'].map((label) => h('th', { key: label }, label)))),
+          h('tbody', null, (active.events ?? []).slice().reverse().map((event) => h('tr', { key: event.seq },
+            h('td', { className: 'px-num' }, event.seq),
+            h('td', null, event.type),
+            h('td', { className: 'px-num' }, new Date(event.at).toLocaleTimeString('zh-CN', { hour12: false }))))))
+          : h('p', { className: 'px-muted' }, '没有活动运行。'));
+    }
+
+    function KnobsDrawer({ view, active, send, onClose }) {
+      const fields = view.knobFields ?? [];
+      const current = active?.knobs ?? view.knobs ?? {};
       const [draft, setDraft] = useState(current);
       useEffect(() => setDraft(current), [active?.id, active?.knobHash]);
-      return h('div', { className: 'px-grid' },
-        h(Card, { kicker: 'KNOBS', title: '冻结超参', wide: true },
-          h(Banner, { tone: 'warn' }, '运行中改任何被 pin 的参数都会分叉成新运行，不改写当前运行。'),
-          h('div', { className: 'px-knobs' }, fields.map((field) => h('div', { key: field.key, className: 'px-knob' },
-            h('div', { className: 'px-knob-head' },
-              h('strong', null, field.label),
-              h('span', { className: 'px-kicker' }, `${field.scope} · ${field.unit}`)),
-            h('div', { className: 'px-knob-body' },
-              h('input', { className: 'px-range', type: 'range', min: field.min, max: field.max, step: field.step, value: draft[field.key] ?? current[field.key] ?? 0, onChange: (event) => setDraft({ ...draft, [field.key]: Number(event.target.value) }), 'aria-label': field.label }),
-              h('span', { className: 'px-num px-knob-value' }, String(draft[field.key] ?? current[field.key] ?? '—'))),
-            h('p', { className: 'px-muted' }, field.hint ?? `默认 ${field.min}–${field.max}`),
-          ))),
-          h(Button, { tone: 'primary', onClick: () => send('set_knobs', { knobs: { ...current, ...draft } }) }, '冻结为新运行'),
-        ),
-        h(Card, { kicker: 'DEFAULTS', title: '默认值' },
-          h('pre', { className: 'px-code' }, json(view?.defaults ?? {})),
-        ),
-      );
+      return h(Drawer, { title: '旋钮', onClose },
+        h(Banner, { tone: 'warn' }, '运行中修改会被冻结；应用后 fork 新 Run。'),
+        h('div', { className: 'px-knobs' }, fields.map((field) => h('div', { key: field.key, className: 'px-knob' },
+          h('div', { className: 'px-knob-head' }, h('strong', null, field.label), h('span', { className: 'px-kicker' }, field.scope)),
+          h('input', { className: 'px-range', type: 'range', min: field.min, max: field.max, step: field.step, value: draft[field.key] ?? current[field.key] ?? 0, onChange: (event) => setDraft({ ...draft, [field.key]: Number(event.target.value) }), 'aria-label': field.label }),
+          h('span', { className: 'px-num' }, String(draft[field.key] ?? current[field.key] ?? '—'))))),
+        h(Btn, { tone: 'primary', onClick: () => send('set_knobs', { knobs: { ...current, ...draft } }) }, '冻结为新运行'));
     }
 
     // ---------------------------------------------------------------- app
 
+    function MapCanvas({ map, scale }) {
+      const nodes = map?.nodes ?? [];
+      const edges = map?.edges ?? [];
+      const positions = {};
+      nodes.forEach((node, index) => { positions[node.id] = { x: 80 + (index % 4) * 240, y: 80 + Math.floor(index / 4) * 130 }; });
+      if (!nodes.length) {
+        return h('div', { className: 'px-canvas' },
+          h('div', { className: 'px-empty-canvas' },
+            h('p', { className: 'px-kicker' }, 'COGNITIVE MAP'),
+            h('p', null, '当前运行还没有登记主张。到检查器里用 map_claim 登记未知或主张。')));
+      }
+      return h('div', { className: 'px-canvas' },
+        h('div', { className: 'px-world', style: { transform: `translate(20px, 20px) scale(${scale})` } },
+          h('svg', { className: 'px-edges', width: 2000, height: 1200 },
+            edges.map((edge, index) => {
+              const a = positions[edge.from];
+              const b = positions[edge.to];
+              if (!a || !b) return null;
+              return h('path', { key: index, d: edgePath(a, b), className: 'px-edge artifact', 'marker-end': 'url(#px-arrow)' });
+            })),
+          nodes.map((node) => h('div', { key: node.id, className: 'px-node ok', style: { transform: `translate(${positions[node.id].x}px, ${positions[node.id].y}px)` } },
+            h('div', { className: 'px-node-head' }, h('i', { className: 'px-node-dot' }), h('span', { className: 'px-node-label' }, node.label)),
+            h('div', { className: 'px-node-meta' }, `${node.status} · ${node.evidenceRefs?.length ?? 0} 证据`)))),
+        h('div', { className: 'px-canvas-help' }, h('span', null, `认知地图 · 节点 ${nodes.length} · 边 ${edges.length}`),
+          h('span', null, map?.meanReversion ? `均值回归 ${num(map.meanReversion.distance)}` : '')));
+    }
+
     function App() {
       const praxis = usePraxis();
-      const [tab, setTab] = useState('tower');
-      const [newRun, setNewRun] = useState(false);
-      const [playbookId, setPlaybookId] = useState('scientific-loop');
-      const [title, setTitle] = useState('');
+      const [mode, setMode] = useState('flow');
+      const [scale, setScale] = useState(0.9);
+      const [selectedId, setSelectedId] = useState(null);
+      const [drawer, setDrawer] = useState(null);
+      const [connectMode, setConnectMode] = useState(false);
       const view = praxis.view;
       const active = view?.active ?? null;
-      const selectRun = async (run) => {
-        if (run && run.id !== active?.id) await praxis.send('activate', {}, { runId: run.id });
-        await praxis.refresh();
+      const graph = view?.graph?.graph ?? null;
+      const states = view?.graph?.states ?? {};
+      const current = view?.graph?.current ?? null;
+      const selected = graph?.nodes?.find((node) => node.id === selectedId) ?? null;
+
+      const saveGraph = async (nextGraph) => {
+        const receipt = await praxis.send('graph_save', { playbookId: graph.playbookId, graph: nextGraph });
+        if (receipt?.status === 'committed') await praxis.refresh();
+        return receipt;
+      };
+      const onConnect = async (from, to, port = 'artifact') => {
+        if (!graph || from === to) return;
+        if (graph.edges.some((edge) => edge.from === from && edge.to === to)) return;
+        const next = { ...graph, edges: [...graph.edges, { id: `e_${Date.now()}`, from, to, port }] };
+        const receipt = await saveGraph(next);
+        if (receipt?.status !== 'committed') praxis.setError(receipt?.reasonCode ?? 'INVALID_GRAPH');
+      };
+      const onDelete = async (id) => {
+        if (!graph || id === 'start' || id === 'end') return;
+        const next = {
+          ...graph,
+          nodes: graph.nodes.filter((node) => node.id !== id),
+          edges: graph.edges.filter((edge) => edge.from !== id && edge.to !== id),
+        };
+        const receipt = await saveGraph(next);
+        if (receipt?.status !== 'committed') praxis.setError(receipt?.reasonCode ?? 'INVALID_GRAPH');
+        else setSelectedId(null);
+      };
+      const onLayout = async (positions) => {
+        if (!graph) return;
+        await praxis.send('layout_save', { playbookId: graph.playbookId, positions }, {});
+      };
+      const focusAction = (action) => {
+        if (!action) return;
+        const node = graph?.nodes?.find((item) => item.config?.action === action)
+          ?? (String(action).includes('close') ? graph?.nodes?.find((item) => item.stage === 'decision') : null)
+          ?? (String(action).includes('pivot') ? graph?.nodes?.find((item) => item.stage === 'decision') : null)
+          ?? (String(action).includes('unknown') ? graph?.nodes?.find((item) => item.stage === 'decision') : null)
+          ?? graph?.nodes?.find((item) => item.stage === 'prereg');
+        if (node) { setSelectedId(node.id); setDrawer(null); }
+        else if (current) setSelectedId(current);
       };
 
       if (!view) {
-        return h('section', { className: 'px-shell', 'aria-busy': 'true' },
+        return h('section', { className: 'px-shell' },
           h('style', null, CSS),
           h('div', { className: 'px-loading' },
-            h('p', { className: 'px-kicker' }, 'PRAXIS'),
-            h('p', null, praxis.error ? `观测通道未接通：${praxis.error}` : '正在读取观测快照…'),
-            h(Button, { onClick: praxis.refresh }, '重试')));
+            h('p', { className: 'px-kicker' }, 'PRAXIS · OBSERVATORY'),
+            h('p', null, praxis.error ? `观测通道未接通：${praxis.error}` : '正在读取图与运行状态…'),
+            h(Btn, { onClick: praxis.refresh }, '重试')));
       }
 
-      return h('section', { className: 'px-shell' },
+      return h('section', { className: 'px-shell', 'data-connect': connectMode ? '1' : '0' },
         h('style', null, CSS),
-        h(Header, {
-          view, tab, setTab, lastAt: praxis.lastAt, busy: praxis.busy,
-          onRefresh: praxis.refresh,
-          onNewRun: () => setNewRun(!newRun),
+        h('div', { className: 'px-top' },
+        h('header', { className: 'px-head' },
+          h('div', { className: 'px-brand' },
+            h('span', { className: 'px-mark', 'aria-hidden': true }),
+            h('div', null,
+              h('p', { className: 'px-kicker' }, 'PRAXIS · OBSERVATORY'),
+              h('h1', null, 'Praxis'),
+              h('p', { className: 'px-sub' }, '先画流程，再推进度。'))),
+          h('div', { className: 'px-head-right' },
+            h('span', { className: 'px-chip' }, view.durability === 'durable' ? '持久化' : '内存态'),
+            h(Btn, { onClick: praxis.refresh, disabled: praxis.busy }, praxis.busy ? '刷新中' : '刷新'),
+            h(Btn, { tone: 'primary', onClick: () => setDrawer('runs') }, '新建运行'))),
+        h(RunBar, {
+          active, onAction: focusAction,
+          onOpenRuns: () => setDrawer('runs'), onOpenSource: () => setDrawer('source'), onOpenAudit: () => setDrawer('audit'), onOpenKnobs: () => setDrawer('knobs'),
+          mode, setMode, onNew: () => setDrawer('runs'), connectMode, setConnectMode, onSelect: setSelectedId,
         }),
-        praxis.error ? h(Banner, { tone: 'bad' }, praxis.error) : null,
-        praxis.receipt ? h(Banner, { tone: praxis.receipt.status === 'committed' || praxis.receipt.status === 'replayed' ? 'ok' : 'warn' },
-          `回执 ${praxis.receipt.status}${praxis.receipt.reasonCode ? ` · ${praxis.receipt.reasonCode}` : ''}${praxis.receipt.runId ? ` · ${praxis.receipt.runId}` : ''}`) : null,
-        newRun ? h('div', { className: 'px-new' },
-          h(Field, { label: '剧本' }, h(Select, { value: playbookId, onChange: (event) => setPlaybookId(event.target.value), options: (view.playbooks ?? []).map((playbook) => [playbook.id, `${playbook.title} · ${playbook.domain}`]) })),
-          h(Field, { label: '标题' }, h(Input, { value: title, onChange: (event) => setTitle(event.target.value), placeholder: '这轮要回答什么问题' })),
-          h(Button, { tone: 'primary', onClick: async () => {
-            const result = await praxis.send('start', { playbookId, title: title.trim() || playbookId });
-            if (result && result.status === 'committed') { setNewRun(false); setTitle(''); setTab('contract'); }
-          } }, '创建'),
-        ) : null,
-        h('div', { className: 'px-layout' },
-          h(RunRail, { view, activeId: active?.id, onSelect: selectRun }),
-          h('main', { className: 'px-main' },
-            tab === 'tower' ? h(Tower, { view, active, send: praxis.send, setTab }) : null,
-            tab === 'map' ? h(MapPage, { view, active, send: praxis.send }) : null,
-            tab === 'contract' ? h(ContractPage, { active, send: praxis.send }) : null,
-            tab === 'discuss' ? h(DiscussPage, { active, send: praxis.send }) : null,
-            tab === 'experiment' ? h(ExperimentPage, { active, send: praxis.send }) : null,
-            tab === 'eval' ? h(EvalPage, { active, send: praxis.send }) : null,
-            tab === 'memory' ? h(MemoryPage, { active, send: praxis.send }) : null,
-            tab === 'lineage' ? h(LineagePage, { view, active }) : null,
-            tab === 'audit' ? h(AuditPage, { active }) : null,
-            tab === 'knobs' ? h(KnobsPage, { view, active, send: praxis.send }) : null,
-          ),
-        ),
-      );
+        praxis.error ? h(Banner, { tone: 'bad' }, praxis.error) : null),
+        h('div', { className: 'px-workspace' },
+          h('main', { className: 'px-stage-area' },
+            mode === 'map'
+              ? h(MapCanvas, { map: view.map, scale })
+              : graph
+                ? h(Canvas, { graph, states, current, selectedId, onSelect: setSelectedId, onLayout, onConnect, onDelete, scale, setScale, connectMode })
+                : h('div', { className: 'px-empty-canvas' }, h('p', null, '没有图。新建运行，或从运行列表选择。'))),
+          h(Inspector, { node: selected, active, send: praxis.send, selectedId, onDelete, graph, onConnect })),
+        drawer === 'runs' ? h(RunsDrawer, { view, active, send: praxis.send, onClose: () => setDrawer(null), onSelect: (id) => { setSelectedId(null); } }) : null,
+        drawer === 'source' && graph ? h(SourceDrawer, { view, graph, send: praxis.send, onClose: () => setDrawer(null) }) : null,
+        drawer === 'audit' ? h(AuditDrawer, { active, onClose: () => setDrawer(null) }) : null,
+        drawer === 'knobs' ? h(KnobsDrawer, { view, active, send: praxis.send, onClose: () => setDrawer(null) }) : null);
     }
 
     function Dock() {
       const praxis = usePraxis();
       const active = praxis.view?.active;
-      return h('div', { className: 'px-dock' },
-        h('span', { className: 'px-dock-mark', 'aria-hidden': true }),
-        h('strong', null, 'Praxis'),
-        h('span', { className: 'px-muted' }, active ? `${active.title} · ${active.state}` : '空闲 · 未选择运行'),
-        active?.blockers?.length ? h('span', { className: 'px-dock-warn' }, `门禁 ${active.blockers.length}`) : null,
-      );
+      if (!active) return null;
+      const blockers = active.blockers?.length ?? 0;
+      const next = active.nextAction;
+      const text = blockers ? `Praxis · ${blockers} 阻塞` : next ? `Praxis · ${NEXT_LABEL[next] ?? next}` : 'Praxis';
+      return h('span', { className: `px-dock${blockers ? ' warn' : ''}`, title: active.title }, h('i', { 'aria-hidden': true }), text);
     }
 
     function Icon({ size = 20, active = false }) {
@@ -720,129 +771,135 @@ window.__ModuleLoader__.load({
       },
       h('circle', { cx: 12, cy: 12, r: 8.2 }),
       h('path', { d: 'M12 3.8v16.4M3.8 12h16.4' }),
-      h('circle', { cx: 12, cy: 12, r: 2.4, fill: 'currentColor', stroke: 'none' }),
-      h('path', { d: 'M17.6 6.4l2.2-2.2M4.2 19.8l2.2-2.2' }));
+      h('circle', { cx: 12, cy: 12, r: 2.4, fill: 'currentColor', stroke: 'none' }));
     }
 
     const CSS = `
-      .px-shell {
-        color: var(--dsw-alias-label-primary);
-        background: var(--dsw-alias-bg-base);
-        font: 13px/1.5 ui-sans-serif, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-        min-height: 100%;
-        padding: 20px 24px 40px;
-        display: grid; gap: 14px; align-content: start;
-        font-variant-numeric: tabular-nums;
-      }
+      .px-shell { color: var(--dsw-alias-label-primary); background: var(--dsw-alias-bg-base); font: 13px/1.5 ui-sans-serif, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; display: grid; grid-template-rows: auto minmax(0, 1fr); height: 100%; min-height: 100%; overflow: hidden; font-variant-numeric: tabular-nums; }
+      .px-top { display: grid; }
       .px-shell *, .px-dock * { box-sizing: border-box; }
-      .px-head { display: grid; gap: 10px; padding-bottom: 0; border-bottom: 1px solid var(--dsw-alias-border-l1); }
-      .px-head-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
+      .px-head { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 20px 10px; border-bottom: 1px solid var(--dsw-alias-border-l1); min-width: 0; }
       .px-brand { display: flex; gap: 12px; align-items: center; }
-      .px-mark { width: 30px; height: 30px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 50%; position: relative; display: inline-block; }
+      .px-mark { width: 28px; height: 28px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 50%; position: relative; display: inline-block; flex: none; }
       .px-mark::before, .px-mark::after { content: ""; position: absolute; background: var(--dsw-alias-brand-primary); }
       .px-mark::before { left: 50%; top: 4px; bottom: 4px; width: 1px; }
       .px-mark::after { top: 50%; left: 4px; right: 4px; height: 1px; }
-      .px-shell h1 { margin: 0; font-size: 26px; line-height: 1.1; font-weight: 560; letter-spacing: .01em; }
-      .px-shell h2 { margin: 0; font-size: 15px; font-weight: 560; }
+      .px-shell h1 { margin: 0; font-size: 22px; line-height: 1.1; font-weight: 560; letter-spacing: .01em; }
+      .px-shell h2 { margin: 0; font-size: 14px; font-weight: 560; }
       .px-kicker { margin: 0; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--dsw-alias-label-secondary); }
-      .px-sub { margin: 2px 0 0; color: var(--dsw-alias-label-secondary); }
-      .px-head-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-      .px-pill { font-size: 11px; padding: 2px 8px; border-radius: 2px; border: 1px solid var(--dsw-alias-border-l2); color: var(--dsw-alias-label-secondary); white-space: nowrap; }
-      .px-pill.ok { color: var(--dsw-alias-state-success-primary); border-color: currentColor; }
-      .px-pill.warn { color: var(--dsw-alias-state-warn-primary); border-color: currentColor; }
-      .px-pill.bad { color: var(--dsw-alias-state-error-primary); border-color: currentColor; }
-      .px-pill.info { color: var(--dsw-alias-brand-primary); border-color: currentColor; }
-      .px-pill.idle { color: var(--dsw-alias-label-secondary); }
-      .px-tabs { display: flex; gap: 2px; flex-wrap: wrap; border-bottom: 1px solid var(--dsw-alias-border-l1); margin-bottom: -1px; }
-      .px-tabs button { appearance: none; border: 0; background: transparent; color: var(--dsw-alias-label-secondary); font: inherit; font-size: 12px; padding: 8px 12px; cursor: pointer; border-bottom: 1px solid transparent; }
-      .px-tabs button:hover { color: var(--dsw-alias-label-primary); }
-      .px-tabs button.is-on { color: var(--dsw-alias-label-primary); border-bottom-color: var(--dsw-alias-brand-primary); }
-      .px-tabs button:focus-visible, .px-btn:focus-visible, .px-input:focus-visible, .px-run:focus-visible { outline: 1px solid var(--dsw-alias-brand-primary); outline-offset: 2px; }
-      .px-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 18px; align-items: start; }
-      .px-rail { display: grid; gap: 8px; position: sticky; top: 12px; }
-      .px-runs { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
-      .px-run { width: 100%; text-align: left; background: transparent; border: 1px solid transparent; color: inherit; padding: 8px 9px; display: grid; grid-template-columns: 8px 1fr; grid-template-rows: auto auto; column-gap: 8px; cursor: pointer; border-radius: 2px; }
-      .px-run:hover { border-color: var(--dsw-alias-border-l1); background: var(--dsw-alias-bg-layer-1); }
-      .px-run.is-on { border-color: var(--dsw-alias-border-l2); background: var(--dsw-alias-bg-layer-1); }
-      .px-run-title { font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .px-run-meta { grid-column: 2; font-size: 10.5px; color: var(--dsw-alias-label-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .px-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-top: 5px; background: var(--dsw-alias-label-secondary); }
-      .px-dot.ok { background: var(--dsw-alias-state-success-primary); }
-      .px-dot.warn { background: var(--dsw-alias-state-warn-primary); }
-      .px-dot.bad { background: var(--dsw-alias-state-error-primary); }
-      .px-dot.info { background: var(--dsw-alias-brand-primary); }
-      .px-rail-foot { margin-top: 12px; border-top: 1px solid var(--dsw-alias-border-l1); padding-top: 10px; }
-      .px-playbook { margin: 6px 0 0; display: grid; gap: 2px; font-size: 11px; color: var(--dsw-alias-label-secondary); }
-      .px-playbook strong { color: var(--dsw-alias-label-primary); font-weight: 500; font-size: 12px; }
-      .px-main { min-width: 0; }
-      .px-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(260px, .85fr); gap: 12px; align-items: start; }
-      .px-card { border: 1px solid var(--dsw-alias-border-l1); background: var(--dsw-alias-bg-layer-1); padding: 14px 16px; display: grid; gap: 10px; border-radius: 2px; }
-      .px-wide { grid-column: 1 / -1; }
-      .px-card h2 { letter-spacing: .01em; }
-      .px-readout { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px 16px; margin: 0; }
-      .px-readout dt { font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--dsw-alias-label-secondary); }
-      .px-readout dd { margin: 1px 0 0; font-size: 13px; overflow-wrap: anywhere; }
-      .px-num { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
-      .px-muted { color: var(--dsw-alias-label-secondary); margin: 0; }
-      .px-empty { color: var(--dsw-alias-label-secondary); margin: 0; padding: 14px; border: 1px dashed var(--dsw-alias-border-l1); text-align: center; }
-      .px-btn { appearance: none; border: 1px solid var(--dsw-alias-border-l2); background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12px; padding: 5px 11px; cursor: pointer; border-radius: 2px; }
+      .px-sub { margin: 1px 0 0; color: var(--dsw-alias-label-secondary); font-size: 12px; }
+      .px-head-right { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; flex: none; }
+      .px-chip { font-size: 11px; padding: 2px 7px; border: 1px solid var(--dsw-alias-border-l2); color: var(--dsw-alias-label-secondary); }
+      .px-btn { appearance: none; border: 1px solid var(--dsw-alias-border-l2); background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12px; padding: 5px 10px; cursor: pointer; border-radius: 2px; white-space: nowrap; }
       .px-btn:hover { border-color: var(--dsw-alias-brand-primary); }
       .px-btn.primary { background: var(--dsw-alias-brand-primary); border-color: var(--dsw-alias-brand-primary); color: var(--dsw-alias-bg-base); }
+      .px-btn.is-on { border-color: var(--dsw-alias-brand-primary); color: var(--dsw-alias-brand-primary); }
       .px-btn:disabled { opacity: .5; cursor: not-allowed; }
-      .px-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-      .px-banner { margin: 0; padding: 7px 10px; border-left: 2px solid var(--dsw-alias-border-l2); background: var(--dsw-alias-bg-layer-2); font-size: 12px; }
+      .px-btn.px-danger { color: var(--dsw-alias-state-error-primary); border-color: var(--dsw-alias-state-error-primary); }
+      .px-btn:focus-visible, .px-input:focus-visible, .px-node:focus-visible, .px-canvas:focus-visible { outline: 1px solid var(--dsw-alias-brand-primary); outline-offset: 2px; }
+      .px-runbar { display: flex; align-items: center; gap: 14px; padding: 8px 20px; border-bottom: 1px solid var(--dsw-alias-border-l1); background: var(--dsw-alias-bg-layer-1); min-height: 46px; flex-wrap: nowrap; min-width: 0; }
+      .px-runbar.px-empty-run { justify-content: flex-start; }
+      .px-runbar-main { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+      .px-run-title { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 520; }
+      .px-state { font-size: 11px; color: var(--dsw-alias-label-secondary); border: 1px solid var(--dsw-alias-border-l2); padding: 1px 6px; }
+      .px-state.warn { color: var(--dsw-alias-state-warn-primary); border-color: currentColor; }
+      .px-progress { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; color: var(--dsw-alias-label-secondary); }
+      .px-progress-bar { flex: 0 0 180px; height: 3px; background: var(--dsw-alias-border-l1); }
+      .px-progress-bar i { display: block; height: 100%; background: var(--dsw-alias-brand-primary); }
+      .px-progress-label { font-size: 11px; color: var(--dsw-alias-label-primary); }
+      .px-stage { font-size: 10px; color: var(--dsw-alias-label-secondary); padding: 2px 5px; border-bottom: 1px solid transparent; white-space: nowrap; }
+      .px-stage.is-done { color: var(--dsw-alias-label-primary); opacity: .55; }
+      .px-stage.is-on { color: var(--dsw-alias-brand-primary); border-bottom-color: var(--dsw-alias-brand-primary); }
+      .px-runbar-actions { display: flex; gap: 6px; align-items: center; flex: none; }
+      .px-sep { width: 1px; height: 16px; background: var(--dsw-alias-border-l1); margin: 0 2px; }
+      .px-workspace { display: grid; grid-template-columns: minmax(0, 1fr) 320px; min-height: 0; min-width: 0; width: 100%; overflow: hidden; }
+      .px-stage-area { position: relative; min-width: 0; height: 100%; overflow: hidden; }
+      .px-inspector { border-left: 1px solid var(--dsw-alias-border-l1); padding: 14px 16px; overflow: auto; display: grid; gap: 10px; align-content: start; background: var(--dsw-alias-bg-base); min-width: 0; width: 100%; }
+      .px-inspector-empty { color: var(--dsw-alias-label-secondary); }
+      .px-summary { border: 1px solid var(--dsw-alias-border-l1); padding: 10px; display: grid; gap: 4px; }
+      .px-canvas { position: relative; width: 100%; height: 100%; overflow: hidden; background-color: var(--dsw-alias-bg-base); background-image: radial-gradient(var(--dsw-alias-border-l1) 1px, transparent 1px); background-size: 26px 26px; cursor: grab; touch-action: none; }
+      .px-canvas.is-dragging { cursor: grabbing; }
+      .px-world { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; }
+      .px-edges { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+      .px-edge { fill: none; stroke: var(--dsw-alias-border-l2); stroke-width: 1.2; }
+      .px-edge.contract { stroke: var(--dsw-alias-brand-primary); opacity: .55; }
+      .px-edge.evidence { stroke: var(--dsw-alias-state-success-primary); opacity: .5; }
+      .px-edge.temp { stroke: var(--dsw-alias-brand-primary); stroke-dasharray: 4 3; opacity: .8; }
+      .px-arrow { fill: var(--dsw-alias-border-l2); }
+      .px-node { position: absolute; width: 186px; height: 78px; border: 1px solid var(--dsw-alias-border-l2); background: var(--dsw-alias-bg-layer-1); padding: 8px 10px; display: grid; grid-template-rows: auto 1fr auto; gap: 2px; cursor: pointer; border-radius: 2px; user-select: none; }
+      .px-node:hover { border-color: var(--dsw-alias-brand-primary); }
+      .px-node.is-gate { border-style: dashed; background: var(--dsw-alias-bg-base); }
+      .px-node.is-selected { box-shadow: 0 0 0 1px var(--dsw-alias-brand-primary); }
+      .px-node.is-current { border-color: var(--dsw-alias-brand-primary); }
+      .px-node-head { display: flex; align-items: center; gap: 6px; min-width: 0; }
+      .px-node-label { font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .px-node-here { margin-left: auto; font-size: 9px; letter-spacing: .08em; color: var(--dsw-alias-brand-primary); }
+      .px-node-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--dsw-alias-label-secondary); flex: none; }
+      .px-world.lod-far .px-node { height: 46px; padding: 7px 9px; }
+      .px-world.lod-far .px-node-meta, .px-world.lod-far .px-node-foot, .px-world.lod-far .px-port { display: none; }
+      .px-node-meta { font-size: 10.5px; color: var(--dsw-alias-label-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .px-node-foot { font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--dsw-alias-label-secondary); }
+      .px-node.active { border-color: var(--dsw-alias-brand-primary); }
+      .px-node.active .px-node-dot { background: var(--dsw-alias-brand-primary); }
+      .px-node.blocked { border-color: var(--dsw-alias-state-warn-primary); }
+      .px-node.blocked .px-node-dot { background: var(--dsw-alias-state-warn-primary); }
+      .px-node.failed { border-color: var(--dsw-alias-state-error-primary); }
+      .px-node.failed .px-node-dot { background: var(--dsw-alias-state-error-primary); }
+      .px-node.done { opacity: .72; }
+      .px-node.done .px-node-dot { background: var(--dsw-alias-state-success-primary); }
+      .px-port { position: absolute; width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--dsw-alias-border-l2); background: var(--dsw-alias-bg-base); padding: 0; cursor: crosshair; }
+      .px-port.in { left: -6px; top: calc(50% - 5px); }
+      .px-port.out { right: -6px; top: calc(50% - 5px); }
+      .px-port:hover { border-color: var(--dsw-alias-brand-primary); background: var(--dsw-alias-brand-primary); }
+      .px-connect-hint { color: var(--dsw-alias-brand-primary); }
+      .px-canvas-help { position: absolute; left: 12px; bottom: 10px; display: flex; gap: 14px; font-size: 10.5px; color: var(--dsw-alias-label-secondary); pointer-events: none; }
+      .px-zoom { position: absolute; right: 12px; bottom: 10px; display: flex; gap: 4px; align-items: center; }
+      .px-zoom .px-btn { padding: 2px 7px; }
+      .px-form { display: grid; gap: 8px; min-width: 0; }
+      .px-field { display: grid; gap: 3px; min-width: 0; }
+      .px-field-label { font-size: 10.5px; color: var(--dsw-alias-label-secondary); display: flex; gap: 6px; }
+      .px-field-label em { font-style: normal; opacity: .75; }
+      .px-input { width: 100%; min-width: 0; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); border: 1px solid var(--dsw-alias-border-l1); border-radius: 2px; padding: 5px 7px; font: inherit; font-size: 12px; }
+      .px-area { resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; line-height: 1.5; }
+      .px-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .px-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+      .px-rule { height: 1px; background: var(--dsw-alias-border-l1); }
+      .px-banner { margin: 0; padding: 6px 9px; border-left: 2px solid var(--dsw-alias-border-l2); background: var(--dsw-alias-bg-layer-1); font-size: 11.5px; }
       .px-banner.ok { border-left-color: var(--dsw-alias-state-success-primary); }
       .px-banner.warn { border-left-color: var(--dsw-alias-state-warn-primary); }
       .px-banner.bad { border-left-color: var(--dsw-alias-state-error-primary); }
-      .px-field { display: grid; gap: 4px; }
-      .px-field-label { font-size: 11px; color: var(--dsw-alias-label-secondary); display: flex; gap: 8px; align-items: baseline; }
-      .px-field-label em { font-style: normal; font-size: 10.5px; opacity: .8; }
-      .px-input { width: 100%; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); border: 1px solid var(--dsw-alias-border-l1); border-radius: 2px; padding: 6px 8px; font: inherit; font-size: 12px; }
-      .px-textarea { resize: vertical; min-height: 64px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; line-height: 1.5; }
-      .px-row3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-      .px-bar { height: 5px; background: var(--dsw-alias-bg-layer-2); border: 1px solid var(--dsw-alias-border-l1); overflow: hidden; }
-      .px-bar span { display: block; height: 100%; background: var(--dsw-alias-brand-primary); }
-      .px-bar span.ok { background: var(--dsw-alias-state-success-primary); }
-      .px-bar span.bad { background: var(--dsw-alias-state-error-primary); }
-      .px-events { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
-      .px-events li { display: grid; grid-template-columns: 52px minmax(0, 1fr) 64px; gap: 10px; padding: 6px 0; border-top: 1px solid var(--dsw-alias-border-l1); font-size: 12px; }
-      .px-events li:first-child { border-top: 0; }
-      .px-event-type { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .px-nodes, .px-list, .px-pairs, .px-tree { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-      .px-nodes li { display: grid; grid-template-columns: 8px 1fr auto; gap: 8px; align-items: baseline; padding: 6px 0; border-top: 1px solid var(--dsw-alias-border-l1); }
-      .px-nodes li:first-child { border-top: 0; }
-      .px-nodes strong { font-weight: 500; }
-      .px-pairs li { padding: 6px 8px; border-left: 2px solid var(--dsw-alias-state-warn-primary); background: var(--dsw-alias-bg-layer-2); font-size: 12px; }
-      .px-list li { display: flex; gap: 8px; align-items: baseline; font-size: 12px; padding: 3px 0; }
-      .px-tree li { display: grid; grid-template-columns: 8px 1.2fr 1fr .8fr .8fr; gap: 8px; align-items: baseline; padding: 5px 0; border-top: 1px solid var(--dsw-alias-border-l1); font-size: 12px; }
-      .px-tree li:first-child { border-top: 0; }
-      .px-tree strong { font-weight: 500; }
-      .px-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-      .px-table th { text-align: left; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--dsw-alias-label-secondary); font-weight: 500; padding: 4px 8px; border-bottom: 1px solid var(--dsw-alias-border-l2); }
-      .px-table td { padding: 6px 8px; border-bottom: 1px solid var(--dsw-alias-border-l1); vertical-align: top; }
-      .px-table tr:last-child td { border-bottom: 0; }
-      .px-code { margin: 0; padding: 10px; background: var(--dsw-alias-bg-base); border: 1px solid var(--dsw-alias-border-l1); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; line-height: 1.55; overflow: auto; max-height: 320px; white-space: pre-wrap; }
-      .px-code-inline { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10.5px; color: var(--dsw-alias-label-secondary); overflow-wrap: anywhere; }
-      .px-knobs { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-      .px-knob { border: 1px solid var(--dsw-alias-border-l1); padding: 10px; display: grid; gap: 6px; }
-      .px-knob-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
-      .px-knob-head strong { font-weight: 500; font-size: 12px; }
-      .px-knob-body { display: grid; grid-template-columns: 1fr 40px; gap: 8px; align-items: center; }
+      .px-muted { color: var(--dsw-alias-label-secondary); margin: 0; }
+      .px-num { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; }
+      .px-code { margin: 0; padding: 8px; background: var(--dsw-alias-bg-layer-1); border: 1px solid var(--dsw-alias-border-l1); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10.5px; line-height: 1.5; overflow: auto; max-height: 300px; white-space: pre-wrap; }
+      .px-tech { display: grid; gap: 4px; }
+      .px-disclose { appearance: none; border: 0; background: transparent; color: var(--dsw-alias-label-secondary); font: inherit; font-size: 11px; text-align: left; cursor: pointer; padding: 0; }
+      .px-drawer-mask { position: fixed; inset: 0; background: rgba(0,0,0,.32); display: flex; justify-content: flex-end; z-index: 40; }
+      .px-drawer { width: 420px; max-width: 92vw; background: var(--dsw-alias-bg-base); border-left: 1px solid var(--dsw-alias-border-l2); padding: 14px 16px; overflow: auto; display: grid; gap: 10px; align-content: start; }
+      .px-drawer.is-wide { width: 720px; }
+      .px-drawer header { display: flex; align-items: center; justify-content: space-between; }
+      .px-drawer h2 { font-size: 15px; }
+      .px-source { min-height: 360px; }
+      .px-errors { margin: 0; padding-left: 16px; color: var(--dsw-alias-state-error-primary); font-size: 11.5px; }
+      .px-runs { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+      .px-run { width: 100%; display: grid; grid-template-columns: 10px 1fr auto; gap: 8px; align-items: center; background: transparent; border: 1px solid transparent; color: inherit; font: inherit; font-size: 12px; padding: 7px 8px; text-align: left; cursor: pointer; }
+      .px-run:hover { border-color: var(--dsw-alias-border-l1); }
+      .px-run.is-on { border-color: var(--dsw-alias-border-l2); background: var(--dsw-alias-bg-layer-1); }
+      .px-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--dsw-alias-label-secondary); display: inline-block; }
+      .px-dot.ok { background: var(--dsw-alias-state-success-primary); }
+      .px-dot.warn { background: var(--dsw-alias-state-warn-primary); }
+      .px-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+      .px-table th { text-align: left; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--dsw-alias-label-secondary); padding: 4px 6px; border-bottom: 1px solid var(--dsw-alias-border-l2); }
+      .px-table td { padding: 5px 6px; border-bottom: 1px solid var(--dsw-alias-border-l1); }
+      .px-knobs { display: grid; gap: 10px; }
+      .px-knob { border: 1px solid var(--dsw-alias-border-l1); padding: 8px 10px; display: grid; gap: 4px; }
+      .px-knob-head { display: flex; justify-content: space-between; align-items: baseline; }
       .px-range { width: 100%; accent-color: var(--dsw-alias-brand-primary); }
-      .px-knob-value { text-align: right; }
-      .px-new { border: 1px solid var(--dsw-alias-border-l2); background: var(--dsw-alias-bg-layer-1); padding: 12px 14px; display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end; }
-      .px-loading { display: grid; gap: 10px; place-content: center; min-height: 40vh; text-align: center; }
-      .px-dock { display: flex; gap: 8px; align-items: center; font-size: 11.5px; color: var(--dsw-alias-label-secondary); padding: 2px 0; }
-      .px-dock strong { color: var(--dsw-alias-label-primary); font-weight: 560; }
-      .px-dock-mark { width: 12px; height: 12px; border: 1px solid var(--dsw-alias-brand-primary); border-radius: 50%; display: inline-block; }
-      .px-dock-warn { color: var(--dsw-alias-state-warn-primary); }
-      .px-new .px-field { min-width: 0; }
-      @media (max-width: 1100px) {
-        .px-layout { grid-template-columns: 1fr; }
-        .px-rail { position: static; }
-        .px-grid { grid-template-columns: 1fr; }
-        .px-row3, .px-new { grid-template-columns: 1fr; }
-      }
+      .px-loading { display: grid; gap: 10px; place-content: center; min-height: 50vh; text-align: center; }
+      .px-empty-canvas { display: grid; place-content: center; height: 100%; color: var(--dsw-alias-label-secondary); }
+      .px-dock { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--dsw-alias-label-secondary); border: 1px solid var(--dsw-alias-border-l1); padding: 1px 7px; }
+      .px-dock.warn { color: var(--dsw-alias-state-warn-primary); border-color: currentColor; }
+      .px-dock i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+      @media (max-width: 1000px) { .px-workspace { grid-template-columns: 1fr; } .px-inspector { border-left: 0; border-top: 1px solid var(--dsw-alias-border-l1); max-height: 38vh; } .px-stages { display: none; } }
     `;
 
     return {
@@ -859,5 +916,6 @@ window.__ModuleLoader__.load({
         }, Dock));
       },
     };
+
   },
 });

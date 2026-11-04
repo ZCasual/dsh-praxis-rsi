@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>Praxis · 画布工作台 · 尚无 Run</title>
+<style>
+:root{
+  --paper:#f2f0e9;
+  --panel:#f8f7f2;
+  --canvas:#fbfaf5;
+  --node:#fdfcf8;
+  --ink:#191917;
+  --ink-2:#3f3d36;
+  --muted:#6b685e;
+  --faint:#9c988a;
+  --line:#ddd8ca;
+  --line-strong:#c3beaf;
+  --hair:#e7e3d7;
+  --pending:#a9a596;
+  --done:#31795a;
+  --active:#0c7a84;
+  --blocked:#8d570d;
+  --blocked-dot:#d2942a;
+  --failed:#ad3a31;
+  --done-line:#4c8b6e;
+  --sans:"PingFang SC","Noto Sans CJK SC","Source Han Sans SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono","SFMono-Regular",ui-monospace,Consolas,"Liberation Mono",monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:12.5px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.faint{color:var(--faint)}
+.icon{width:17px;height:17px;display:block;fill:none;stroke:currentColor;stroke-width:1.35;stroke-linecap:round;stroke-linejoin:round}
+
+.app{
+  position:relative;width:1440px;height:1000px;margin:0 auto;
+  background:var(--paper);display:flex;flex-direction:column;overflow:hidden;
+}
+
+/* ── run bar ───────────────────────────────────────────── */
+.runbar{
+  flex:0 0 56px;height:56px;display:flex;align-items:stretch;
+  border-bottom:1px solid var(--line-strong);background:var(--paper);
+  position:relative;z-index:6;
+}
+.brand{
+  flex:0 0 116px;width:116px;display:flex;align-items:center;gap:9px;
+  padding-left:16px;border-right:1px solid var(--line);
+}
+.brand-mark{width:17px;height:17px;border:1.5px solid var(--ink);position:relative;display:block}
+.brand-mark::after{content:"";position:absolute;left:3px;top:3px;width:5px;height:5px;background:var(--ink)}
+.brand-name{font:600 10px/1 var(--mono);letter-spacing:.2em}
+.run-id{
+  flex:1 1 auto;min-width:0;display:flex;flex-direction:column;justify-content:center;
+  gap:3px;padding:0 20px;border-right:1px solid var(--line);
+}
+.run-title-row{display:flex;align-items:center;gap:8px;min-width:0}
+.run-title{
+  font-size:13.5px;font-weight:600;letter-spacing:.01em;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;
+}
+.chip{
+  font:9px/1 var(--mono);letter-spacing:.06em;color:var(--muted);
+  border:1px solid var(--line-strong);padding:2px 5px;border-radius:2px;white-space:nowrap;
+}
+.run-sub{font:9.5px/1.2 var(--mono);letter-spacing:.05em;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.run-state{
+  flex:0 0 352px;width:352px;display:flex;flex-direction:column;justify-content:center;
+  gap:6px;padding:0 18px 0 20px;border-right:1px solid var(--line);
+}
+.state-line{display:flex;align-items:center;gap:8px;min-width:0;font-size:11.5px}
+.state-word{font-weight:600;letter-spacing:.02em}
+.state-word.active{color:var(--active)}
+.state-word.blocked{color:var(--blocked)}
+.state-word.failed{color:var(--failed)}
+.divider{width:1px;height:10px;background:var(--line-strong);display:block;flex:0 0 1px}
+.stage-name{font:600 11px/1 var(--mono);letter-spacing:.03em;color:var(--ink-2);white-space:nowrap}
+.ticks{display:flex;align-items:center;gap:3px;margin-left:auto;flex:0 0 auto}
+.tick{width:8px;height:3px;background:#d5d0c1;border-radius:1px;display:block}
+.tick.done{background:var(--done)}
+.tick.active{background:var(--active);height:5px}
+.tick.blocked{background:var(--blocked-dot);height:5px}
+.tick.failed{background:var(--failed);height:5px}
+.tick-count{font:9px/1 var(--mono);color:var(--muted);letter-spacing:.04em;margin-left:2px}
+.state-sub{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.state-sub.warn{color:var(--blocked)}
+
+.next-wrap{flex:0 0 auto;display:flex;align-items:center;gap:14px;padding:0 16px 0 18px}
+.history-btn{
+  border:0;background:none;padding:0 0 2px;font-size:10.5px;color:var(--muted);
+  border-bottom:1px dotted var(--line-strong);white-space:nowrap;
+}
+.history-btn:hover{color:var(--ink);border-bottom-color:var(--ink)}
+.btn-next{
+  display:flex;align-items:center;gap:11px;height:38px;padding:0 10px 0 13px;
+  background:var(--ink);color:#faf8f1;border:1px solid var(--ink);border-radius:2px;text-align:left;
+}
+.btn-next:hover{background:#000}
+.btn-text{display:flex;flex-direction:column;gap:2px}
+.btn-next .kicker{font:8px/1 var(--mono);letter-spacing:.16em;color:#a6a294}
+.btn-next .label{font-size:12.5px;font-weight:600;letter-spacing:.02em;line-height:1}
+.btn-next .arrow{font:13px/1 var(--mono);color:#d8d3c5}
+.btn-next .key{font:8.5px/1 var(--mono);color:#8f8b7f;border:1px solid #4b4941;border-radius:2px;padding:2px 4px}
+
+/* empty (no run) strip */
+.empty-head{
+  flex:0 0 318px;width:318px;display:flex;flex-direction:column;justify-content:center;
+  gap:4px;padding:0 20px;border-right:1px solid var(--line);
+}
+.empty-title{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600}
+.empty-sub{font-size:10px;color:var(--muted);white-space:nowrap}
+.empty-form{flex:1 1 auto;display:flex;align-items:center;gap:8px;padding:0 8px 0 20px;min-width:0}
+.field-btn{
+  display:flex;align-items:center;gap:8px;height:34px;padding:0 10px;
+  background:var(--panel);border:1px solid var(--line-strong);border-radius:2px;white-space:nowrap;
+}
+.field-btn .f-label{font-size:9px;color:var(--faint);letter-spacing:.06em}
+.field-btn .f-value{font-size:12px;font-weight:600}
+.field-btn .f-mono{font:9px/1 var(--mono);color:var(--faint)}
+.field-btn .chev{font-size:9px;color:var(--muted);margin-left:2px}
+.field-input{
+  display:flex;align-items:center;gap:8px;height:34px;padding:0 10px;
+  border:1px solid var(--line-strong);background:var(--panel);
+  border-radius:2px;min-width:236px;
+}
+.field-input .f-label{font-size:9px;color:var(--faint);letter-spacing:.06em}
+.field-input input{border:0;background:none;outline:none;font-size:12px;min-width:140px;color:var(--ink)}
+.field-input input::placeholder{color:var(--faint)}
+.runbar > .btn-next{margin:0 16px 0 auto;align-self:center}
+
+/* ── workspace ─────────────────────────────────────────── */
+.workspace{flex:1 1 auto;display:flex;min-height:0;position:relative}
+.rail{
+  flex:0 0 48px;width:48px;border-right:1px solid var(--line);background:var(--paper);
+  display:flex;flex-direction:column;align-items:center;padding:6px 0 8px;gap:2px;z-index:4;
+}
+.rail-btn{
+  position:relative;width:36px;height:36px;display:grid;place-items:center;
+  border:0;background:none;color:var(--muted);border-radius:2px;
+}
+.rail-btn:hover{background:#eae7dc;color:var(--ink)}
+.rail-btn.active{color:var(--ink)}
+.rail-btn.active::before{content:"";position:absolute;left:-6px;top:9px;bottom:9px;width:2px;background:var(--active)}
+.rail-btn .badge{position:absolute;right:2px;top:2px;font:8px/1 var(--mono);color:var(--faint)}
+.rail-spacer{flex:1}
+
+.canvas{
+  position:relative;flex:1 1 auto;min-width:0;overflow:hidden;
+  background-color:var(--canvas);
+  background-image:radial-gradient(circle at 1px 1px,#d7d2c3 1px,transparent 1.15px);
+  background-size:24px 24px;
+}
+.canvas-label{
+  position:absolute;left:18px;top:13px;z-index:3;font:8.5px/1 var(--mono);
+  letter-spacing:.14em;color:var(--faint);text-transform:uppercase;white-space:nowrap;
+}
+.canvas-note{position:absolute;left:18px;top:31px;z-index:3;font-size:10.5px;color:var(--faint);white-space:nowrap}
+
+/* edges */
+.edges{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;overflow:visible}
+.edge{fill:none;stroke:#cbc6b7;stroke-width:1;stroke-dasharray:3 3}
+.edge.done{stroke:var(--done-line);stroke-width:1.4;stroke-dasharray:none}
+.edge.active{stroke:var(--active);stroke-width:1.4;stroke-dasharray:none}
+.edge.blocked{stroke:var(--blocked-dot);stroke-width:1.4;stroke-dasharray:2 3}
+
+/* nodes */
+.node{
+  position:absolute;width:160px;height:84px;background:var(--node);
+  border:1px solid var(--line-strong);border-radius:2px;padding:12px 11px 0 12px;z-index:2;
+}
+.node-head{display:flex;align-items:center;gap:7px}
+.node-name{font-size:13px;font-weight:600;white-space:nowrap;letter-spacing:.005em;color:var(--ink-2)}
+.node-tag{margin-left:auto;font:7.5px/1 var(--mono);letter-spacing:.12em;color:var(--faint)}
+.node-meta{
+  margin-top:8px;font-size:11px;line-height:1.35;color:var(--muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.node-meta .num{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:10px}
+.dot{width:7px;height:7px;border-radius:50%;flex:0 0 7px;background:var(--pending);display:block}
+.dot.done{background:var(--done)}
+.dot.active{background:var(--active);box-shadow:0 0 0 3px rgba(12,122,132,.14)}
+.dot.blocked{background:var(--blocked-dot);box-shadow:0 0 0 3px rgba(210,148,42,.16)}
+.dot.failed{background:var(--failed)}
+.dot.pending{background:var(--pending)}
+.port{
+  position:absolute;top:38px;width:5px;height:5px;border-radius:50%;
+  background:var(--canvas);border:1px solid var(--line-strong);z-index:3;
+}
+.port.in{left:-3px}
+.port.out{right:-3px}
+
+.node.pending{background:#fbfaf5;border-color:#d6d1c2}
+.node.pending .node-name{color:#8b877b;font-weight:500}
+.node.pending .node-meta{color:var(--faint)}
+.node.done{border-color:#b3c9bb;background:#fcfbf6}
+.node.done .node-meta{color:#5c7568}
+.node.active{border-color:var(--active);box-shadow:0 0 0 1px var(--active);background:#fcfbf6}
+.node.active .node-meta{color:var(--ink-2)}
+.node.blocked{border-color:var(--blocked-dot);box-shadow:0 0 0 1px rgba(210,148,42,.85);background:#fdfaf2}
+.node.blocked .node-meta{color:var(--blocked)}
+.node.failed{border-color:var(--failed);box-shadow:0 0 0 1px var(--failed);background:#fdf8f6}
+.node.failed .node-meta{color:var(--failed)}
+.node.gate{background:#f7f4e9}
+.node.pending.gate{background:#faf8f0}
+.node.selected{outline:1px solid var(--ink);outline-offset:3px}
+.node.ghost{background:rgba(251,250,245,.93);border-style:dashed;border-color:#c9c4b3}
+.node.ghost .node-name{color:#6f6b60;font-weight:500}
+.node.ghost .node-meta{color:#8b877b}
+.node.ghost .node-tag{color:#aaa492}
+
+.flag{
+  position:absolute;left:0;top:-21px;z-index:4;display:flex;align-items:center;gap:6px;
+  font-size:10px;font-weight:600;white-space:nowrap;letter-spacing:.02em;
+}
+.flag i{width:5px;height:5px;background:currentColor;display:block;transform:rotate(45deg)}
+.flag.active{color:var(--active)}
+.flag.blocked{color:var(--blocked)}
+.flag.failed{color:var(--failed)}
+.flag.done{color:var(--done)}
+
+.start-mark{
+  position:absolute;left:128px;top:333px;z-index:3;display:flex;align-items:center;gap:8px;
+  font:8px/1 var(--mono);letter-spacing:.14em;color:var(--faint);white-space:nowrap;
+}
+.start-mark::after{content:"";width:46px;height:1px;background:var(--line-strong)}
+
+/* canvas hud */
+.canvas-hud{position:absolute;left:16px;bottom:12px;z-index:4;display:flex;align-items:center;gap:12px}
+.zoom{
+  flex:0 0 auto;display:flex;align-items:center;height:26px;border:1px solid var(--line);
+  background:rgba(250,249,243,.92);border-radius:2px;overflow:hidden;
+}
+.zoom button{width:24px;height:24px;border:0;background:none;color:var(--muted);display:grid;place-items:center;font-size:12px;padding:0}
+.zoom button:hover{background:#ece9df;color:var(--ink)}
+.zoom .val{
+  flex:0 0 auto;font:9.5px/1 var(--mono);padding:0 7px;height:26px;display:grid;place-items:center;
+  border-left:1px solid var(--line);border-right:1px solid var(--line);color:var(--muted);
+}
+.zoom .fit{flex:0 0 auto;width:auto;font-size:10px;padding:0 9px;height:26px;display:grid;place-items:center;color:var(--muted);white-space:nowrap}
+.hud-meta{font:8.5px/1 var(--mono);letter-spacing:.08em;color:var(--faint);text-transform:uppercase}
+.canvas-help{position:absolute;right:16px;bottom:14px;z-index:4;font-size:9.5px;color:var(--faint)}
+
+/* ── inspector ─────────────────────────────────────────── */
+.inspector{
+  flex:0 0 360px;width:360px;border-left:1px solid var(--line-strong);
+  background:var(--panel);display:flex;flex-direction:column;min-height:0;z-index:5;
+}
+.insp-head{padding:16px 20px 14px;border-bottom:1px solid var(--line)}
+.insp-kicker{font:8.5px/1 var(--mono);letter-spacing:.14em;color:var(--faint);text-transform:uppercase}
+.insp-title-row{display:flex;align-items:center;gap:8px;margin-top:9px}
+.insp-title{font-size:17px;font-weight:650;letter-spacing:.01em;line-height:1.1}
+.state-chip{
+  font-size:9.5px;font-weight:500;padding:2px 6px;border:1px solid;border-radius:2px;white-space:nowrap;
+}
+.state-chip.blocked{color:var(--blocked);border-color:#d8b77c;background:#f7eedb}
+.state-chip.active{color:var(--active);border-color:#a9c9cc;background:#eaf3f3}
+.state-chip.done{color:var(--done);border-color:#b3c9bb;background:#eef4f0}
+.insp-close{
+  margin-left:auto;width:24px;height:24px;display:grid;place-items:center;border:1px solid transparent;
+  background:none;color:var(--muted);font-size:15px;line-height:1;padding:0;border-radius:2px;
+}
+.insp-close:hover{border-color:var(--line-strong);color:var(--ink)}
+.insp-sub{margin-top:7px;font-size:10.5px;color:var(--muted);line-height:1.5}
+.insp-sub .mono{font-size:9.5px;color:var(--faint)}
+.insp-body{flex:1 1 auto;overflow:hidden;padding:0 20px;min-height:0;display:flex;flex-direction:column}
+.sec{padding:14px 0 12px;border-bottom:1px solid var(--line)}
+.sec-head{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
+.sec-title{font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--ink)}
+.sec-count{margin-left:auto;font:9px/1 var(--mono);letter-spacing:.03em;color:var(--faint);white-space:nowrap}
+.sec-count.warn{color:var(--blocked)}
+.field{display:grid;grid-template-columns:18px 1fr 12px;gap:9px;padding:9px 0;border-top:1px solid var(--hair)}
+.field:first-of-type{border-top:0;padding-top:7px}
+.field-key{font:8.5px/1.4 var(--mono);color:var(--faint);padding-top:1px}
+.field-label{font-size:9.5px;color:var(--faint);margin-bottom:3px;letter-spacing:.03em}
+.field-value{font-size:12px;line-height:1.55;color:var(--ink-2)}
+.field-ok{color:var(--done);font-size:10px;padding-top:1px}
+.sec-foot{margin-top:8px;font-size:9.5px;color:var(--faint);line-height:1.5}
+.folded{
+  display:flex;align-items:center;gap:8px;padding:12px 0;border-bottom:1px solid var(--line);
+  font-size:11px;color:var(--muted);cursor:pointer;
+}
+.folded .mono{margin-left:auto;font-size:9px;color:var(--faint)}
+.folded .chev{font-size:9px;color:var(--faint)}
+.folded:hover{color:var(--ink)}
+.reason{margin:14px 0 2px;padding:11px 12px;border:1px solid #e2cba4;background:#faf4e7;border-radius:2px}
+.reason-label{font:8.5px/1 var(--mono);letter-spacing:.1em;color:var(--blocked);margin-bottom:6px}
+.reason p{margin:0;font-size:10.5px;line-height:1.6;color:#5f5238}
+.insp-action{
+  flex:0 0 auto;padding:14px 20px 16px;border-top:1px solid var(--line-strong);background:var(--panel);
+}
+.btn-action{
+  width:100%;height:40px;display:flex;align-items:center;justify-content:center;gap:10px;
+  background:var(--ink);color:#faf8f1;border:1px solid var(--ink);border-radius:2px;
+  font-size:13px;font-weight:600;letter-spacing:.02em;
+}
+.btn-action:hover{background:#000}
+.btn-action .key{font:8.5px/1 var(--mono);color:#8f8b7f;border:1px solid #4b4941;border-radius:2px;padding:2px 4px}
+.action-note{margin-top:8px;text-align:center;font:9px/1 var(--mono);letter-spacing:.05em;color:var(--faint)}
+
+/* ── source drawer ─────────────────────────────────────── */
+.drawer{
+  flex:0 0 30px;height:30px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 14px 0 12px;border-top:1px solid var(--line-strong);background:var(--panel);
+  font-size:10px;color:var(--muted);z-index:6;
+}
+.drawer-left,.drawer-right{display:flex;align-items:center;gap:10px}
+.kbd{
+  font:8.5px/1 var(--mono);border:1px solid var(--line-strong);border-bottom-width:2px;
+  padding:2px 4px;border-radius:2px;background:var(--paper);color:var(--muted);
+}
+.drawer .sep{color:var(--line-strong)}
+.drawer .mono{font-size:9.5px}
+.chev-up{font-size:9px;color:var(--faint)}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="runbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">PRAXIS</span>
+    </div>
+
+    <div class="empty-head">
+      <div class="empty-title"><span class="dot pending"></span>尚无 Run</div>
+      <div class="empty-sub">画布显示剧本默认路径，开始后按回执逐一点亮。</div>
+    </div>
+
+    <div class="empty-form">
+      <button class="field-btn" type="button" aria-haspopup="listbox" aria-label="选择剧本">
+        <span class="f-label">剧本</span>
+        <span class="f-value">科研闭环</span>
+        <span class="f-mono">scientific-loop</span>
+        <span class="chev">▾</span>
+      </button>
+      <label class="field-input">
+        <span class="f-label">命名</span>
+        <input type="text" placeholder="可留空，如：噪声分离-01" aria-label="Run 名称">
+      </label>
+    </div>
+
+    <button class="btn-next" type="button">
+      <span class="btn-text"><span class="kicker">新建</span><span class="label">开始 Run</span></span>
+      <span class="arrow">→</span>
+      <span class="key">⌘↵</span>
+    </button>
+  </header>
+
+  <div class="workspace">
+    <nav class="rail" aria-label="工作台抽屉">
+      <button class="rail-btn active" type="button" title="画布" aria-current="page">
+        <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="14" height="14"/><path d="M3 8h14M8 3v14"/></svg>
+      </button>
+      <button class="rail-btn" type="button" title="Run 列表 (R)">
+        <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 5h12M4 10h12M4 15h8"/></svg>
+        <span class="badge">0</span>
+      </button>
+      <button class="rail-btn" type="button" title="调色板 (G)">
+        <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><rect x="3.5" y="3.5" width="5" height="5"/><rect x="11.5" y="3.5" width="5" height="5"/><rect x="3.5" y="11.5" width="5" height="5"/><path d="M14 11.5v5M11.5 14h5"/></svg>
+      </button>
+      <button class="rail-btn" type="button" title="源码 (L)">
+        <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5 3 10l4 5M13 5l4 5-4 5"/></svg>
+      </button>
+      <button class="rail-btn" type="button" title="审计 (A)">
+        <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6.5"/><path d="M10 6v4.5l3 1.5"/></svg>
+      </button>
+      <span class="rail-spacer"></span>
+      <button class="rail-btn" type="button" title="快捷键 (?)">
+        <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="6.5"/><path d="M8 8.2a2 2 0 1 1 2.6 1.9c-.4.2-.6.5-.6 1v.4"/><circle cx="10" cy="14" r=".7" fill="currentColor" stroke="none"/></svg>
+      </button>
+    </nav>
+
+    <main class="canvas" aria-label="画布">
+      <div class="canvas-label">Default graph · scientific-loop · v3 · 10 nodes / 9 edges</div>
+      <div class="canvas-note">默认路径预览 · 开始 Run 后按回执逐一点亮</div>
+
+      <div class="start-mark">START</div>
+
+      <svg class="edges" viewBox="0 0 1392 914" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <marker id="ar-p" viewBox="0 0 5 5" refX="4.6" refY="2.5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 5 2.5 0 5Z" fill="#c3beaf"/></marker>
+        </defs>
+        <path class="edge" d="M368 341H412" marker-end="url(#ar-p)"/>
+        <path class="edge" d="M572 341H616" marker-end="url(#ar-p)"/>
+        <path class="edge" d="M776 341H820" marker-end="url(#ar-p)"/>
+        <path class="edge" d="M980 341H1024" marker-end="url(#ar-p)"/>
+        <path class="edge" d="M1104 383V527" marker-end="url(#ar-p)"/>
+        <path class="edge" d="M1024 573H984" marker-end="url(#ar-p)"/>
+        <path class="edge" d="M820 573H780" marker-end="url(#ar-p)"/>
+        <path class="edge" d="M616 573H576" marker-end="url(#ar-p)"/>
+        <path class="edge" d="M412 573H372" marker-end="url(#ar-p)"/>
+      </svg>
+
+      <div class="node ghost pending" style="left:208px;top:299px">
+        <span class="port in"></span><span class="port out"></span>
+        <div class="node-head"><span class="dot pending"></span><span class="node-name">Intake</span></div>
+        <div class="node-meta">收集原料 · 生成产物</div>
+      </div>
+
+      <div class="node ghost pending" style="left:412px;top:299px">
+        <span class="port in"></span><span class="port out"></span>
+        <div class="node-head"><span class="dot pending"></span><span class="node-name">Question</span></div>
+        <div class="node-meta">成型疑问 · 可裁决</div>
+      </div>
+
+      <div class="node ghost pending gate" style="left:616px;top:299px">
+        <span class="port in"></span><span class="port out"></span>
+        <div class="node-head"><span class="dot pending"></span><span class="node-name">Prereg Gate</span><span class="node-tag">GATE</span></div>
+        <div class="node-meta">契约 <span class="num">0/3</span> · 未冻结</div>
+      </div>
+
+      <div class="node ghost pending" style="left:820px;top:299px">
+        <span class="port in"></span><span class="port out"></span>
+        <div class="node-head"><span class="dot pending"></span><span class="node-name">Discussion</span></div>
+        <div class="node-meta">观点包 · 合成</div>
+      </div>
+
+      <div class="node ghost pending" style="left:1024px;top:299px">
+        <span class="port in"></span><span class="port out"></span>
+        <div class="node-head"><span class="dot pending"></span><span class="node-name">Experiment</span></div>
+        <div class="node-meta">执行实验 · 留痕</div>
+      </div>
+
+      <div class="node ghost pending" style="left:1024px;top:531px">
+        <span class="port in"></span><span class="port out"></span>
+        <div class="node-head"><span class="dot pending"></span><span class="node-name">Review</span></div>
+        <div class="node-meta">复核产物</div>
+      </div>
+
+      <div class="node ghost pending" style="left:820px;top:531px">
+        <span class="port in"></span><span class="port out"></span>
+        <div class="node-head"><span class="dot pending"></span><span class="node-name">Stage4</span></div>
+        <div class="node-meta">阶段四记录</div>
+      </div>
+
+      <div class="node ghost pending gate" style="left:616px;top:531px">
+        <span class="port in"></span><span class="port out"></span>
+        <div class="node-head"><span class="dot pending"></span><span class="node-name">Eval Gate</span><span class="node-tag">GATE</span></div>
+        <div class="node-meta">独立评估门</div>
+      </div>
+
+      <div class="node ghost pending" style="left:412px;top:531px">
+        <span class="port in"></span><span class="port out"></span>
+        <div class="node-head"><span class="dot pending"></span><span class="node-name">Memory</span></div>
+        <div class="node-meta">记忆提案</div>
+      </div>
+
+      <div class="node ghost pending" style="left:208px;top:531px">
+        <span class="port in"></span><span class="port out"></span>
+        <div class="node-head"><span class="dot pending"></span><span class="node-name">Decision</span></div>
+        <div class="node-meta">决策记录</div>
+      </div>
+
+      <div class="canvas-hud">
+        <div class="zoom">
+          <button type="button" aria-label="缩小">−</button>
+          <span class="val">100%</span>
+          <button type="button" aria-label="放大">+</button>
+          <button class="fit" type="button">适应</button>
+        </div>
+        <span class="hud-meta">10 节点 · 9 条边</span>
+      </div>
+      <div class="canvas-help">拖背景平移 · ⌘滚轮缩放 · 双击空白建节点</div>
+    </main>
+  </div>
+
+  <footer class="drawer">
+    <div class="drawer-left">
+      <kbd class="kbd">L</kbd>
+      <span>源码</span>
+      <span class="sep">/</span>
+      <span class="mono">graph:scientific-loop:v3</span>
+    </div>
+    <div class="drawer-right">
+      <span class="mono">JSON · 与画布同源</span>
+      <span class="chev-up">⌃</span>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

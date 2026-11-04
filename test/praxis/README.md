@@ -23,19 +23,23 @@ node --test test/praxis/*.test.js 2>&1 | grep -E '^(✖|ℹ (tests|pass|fail))'
 无测试依赖、无网络、无文件系统写入：`store.test.js` 用内存 fake domain，
 `http.test.js` 用 fake `req`/`res`。仅依赖 Node 内置 `node:test`/`node:assert`。
 
-## 当前状态（2026-11-04 09:42 CST，已验收）
+## 当前状态（2026-11-04 14:5x CST，已验收）
 
 ```text
-ℹ tests 70
-ℹ pass 70
+ℹ tests 99
+ℹ pass 99
 ℹ fail 0
 ℹ skipped 0
 ℹ todo 0
 ```
 
-分组：engine 39、store 6、host 10、http 14、integration 1。
-其中原 21 条（engine 18 + host 3）保持通过；新增 49 条契约测试。
-连续两次运行结果一致（无随机/时间敏感断言）。
+分组：engine 39、store 6、host 10、http 14、integration 1、graph 21、graph-api 8。
+其中原 21 条（engine 18 + host 3）保持通过；连续两次运行结果一致（无随机/时间敏感断言）。
+
+图模型（redesign v1）首轮红测 9 fail 已由实现方全部修复并锁定：
+graphStates 的三个 gate 推导（prereg=false→active、experiment 冻结后未执行→active、eval 只认
+readAt/reportHash）、GET /graph 顶层信封与无 run 默认图、dump.graphs 对象映射、HTTP 管理动作
+`body.actor` 透传（非 user → 4xx USER_ONLY）。
 
 ## 文件职责
 
@@ -103,6 +107,31 @@ node --test test/praxis/*.test.js 2>&1 | grep -E '^(✖|ℹ (tests|pass|fail))'
   200 `{receipt,view}`；引擎拒绝 → 4xx 且 body 含 `{error, code, receipt, blockers?}`（`code===reasonCode`）；
   `x-praxis-request:1` 缺失、Host 非 loopback、跨源 Origin → 403；坏 JSON/缺 command → 400；
   GET `/praxis/api/map?runId=` → `{map}`。
+
+## 图模型与画布测试（redesign v1，2026-11-04）
+
+验收命令不变（`node --test test/praxis/*.test.js`），新增两个文件：
+
+| 文件 | 覆盖 | 关键断言 |
+|---|---|---|
+| `graph.test.js` | `07-graph-contract.md` §1–§4 | `buildDefaultGraph` 全 playbook 校验通过/阶段覆盖/类型与端口；`validateGraph` V1–V9 各一条；`graphStates` INTAKE/PREREG_FROZEN/EVAL/DRIFT 推导与 current；纯函数不变异 |
+| `graph-api.test.js` | §5–§6 | `GET /graph`（无 run 默认图 + 空 states；有 run 图+states）；`POST /graph` 合法 200 `{graph,receipt}` 且落 `dump.graphs`、重启后保留；非法 400 `{error,code:'INVALID_GRAPH',errors:[{code}]}`；`POST /layout` 只合并 position；非 user actor 4xx `USER_ONLY` 且不落盘 |
+
+实现侧接口（测试固化，实现方按此交付）：
+
+```js
+// src/graph.js
+buildDefaultGraph(playbook)              // 传 PLAYBOOKS[id] 对象，返回 Graph（id = `${playbookId}:v${version}`）
+validateGraph(graph, playbook)           // -> { ok: boolean, errors: [{ code: 'V1'..'V9', message? }] }
+graphStates(run, graph)                  // -> { states: { [nodeId]: 'pending'|'active'|'blocked'|'done'|'failed'|'quarantined' }, current: nodeId|null }
+```
+
+- Graph 形状按契约 §1；默认图拓扑按 §2（scientific-loop 为单链 start→…→end，含 prereg/experiment/eval 三个 gate；gate→stage 边 port=`contract`，stage→stage 边 port=`artifact`，review→eval 边 port=`evidence`，且至少有一条 evidence 边）。
+- 阶段覆盖：`playbook.stages ⊆ {node.stage}`（gate 节点可带 `stage` 以覆盖 `prereg` 这类无独立 stage 节点的阶段）。
+- `graphStates`：stage 节点按 run.state 在 playbook 阶段序中的位置得 done/active/pending，`DRIFT_DETECTED` → failed；`prereg_gate` 看 `run.preregHash`；`experiment_gate` 无 preregHash→blocked、冻结后未 EXECUTING→active、之后→done；`eval_gate` 看 `run.eval.readAt`/`run.eval.reportHash`；`current` 为拓扑序第一个 active/blocked。
+- 管理动作只允许 `user`：HTTP 请求体可带可选 `actor`（缺省视为 user），`actor.kind !== 'user'` → 4xx `{error, code:'USER_ONLY'}`。
+- 持久化：`engine.dump()` 增加 `graphs: { [playbookId]: Graph }`，`load()` 恢复；layout 合并进 Graph 的 `position` 后随图落盘（不另存表）；图保存写 `graph.saved` 事件（meta）。
+- `POST /graph` 成功后返回 `{graph, receipt}`，`receipt.status === 'committed'`，`graph.contentHash` 非空。
 
 ## 约定
 

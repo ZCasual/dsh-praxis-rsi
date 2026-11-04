@@ -1,6 +1,6 @@
 {
   "name": "@local/dsh-praxis",
-  "version": "0.1.0",
+  "version": "0.1.8",
   "private": true,
   "type": "module",
   "description": "Praxis Observatory: a governed research-playbook engine with a cognitive map, frozen contracts, independent evaluation, and anti-mean-reversion checks.",
@@ -20,11 +20,15 @@
     "README.md"
   ],
   "dsh": {
-    "bundle": { "patch": "./cordis.patch.yml" },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
     "client": {
       "platform": "web",
       "immediately": true,
-      "inject": ["@deepseek-ai/dsh-client-ui-conversation"]
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ]
     }
   }
 }
