@@ -24,6 +24,8 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { CDP } from './cdp.mjs';
+import { buildDefaultGraph } from '../../plugins/dsh-praxis/src/graph.js';
+import { PLAYBOOKS } from '../../plugins/dsh-praxis/src/engine.js';
 import { COMPAT_THRESHOLDS, METRIC_THRESHOLDS, checkMetrics, collectMetrics } from './metrics.mjs';
 
 const ROOT = resolve(import.meta.dirname, '../..');
@@ -367,6 +369,27 @@ async function collectSceneMetrics(browser, selectedNodeId = null) {
       inspectorRect,
       selectedOverlapArea: intersectionArea,
       inspectorVisible: !!inspector,
+      bannerText: (document.querySelector('[data-testid="banner"], .px-banner-slot') || {}).innerText ? document.querySelector('[data-testid="banner"], .px-banner-slot').innerText.slice(0, 300) : '',
+      retryVisible: [...document.querySelectorAll('button')].some((button) => /重试/.test(button.textContent || '')),
+      errorText: shell && shell.getAttribute('data-scene') === 'error' ? shell.innerText.slice(0, 300) : null,
+      primaryDisabled: (() => {
+        const primary = document.querySelector('[data-testid="primary"]');
+        if (!primary) return null;
+        return Boolean(primary.disabled || primary.getAttribute('aria-disabled') === 'true');
+      })(),
+      graphNodeCount: document.querySelectorAll('.px-node').length,
+      nodeOverlapArea: (() => {
+        const rects = [...document.querySelectorAll('.px-node')].map((node) => node.getBoundingClientRect());
+        let area = 0;
+        for (let i = 0; i < rects.length; i += 1) {
+          for (let j = i + 1; j < rects.length; j += 1) {
+            const w = Math.max(0, Math.min(rects[i].right, rects[j].right) - Math.max(rects[i].left, rects[j].left));
+            const h = Math.max(0, Math.min(rects[i].bottom, rects[j].bottom) - Math.max(rects[i].top, rects[j].top));
+            area += w * h;
+          }
+        }
+        return Number(area.toFixed(2));
+      })(),
     };
   })()`);
 }
@@ -760,12 +783,9 @@ async function main(argv = process.argv.slice(2)) {
         manifest.errors.push(`loading screenshot failed: ${error instanceof Error ? error.message : String(error)}`);
       }
 
-      // 未测场景登记（不写“通过”）
-      manifest.unverifiedScenes = [
-        { scene: 'error', reason: '需注入接口 500/断网；当前 capture 未实现' },
-        { scene: 'stale', reason: '需客户端 StoreSend 触发 409；当前 capture 未实现' },
-        { scene: '14-nodes', reason: '受保护节点约束下尚未定义合法 14 节点自定义图；待 Lead 提供夹具' },
-      ];
+      // 未测场景登记（动态：能真实复现的移出 unverified，不写“通过”）
+      manifest.unverifiedScenes = [];
+      manifest.variants = [];
 
       // 附加：认知地图（非 D3 必需场景；失败记为 warning，不阻塞 manifest）
       try {
@@ -790,6 +810,174 @@ async function main(argv = process.argv.slice(2)) {
         manifest.warnings = [...(manifest.warnings ?? []), `map screenshot optional: ${error instanceof Error ? error.message : String(error)}`];
       }
 
+      // -------------------------------------------------------------------
+      // 补充场景：error / stale(409) / variant-engineering-11（消除 unverified）
+      // -------------------------------------------------------------------
+      const recover = async () => {
+        try { await browser.send('Fetch.disable'); } catch {}
+        await browser.navigate(tokenUrl);
+        await openPraxis(browser, options.timeoutMs);
+        await browser.waitFor('document.querySelectorAll(".px-node").length > 0', { timeout: 15000, label: 'recover nodes' }).catch(() => null);
+      };
+
+      // error 场景：Fetch.failRequest /praxis/api/state → 错误态 + 重试按钮
+      try {
+        await browser.send('Fetch.enable', { patterns: [{ urlPattern: '*praxis/api/state*', requestStage: 'Request' }] });
+        const pausedPromise = browser.waitEvent('Fetch.requestPaused', 15000);
+        await browser.navigate(tokenUrl);
+        await browser.clickText('Praxis', { timeout: 8000, selector: 'button, a, [role="button"], li, div' }).catch(() => {});
+        const paused = await pausedPromise.catch(() => null);
+        if (!paused) throw new Error('no paused /praxis/api/state request');
+        await browser.send('Fetch.failRequest', { requestId: paused.requestId, errorReason: 'Failed' });
+        await browser.waitFor(`!!document.querySelector('.px-shell[data-scene="error"], [data-testid="error"]')`, { timeout: 8000, label: 'error scene' }).catch(() => null);
+        await new Promise((resolvePromise) => setTimeout(resolvePromise, 350));
+        const errorEntry = await captureAt(browser, options, {
+          name: `error-${options.theme}-1440x1000`,
+          scenario: 'error',
+          viewport,
+          theme: options.theme,
+          note: '服务错误态（/praxis/api/state 注入失败）+ 重试按钮',
+          expectedMetrics: { visibleNodeRatio: 0, nodeVisible: 0, bboxWidthRatio: 0, bboxHeightRatio: 0, bboxAreaRatio: 0, primaryCount: 1, internalCodeCount: 0, destructiveControlCount: 0, horizontalOverflow: 0 },
+        }, manifest, context);
+        const errorInfo = errorEntry.sceneMetrics ?? {};
+        if (errorInfo.shellScene !== 'error' || !errorInfo.retryVisible || !errorInfo.errorText) {
+          manifest.unverifiedScenes.push({ scene: 'error', reason: `error UI incomplete: ${JSON.stringify({ scene: errorInfo.shellScene, retry: errorInfo.retryVisible, text: errorInfo.errorText })}` });
+        } else {
+          manifest.errorScene = { scene: errorInfo.shellScene, retryVisible: errorInfo.retryVisible, text: errorInfo.errorText.slice(0, 160) };
+        }
+        await browser.send('Fetch.disable').catch(() => {});
+        await recover();
+      } catch (error) {
+        manifest.unverifiedScenes.push({ scene: 'error', reason: error instanceof Error ? error.message : String(error) });
+        try { await browser.send('Fetch.disable'); } catch {}
+      }
+
+      // stale/409 场景：新文档内 monkeypatch fetch，对 POST /praxis/api/command 伪造 409 CONFLICT + 真实 view
+      try {
+        await recover();
+        const realState = await browser.api('/praxis/api/state');
+        const realView = realState.status === 200 ? realState.json.view : null;
+        if (!realView) throw new Error('no real view for stale fixture');
+        const conflictPayload = {
+          error: '版本已过期，请刷新后重试',
+          code: 'CONFLICT',
+          receipt: { status: 'rejected', reasonCode: 'CONFLICT', retry: 'manual' },
+          view: realView,
+        };
+        const injection = await browser.send('Page.addScriptToEvaluateOnNewDocument', {
+          source: `(() => {
+            const original = window.fetch;
+            const payload = ${JSON.stringify(JSON.stringify(conflictPayload))};
+            window.fetch = (input, init) => {
+              const url = input && input.url ? input.url : String(input);
+              const method = String(init?.method ?? (input && input.method) ?? 'GET').toUpperCase();
+              if (method === 'POST' && url.includes('/praxis/api/command')) {
+                return Promise.resolve(new Response(payload, { status: 409, headers: { 'content-type': 'application/json' } }));
+              }
+              return original(input, init);
+            };
+          })();`,
+        });
+        await browser.navigate(tokenUrl);
+        await openPraxis(browser, options.timeoutMs);
+        await browser.waitFor('document.querySelectorAll(".px-node").length > 0', { timeout: 15000, label: 'stale fixture mounted' }).catch(() => null);
+        await browser.evaluate(`document.querySelector('[data-testid="primary"]')?.click(); true`);
+        await browser.waitFor(`(() => { const banner = document.querySelector('[data-testid="banner"]'); return Boolean(banner && /数据已更新|未提交|版本已过期/.test(banner.innerText)); })()`, { timeout: 8000, label: 'stale banner' }).catch(() => null);
+        await new Promise((resolvePromise) => setTimeout(resolvePromise, 350));
+        const staleEntry = await captureAt(browser, options, {
+          name: `stale-${options.theme}-1440x1000`,
+          scenario: 'stale',
+          viewport,
+          theme: options.theme,
+          note: '409 CONFLICT（fetch 注入）→ stale 横幅（数据已更新/未提交）+ 推进按钮禁用',
+          expectedMetrics: { visibleNodeRatio: 1, bboxWidthRatio: 0, bboxHeightRatio: 0, bboxAreaRatio: 0, primaryCount: 1, internalCodeCount: 0, destructiveControlCount: 0, horizontalOverflow: 0 },
+        }, manifest, context);
+        const staleInfo = staleEntry.sceneMetrics ?? {};
+        if (!/数据已更新|未提交|版本已过期/.test(staleInfo.bannerText ?? '') || staleInfo.primaryDisabled !== true) {
+          manifest.unverifiedScenes.push({ scene: 'stale', reason: `stale banner/disabled primary incomplete: ${JSON.stringify({ banner: staleInfo.bannerText, disabled: staleInfo.primaryDisabled })}` });
+        } else {
+          manifest.staleScene = { banner: staleInfo.bannerText.slice(0, 160), primaryDisabled: staleInfo.primaryDisabled };
+        }
+        await browser.send('Page.removeScriptToEvaluateOnNewDocument', { identifier: injection.identifier }).catch(() => {});
+        await recover();
+      } catch (error) {
+        manifest.unverifiedScenes.push({ scene: 'stale', reason: error instanceof Error ? error.message : String(error) });
+        try { await browser.send('Fetch.disable'); } catch {}
+      }
+
+      // variant-engineering-11：非 15 节点（engineering-release 11 节点）布局/检查器覆盖
+      try {
+        await recover();
+        const playbookId = 'engineering-release';
+        const playbook = PLAYBOOKS[playbookId];
+        if (!playbook) throw new Error('PLAYBOOKS.engineering-release missing');
+        const variantGraph = buildDefaultGraph(playbook);
+        const currentGraph = await browser.api(`/praxis/api/graph?playbookId=${playbookId}`);
+        const expectedRevision = currentGraph.status === 200 ? (currentGraph.json?.revision ?? 0) : 0;
+        const saved = await browser.api('/praxis/api/graph', {
+          method: 'POST',
+          body: { playbookId, graph: variantGraph, expectedRevision },
+        });
+        if (saved.status !== 200) throw new Error(`save variant graph failed: ${saved.status} ${JSON.stringify(saved.json)}`);
+        const stamp = Date.now();
+        const start = await browser.api('/praxis/api/command', {
+          method: 'POST',
+          body: { command: { commandId: `variant-${stamp}-start`, action: 'start', payload: { playbookId, title: 'variant engineering 11' } } },
+        });
+        if (start.status !== 200) throw new Error(`variant start failed: ${start.status} ${JSON.stringify(start.json)}`);
+        const variantRunId = start.json.receipt.runId;
+        const asked = await browser.api('/praxis/api/command', {
+          method: 'POST',
+          body: {
+            command: {
+              commandId: `variant-${stamp}-q`, action: 'question', runId: variantRunId,
+              payload: { question: { text: '工程发布：冻结契约能否验证发布？', hypothesis: '可以验证且不把诊断当验收', unknowns: ['回滚窗口'] } },
+            },
+          },
+        });
+        if (asked.status !== 200) throw new Error(`variant question failed: ${asked.status} ${JSON.stringify(asked.json)}`);
+        const frozenVariant = await browser.api('/praxis/api/command', {
+          method: 'POST',
+          body: {
+            command: {
+              commandId: `variant-${stamp}-f`, action: 'prereg_freeze', runId: variantRunId,
+              payload: { prereg: { question: '工程发布能否用冻结契约验证？', prediction: '可以', acceptance: '通过', acceptableFailure: '回滚', controls: ['canary'], metrics: { primary: 'pass-rate', threshold: 0.9 }, input: { source: 'release' }, budget: { wallMin: 30 }, stop: { sameConclusion: 2 } } },
+            },
+          },
+        });
+        if (frozenVariant.status !== 200) throw new Error(`variant freeze failed: ${frozenVariant.status} ${JSON.stringify(frozenVariant.json)}`);
+        await browser.waitFor('document.querySelectorAll(".px-node").length === 11', { timeout: 15000, label: '11-node variant graph' }).catch(() => null);
+        await new Promise((resolvePromise) => setTimeout(resolvePromise, 500));
+        const currentPoint = await browser.evaluate(`(() => {
+          const node = document.querySelector('[data-current="true"]') ?? document.querySelector('.px-node');
+          if (!node) return null;
+          const rect = node.getBoundingClientRect();
+          return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, id: node.getAttribute('data-node-id') };
+        })()`);
+        if (currentPoint) {
+          await browser.clickAt(currentPoint.x, currentPoint.y);
+          await new Promise((resolvePromise) => setTimeout(resolvePromise, 450));
+        }
+        const variantEntry = await captureAt(browser, options, {
+          name: `variant-engineering-11-${options.theme}-1440x1000`,
+          scenario: 'variant-engineering-11',
+          viewport,
+          theme: options.theme,
+          note: 'variant：engineering-release 11 节点（非 15；非 14 的诚实替代）',
+          expectedMetrics: { visibleNodeRatio: 1, bboxWidthRatio: 0, bboxHeightRatio: 0, bboxAreaRatio: 0, primaryCount: 1, internalCodeCount: 0, destructiveControlCount: 0, horizontalOverflow: 0 },
+          selectedNodeId: currentPoint?.id ?? null,
+        }, manifest, context);
+        const variantInfo = variantEntry.sceneMetrics ?? {};
+        const variantTotal = variantEntry.metrics?.nodeTotal ?? null;
+        if (variantTotal !== 11 || variantInfo.nodeOverlapArea > 0.5 || variantInfo.inspectorVisible !== true) {
+          manifest.unverifiedScenes.push({ scene: 'variant-engineering-11', reason: `variant layout/inspector incomplete: ${JSON.stringify({ nodes: variantTotal, overlap: variantInfo.nodeOverlapArea, inspector: variantInfo.inspectorVisible })}` });
+        } else {
+          manifest.variants = [{ scene: 'variant-engineering-11', nodes: 11, note: 'engineering-release 11 节点；非 14，按 Lead 建议诚实替代' }];
+        }
+      } catch (error) {
+        manifest.unverifiedScenes.push({ scene: 'variant-engineering-11', reason: error instanceof Error ? error.message : String(error) });
+      }
+
       await browser.close();
     } catch (error) {
       manifest.errors.push(error instanceof Error ? error.message : String(error));
@@ -799,7 +987,7 @@ async function main(argv = process.argv.slice(2)) {
     // 合并历史截图：亮/暗、不同场景的多次 capture 累加到同一 manifest。
     const INAPPLICABLE_700 = /(selected|blueprint)-[^/]*700x600\.png$/;
     // 允许矩阵之外的历史截图一律移除，避免旧口径污染 aggregate manifest。
-    const ALLOWED = /(?:^|\/)(?:empty-(?:light|dark)-(?:1440x1000|1024x900|700x600)|running-(?:light|dark)-(?:1440x1000|1024x900|700x600)|selected-(?:light|dark)-1440x1000|blueprint-(?:light|dark)-1440x1000|selected-noncurrent-(?:light|dark)-1440x1000|drawer-source-(?:light|dark)-1440x1000|clean-light-1440x1000|loading-(?:light|dark)-1440x1000|cognitive-map-(?:light|dark)-1440x1000)\.png$/;
+    const ALLOWED = /(?:^|\/)(?:empty-(?:light|dark)-(?:1440x1000|1024x900|700x600)|running-(?:light|dark)-(?:1440x1000|1024x900|700x600)|selected-(?:light|dark)-1440x1000|blueprint-(?:light|dark)-1440x1000|selected-noncurrent-(?:light|dark)-1440x1000|drawer-source-(?:light|dark)-1440x1000|clean-light-1440x1000|loading-(?:light|dark)-1440x1000|cognitive-map-(?:light|dark)-1440x1000|error-(?:light|dark)-1440x1000|stale-(?:light|dark)-1440x1000|variant-engineering-11-(?:light|dark)-1440x1000)\.png$/;
     for (const [file, entry] of previousShots) {
       if (INAPPLICABLE_700.test(entry.file) || !ALLOWED.test(entry.file)) {
         try { unlinkSync(resolve(ROOT, entry.file)); } catch {}

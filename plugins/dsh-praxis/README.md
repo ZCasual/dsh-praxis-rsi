@@ -1,14 +1,31 @@
-# Praxis
+# Praxis（@local/dsh-praxis）
 
-DSH 科研判断引擎。面板名 Praxis。工具前缀 `rsi_`。
+DSH 科研工作流引擎与观测台。面板名 Praxis，模型工具 `rsi_run`，HTTP API 前缀 `/praxis/api`。
 
-剧本是声明式 Playbook。第一版打磨通用科研闭环，并保留工程验证、审计红队、知识生产三个剧本入口。Q19 / BENGI 不是产品中心。
+## 结构
+
+```text
+index.js              Host 插件装配（工具、命令、HTTP 路由、持久化）
+client/               Client 源码，构建为 client.js（build-client.mjs）
+src/engine.js         Run 状态机、动作分派、权限、fork、迁移、receipt
+src/graph.js          图模型、布局 v2、双轴状态、I1–I6 审计、端口推导
+src/host.js           命令门面、view/catalog、evidence、委托 actor
+src/http.js           wire v2 路由（200 / 409 / 422 / 428）
+src/store.js          持久化适配
+client.js             生成产物，禁止手改
+```
 
 ## 已验证
 
-- `node --test test/praxis/*.test.js` 锁定：无契约拒绝实验、冻结后改契约、同结论漂移、未知恐惧、评估器越权、记忆提交仅用户、旋钮改动分叉、人格缺绑定拒绝、矛盾不平均。
-- Host 与面板调用 `src/host.js` 的同一 `execute`。
+- `node --test test/praxis/*.test.js` → 140 pass / 0 fail（状态机、双轴图状态、不变量、fork/迁移、wire v2、模块构建）。
+- `node --test test/praxis/acceptance/*.test.js` → 真实 Chrome：1440/1024/700 视口、亮/暗实例、全生命周期到 `DECISION`。
+- 证据：`docs/praxis/evidence/manifest.json`（ok=true，25 张截图，逐对 WCAG 对比度）。
 
-## 未验证
+## 构建
 
-- 安装后的 GUI 像素。安装与 slot occupant 是独立观测，不代替截图。
+```bash
+node build-client.mjs          # 生成 client.js
+node build-client.mjs --check  # 校验是否最新
+```
+
+修改 `client/*.js` 后必须重建；DSH 需要重启才会重新加载 Client bundle。

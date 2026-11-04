@@ -1,32 +1,32 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-04T18:53:43.633Z",
+  "generatedAt": "2026-11-04T19:07:36.051Z",
   "node": "v25.2.0",
   "packageVersion": "0.2.0",
-  "gitCommit": "7fc2181",
+  "gitCommit": "44555b5",
   "buildHash": "17dc23af5f2e0a614662a5e269dd5f3d21e0c0bd29fe208e5392f842e0c061f6",
   "bundleSha256": "17dc23af5f2e0a614662a5e269dd5f3d21e0c0bd29fe208e5392f842e0c061f6",
   "buildChecked": true,
-  "port": 40345,
-  "url": "http://127.0.0.1:40345/?token=722O…4QMI",
-  "statePath": "/tmp/praxis-acceptance/state-capture-157219-40345.json",
-  "chromeProfile": "/tmp/praxis-acceptance/chrome-profile-capture-157219-40345",
+  "port": 39099,
+  "url": "http://127.0.0.1:39099/?token=Zwmh…k8VQ",
+  "statePath": "/tmp/praxis-acceptance/state-capture-159608-39099.json",
+  "chromeProfile": "/tmp/praxis-acceptance/chrome-profile-capture-159608-39099",
   "server": {
     "reused": false,
-    "port": 40345,
-    "pid": 157239,
-    "statePath": "/tmp/praxis-acceptance/state-capture-157219-40345.json",
-    "theme": "dark",
-    "command": "dsh web --patch /tmp/praxis-acceptance/patch-40345.yml --port 40345 --no-open",
-    "patch": "/tmp/praxis-acceptance/patch-40345.yml",
-    "log": "/tmp/praxis-acceptance/server-40345.log",
+    "port": 39099,
+    "pid": 159628,
+    "statePath": "/tmp/praxis-acceptance/state-capture-159608-39099.json",
+    "theme": "light",
+    "command": "dsh web --patch /tmp/praxis-acceptance/patch-39099.yml --port 39099 --no-open",
+    "patch": "/tmp/praxis-acceptance/patch-39099.yml",
+    "log": "/tmp/praxis-acceptance/server-39099.log",
     "probeStatus": 200,
     "stopped": true
   },
   "theme": {
-    "requested": "dark",
+    "requested": "light",
     "applied": true,
-    "mechanism": "CDP Emulation.setEmulatedMedia + host theme source"
+    "mechanism": "host default"
   },
   "scenarios": [
     {
@@ -37,7 +37,7 @@
     {
       "scenario": "frozen",
       "status": "seeded",
-      "runId": "run_a9e63f99",
+      "runId": "run_78c5ff29",
       "expected": "PREREG_FROZEN"
     }
   ],
@@ -268,12 +268,12 @@
     },
     {
       "file": "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
-      "sha256": "24dc605139ed916cbbcfc026c94e762e6f6553b956742dce471bcc8792218fb6",
+      "sha256": "63e6354eeb21c6ec722de467b2f88b45104ae6c0c13fd5b9d499ccd42696dbf0",
       "viewport": "1440x1000",
       "theme": "light",
       "themeApplied": true,
       "scenario": "blueprint:frozen",
-      "capturedAt": "2026-11-04T18:53:24.722Z",
+      "capturedAt": "2026-11-04T19:08:16.931Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -470,21 +470,27 @@
       "sceneMetrics": {
         "shellScene": "blueprint",
         "shellMode": "blueprint",
-        "runbarText": "Praxis\n证据截图 · frozen\n预注册已冻结\nv3\n3/10\n运行\n蓝图\n更多\n▾",
-        "progress": "3/10",
-        "progressDone": 3,
+        "runbarText": "Praxis\n证据截图 · frozen\n立项\nv1\n1/10\n运行\n蓝图\n待办：需要冻结预注册\n更多\n▾",
+        "progress": "1/10",
+        "progressDone": 1,
         "progressTotal": 10,
         "worldScale": "1.000",
-        "selectedNodeId": "n_prereg",
+        "selectedNodeId": "n_intake",
         "selectedRect": {
-          "x": 1150,
+          "x": 598,
           "y": 378,
           "w": 156,
           "h": 64
         },
         "inspectorRect": null,
         "selectedOverlapArea": 0,
-        "inspectorVisible": false
+        "inspectorVisible": false,
+        "bannerText": "",
+        "retryVisible": false,
+        "errorText": null,
+        "primaryDisabled": false,
+        "graphNodeCount": 15,
+        "nodeOverlapArea": 0
       },
       "violations": [],
       "expectedViolations": [],
@@ -492,12 +498,12 @@
     },
     {
       "file": "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
-      "sha256": "b3d19640bff337d4b71c6a6617a5c185353454c051d32407c88b871549457453",
+      "sha256": "ae9406aa61dbaf3cbad12368eb55565e38de1a5fff71f76bd351b2da7cdd9f9f",
       "viewport": "1440x1000",
       "theme": "light",
       "themeApplied": true,
       "scenario": "clean:frozen",
-      "capturedAt": "2026-11-04T18:53:27.111Z",
+      "capturedAt": "2026-11-04T19:08:19.161Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -708,7 +714,13 @@
         },
         "inspectorRect": null,
         "selectedOverlapArea": 0,
-        "inspectorVisible": false
+        "inspectorVisible": false,
+        "bannerText": "",
+        "retryVisible": false,
+        "errorText": null,
+        "primaryDisabled": false,
+        "graphNodeCount": 15,
+        "nodeOverlapArea": 0
       },
       "violations": [],
       "expectedViolations": [],
@@ -940,12 +952,12 @@
     },
     {
       "file": "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
-      "sha256": "60ec45c8e9046bbcd9ccdd8428b7a2488eaf0e3449a403a7d93809a3904d2df9",
+      "sha256": "3b19467537c81bd45f3a3a3af2705fae9451cda6b08124227f4a25470a34ee12",
       "viewport": "1440x1000",
       "theme": "light",
       "themeApplied": true,
       "scenario": "map:frozen",
-      "capturedAt": "2026-11-04T18:53:35.481Z",
+      "capturedAt": "2026-11-04T19:08:27.847Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -1156,7 +1168,13 @@
         },
         "inspectorRect": null,
         "selectedOverlapArea": 0,
-        "inspectorVisible": false
+        "inspectorVisible": false,
+        "bannerText": "",
+        "retryVisible": false,
+        "errorText": null,
+        "primaryDisabled": null,
+        "graphNodeCount": 15,
+        "nodeOverlapArea": 0
       },
       "violations": [],
       "expectedViolations": [],
@@ -1398,12 +1416,12 @@
     },
     {
       "file": "docs/praxis/screenshots/v2/drawer-source-light-1440x1000.png",
-      "sha256": "c4f49c91412b976c691a03c67b0fef11e44308234cf4ffae2e616e1d8b1ad2d2",
+      "sha256": "6486ad4c4d120273e3864656e246d5655a3e5bd12beaef94e4c366300a0c2ae7",
       "viewport": "1440x1000",
       "theme": "light",
       "themeApplied": true,
       "scenario": "drawer:source",
-      "capturedAt": "2026-11-04T18:53:28.872Z",
+      "capturedAt": "2026-11-04T19:08:21.461Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -1614,7 +1632,13 @@
         },
         "inspectorRect": null,
         "selectedOverlapArea": 0,
-        "inspectorVisible": false
+        "inspectorVisible": false,
+        "bannerText": "",
+        "retryVisible": false,
+        "errorText": null,
+        "primaryDisabled": null,
+        "graphNodeCount": 15,
+        "nodeOverlapArea": 0
       },
       "violations": [],
       "expectedViolations": [
@@ -2091,12 +2115,12 @@
     },
     {
       "file": "docs/praxis/screenshots/v2/empty-light-1024x900.png",
-      "sha256": "7ebcd1bb56b8ae7d39a53f2db84c3f0b8afaa6489fe1c81ce62a78ce61ade1ee",
+      "sha256": "0e3c0ff1992553f1714d0e0aa8b05fcd6217cfad8affd9c7ab5e2d4b2aec7dd0",
       "viewport": "1024x900",
       "theme": "light",
       "themeApplied": true,
       "scenario": "empty",
-      "capturedAt": "2026-11-04T18:53:11.377Z",
+      "capturedAt": "2026-11-04T19:08:07.163Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -2236,7 +2260,13 @@
         "selectedRect": null,
         "inspectorRect": null,
         "selectedOverlapArea": 0,
-        "inspectorVisible": false
+        "inspectorVisible": false,
+        "bannerText": "",
+        "retryVisible": false,
+        "errorText": null,
+        "primaryDisabled": null,
+        "graphNodeCount": 0,
+        "nodeOverlapArea": 0
       },
       "violations": [],
       "expectedViolations": [],
@@ -2244,12 +2274,12 @@
     },
     {
       "file": "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
-      "sha256": "43b25edfe1200046a7678aa39576f26da536ea328aa2760eac8631fbc52262b7",
+      "sha256": "2d61218321356d8b2a88f46282b0d8d128543318b2f49c436cde60f993a9c33f",
       "viewport": "1440x1000",
       "theme": "light",
       "themeApplied": true,
       "scenario": "empty",
-      "capturedAt": "2026-11-04T18:53:10.800Z",
+      "capturedAt": "2026-11-04T19:08:06.599Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -2389,7 +2419,13 @@
         "selectedRect": null,
         "inspectorRect": null,
         "selectedOverlapArea": 0,
-        "inspectorVisible": false
+        "inspectorVisible": false,
+        "bannerText": "",
+        "retryVisible": false,
+        "errorText": null,
+        "primaryDisabled": null,
+        "graphNodeCount": 0,
+        "nodeOverlapArea": 0
       },
       "violations": [],
       "expectedViolations": [],
@@ -2397,12 +2433,12 @@
     },
     {
       "file": "docs/praxis/screenshots/v2/empty-light-700x600.png",
-      "sha256": "2fb1fb83b4ecb2304e536dc916aa657df81fddfeb70fcf704e4a3ab88afabae4",
+      "sha256": "844c6a6e46642d89ecfa49b6d482df1e3bc80c9bc14ab51563065eb8a9de2ec5",
       "viewport": "700x600",
       "theme": "light",
       "themeApplied": true,
       "scenario": "empty",
-      "capturedAt": "2026-11-04T18:53:11.942Z",
+      "capturedAt": "2026-11-04T19:08:07.716Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -2542,11 +2578,165 @@
         "selectedRect": null,
         "inspectorRect": null,
         "selectedOverlapArea": 0,
-        "inspectorVisible": false
+        "inspectorVisible": false,
+        "bannerText": "",
+        "retryVisible": false,
+        "errorText": null,
+        "primaryDisabled": null,
+        "graphNodeCount": 0,
+        "nodeOverlapArea": 0
       },
       "violations": [],
       "expectedViolations": [],
       "note": "空态（无 Run，700x600）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/error-light-1440x1000.png",
+      "sha256": "e7f97fdcadf87fc078fe1b8fcbae5c89b41f058cfffaa4573d252518107c3caa",
+      "viewport": "1440x1000",
+      "theme": "light",
+      "themeApplied": true,
+      "scenario": "error",
+      "capturedAt": "2026-11-04T19:08:29.179Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "canvas": {
+          "width": 1440,
+          "height": 1000
+        },
+        "nodeTotal": 0,
+        "nodeVisible": 0,
+        "visibleNodeRatio": 0,
+        "contentBBoxRatio": 0,
+        "bboxWidthRatio": 0,
+        "bboxHeightRatio": 0,
+        "bboxAreaRatio": 0,
+        "shellWidth": 1160,
+        "shellHeight": 1000,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 13,
+        "fontSizeMin": 13,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "status": "missing"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              255,
+              255,
+              255
+            ],
+            "bg": [
+              15,
+              17,
+              21
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "status": "missing"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "status": "missing"
+          }
+        ],
+        "contrast": {
+          "textMin": 18.9,
+          "nonTextMin": null,
+          "textStatus": "sampled",
+          "nonTextStatus": "未测",
+          "violations": []
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "class-fallback",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "重试"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": true,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": null,
+        "viewportHint": false,
+        "themeSource": "light",
+        "bodyBackground": "rgb(255, 255, 255)",
+        "pageScrollHeight": 1000
+      },
+      "sceneMetrics": {
+        "shellScene": "error",
+        "shellMode": "run",
+        "runbarText": "",
+        "progress": null,
+        "progressDone": null,
+        "progressTotal": null,
+        "worldScale": null,
+        "selectedNodeId": null,
+        "selectedRect": null,
+        "inspectorRect": null,
+        "selectedOverlapArea": 0,
+        "inspectorVisible": false,
+        "bannerText": "",
+        "retryVisible": true,
+        "errorText": "无法连接 Praxis 服务\n\nFailed to fetch\n\n重试",
+        "primaryDisabled": null,
+        "graphNodeCount": 0,
+        "nodeOverlapArea": 0
+      },
+      "violations": [],
+      "expectedViolations": [],
+      "note": "服务错误态（/praxis/api/state 注入失败）+ 重试按钮"
     },
     {
       "file": "docs/praxis/screenshots/v2/loading-dark-1440x1000.png",
@@ -2677,12 +2867,12 @@
     },
     {
       "file": "docs/praxis/screenshots/v2/loading-light-1440x1000.png",
-      "sha256": "527c15f86de24e9c13c492514252c4017c0f9f94ce661af157f6511e34835edf",
+      "sha256": "b3114c1c42f0d1b2ead76f83f52a0530b2f141f994659d87f08a7a107bd920cb",
       "viewport": "1440x1000",
       "theme": "light",
       "themeApplied": true,
       "scenario": "loading",
-      "capturedAt": "2026-11-04T18:53:30.119Z",
+      "capturedAt": "2026-11-04T19:08:22.584Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -2796,7 +2986,13 @@
         "selectedRect": null,
         "inspectorRect": null,
         "selectedOverlapArea": 0,
-        "inspectorVisible": false
+        "inspectorVisible": false,
+        "bannerText": "",
+        "retryVisible": false,
+        "errorText": null,
+        "primaryDisabled": null,
+        "graphNodeCount": 0,
+        "nodeOverlapArea": 0
       },
       "violations": [],
       "expectedViolations": [],
@@ -3476,12 +3672,12 @@
     },
     {
       "file": "docs/praxis/screenshots/v2/running-light-1024x900.png",
-      "sha256": "b80952d6d700a294084e1ece3e773e24321c75097b496190035335260c572bfb",
+      "sha256": "4cc2c4655c8a81db196b56d48fd844a97e7debfc13cc844d411bda8654eb33d6",
       "viewport": "1024x900",
       "theme": "light",
       "themeApplied": true,
       "scenario": "running:frozen",
-      "capturedAt": "2026-11-04T18:53:25.665Z",
+      "capturedAt": "2026-11-04T19:08:17.865Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -3660,7 +3856,7 @@
         "primarySelector": "data-testid=primary",
         "primaryCount": 1,
         "primaryTexts": [
-          "提交讨论"
+          "记录研究问题"
         ],
         "primaryClassNames": [
           "px-btn primary"
@@ -3678,21 +3874,27 @@
       "sceneMetrics": {
         "shellScene": "running",
         "shellMode": "run",
-        "runbarText": "Praxis\n证据截图 · frozen\n预注册已冻结\n3/10\n运行\n蓝图\n提交讨论\n更多\n▾",
-        "progress": "3/10",
-        "progressDone": 3,
+        "runbarText": "Praxis\n证据截图 · frozen\n立项\n1/10\n运行\n蓝图\n记录研究问题\n更多\n▾",
+        "progress": "1/10",
+        "progressDone": 1,
         "progressTotal": 10,
         "worldScale": "0.798",
-        "selectedNodeId": "n_prereg",
+        "selectedNodeId": "n_intake",
         "selectedRect": {
-          "x": 884.8400268554688,
+          "x": 443.239990234375,
           "y": 358.739990234375,
-          "w": 124.79998779296875,
+          "w": 124.800048828125,
           "h": 51.20001220703125
         },
         "inspectorRect": null,
         "selectedOverlapArea": 0,
-        "inspectorVisible": false
+        "inspectorVisible": false,
+        "bannerText": "",
+        "retryVisible": false,
+        "errorText": null,
+        "primaryDisabled": false,
+        "graphNodeCount": 15,
+        "nodeOverlapArea": 0
       },
       "violations": [],
       "expectedViolations": [],
@@ -3700,12 +3902,12 @@
     },
     {
       "file": "docs/praxis/screenshots/v2/running-light-1440x1000.png",
-      "sha256": "c7d4d98ef17f65d1fde8cc936898f8dbbd9aa0cd14188fa471591643f9b0c0ec",
+      "sha256": "240cfd77857303b555811905502c359555140d09d8924f036a0f59f2d88569d8",
       "viewport": "1440x1000",
       "theme": "light",
       "themeApplied": true,
       "scenario": "running:frozen",
-      "capturedAt": "2026-11-04T18:53:23.188Z",
+      "capturedAt": "2026-11-04T19:08:15.453Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -3884,7 +4086,7 @@
         "primarySelector": "data-testid=primary",
         "primaryCount": 1,
         "primaryTexts": [
-          "提交讨论"
+          "记录研究问题"
         ],
         "primaryClassNames": [
           "px-btn primary"
@@ -3902,21 +4104,27 @@
       "sceneMetrics": {
         "shellScene": "running",
         "shellMode": "run",
-        "runbarText": "Praxis\n证据截图 · frozen\n预注册已冻结\nv3\n3/10\n运行\n蓝图\n提交讨论\n更多\n▾",
-        "progress": "3/10",
-        "progressDone": 3,
+        "runbarText": "Praxis\n证据截图 · frozen\n立项\nv1\n1/10\n运行\n蓝图\n记录研究问题\n待办：需要冻结预注册\n更多\n▾",
+        "progress": "1/10",
+        "progressDone": 1,
         "progressTotal": 10,
         "worldScale": "1.000",
-        "selectedNodeId": "n_prereg",
+        "selectedNodeId": "n_intake",
         "selectedRect": {
-          "x": 1150,
+          "x": 598,
           "y": 378,
           "w": 156,
           "h": 64
         },
         "inspectorRect": null,
         "selectedOverlapArea": 0,
-        "inspectorVisible": false
+        "inspectorVisible": false,
+        "bannerText": "",
+        "retryVisible": false,
+        "errorText": null,
+        "primaryDisabled": false,
+        "graphNodeCount": 15,
+        "nodeOverlapArea": 0
       },
       "violations": [],
       "expectedViolations": [],
@@ -3924,12 +4132,12 @@
     },
     {
       "file": "docs/praxis/screenshots/v2/running-light-700x600.png",
-      "sha256": "6d87682ab2cca5568ddbc850c42985f48c62ff9bda70dafd4ae4700f371c3b13",
+      "sha256": "1d7ed044cf5652deb1a81b5f243688f60e31731357a096351f98a8e6dfbbaa25",
       "viewport": "700x600",
       "theme": "light",
       "themeApplied": true,
       "scenario": "running:frozen",
-      "capturedAt": "2026-11-04T18:53:26.282Z",
+      "capturedAt": "2026-11-04T19:08:18.467Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -4108,7 +4316,7 @@
         "primarySelector": "data-testid=primary",
         "primaryCount": 1,
         "primaryTexts": [
-          "提交讨论"
+          "记录研究问题"
         ],
         "primaryClassNames": [
           "px-btn primary"
@@ -4126,21 +4334,27 @@
       "sceneMetrics": {
         "shellScene": "running",
         "shellMode": "run",
-        "runbarText": "证据截图 · frozen\n预注册已冻结\n提交讨论\n更多\n▾",
+        "runbarText": "证据截图 · frozen\n立项\n记录研究问题\n更多\n▾",
         "progress": null,
         "progressDone": null,
         "progressTotal": null,
         "worldScale": "0.686",
-        "selectedNodeId": "n_prereg",
+        "selectedNodeId": "n_intake",
         "selectedRect": {
-          "x": 579.9300537109375,
+          "x": 199.0500030517578,
           "y": 225.87001037597656,
-          "w": 107.63995361328125,
+          "w": 107.63999938964844,
           "h": 44.15998840332031
         },
         "inspectorRect": null,
         "selectedOverlapArea": 0,
-        "inspectorVisible": false
+        "inspectorVisible": false,
+        "bannerText": "",
+        "retryVisible": false,
+        "errorText": null,
+        "primaryDisabled": false,
+        "graphNodeCount": 15,
+        "nodeOverlapArea": 0
       },
       "violations": [],
       "expectedViolations": [],
@@ -4388,12 +4602,12 @@
     },
     {
       "file": "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
-      "sha256": "b83746d3e15f88f45b37d4221275ca6816697d87250ced7136ca12ea140805d3",
+      "sha256": "3223b5eaa578e45ef2ccec656d14e4d9a520bd408aeb1bc17b4b984005ebcdea",
       "viewport": "1440x1000",
       "theme": "light",
       "themeApplied": true,
       "scenario": "selected:frozen",
-      "capturedAt": "2026-11-04T18:53:23.967Z",
+      "capturedAt": "2026-11-04T19:08:16.202Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -4583,7 +4797,7 @@
         "primarySelector": "data-testid=primary",
         "primaryCount": 1,
         "primaryTexts": [
-          "提交讨论"
+          "提交问题"
         ],
         "primaryClassNames": [
           "px-btn primary"
@@ -4601,14 +4815,14 @@
       "sceneMetrics": {
         "shellScene": "running",
         "shellMode": "run",
-        "runbarText": "Praxis\n证据截图 · frozen\n预注册已冻结\nv3\n3/10\n运行\n蓝图\n收起面板\n更多\n▾",
-        "progress": "3/10",
-        "progressDone": 3,
+        "runbarText": "Praxis\n证据截图 · frozen\n立项\nv1\n1/10\n运行\n蓝图\n收起面板\n更多\n▾",
+        "progress": "1/10",
+        "progressDone": 1,
         "progressTotal": 10,
         "worldScale": "1.000",
-        "selectedNodeId": "n_prereg",
+        "selectedNodeId": "n_intake",
         "selectedRect": {
-          "x": 896,
+          "x": 598,
           "y": 378,
           "w": 156,
           "h": 64
@@ -4620,7 +4834,13 @@
           "h": 916
         },
         "selectedOverlapArea": 0,
-        "inspectorVisible": true
+        "inspectorVisible": true,
+        "bannerText": "",
+        "retryVisible": false,
+        "errorText": null,
+        "primaryDisabled": false,
+        "graphNodeCount": 15,
+        "nodeOverlapArea": 0
       },
       "violations": [],
       "expectedViolations": [],
@@ -4868,12 +5088,12 @@
     },
     {
       "file": "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png",
-      "sha256": "8675de5665dc1adeb7ab148504e3abd633ffade3861bc1e1dbe09ac5c024d7e7",
+      "sha256": "1a0391e5fa8d577e738b29f3f3551e04974987ac797269feab78f3c60acec05c",
       "viewport": "1440x1000",
       "theme": "light",
       "themeApplied": true,
       "scenario": "selected-noncurrent:frozen",
-      "capturedAt": "2026-11-04T18:53:27.858Z",
+      "capturedAt": "2026-11-04T19:08:19.900Z",
       "metrics": {
         "available": true,
         "scenario": null,
@@ -5100,20 +5320,532 @@
           "h": 916
         },
         "selectedOverlapArea": 0,
-        "inspectorVisible": true
+        "inspectorVisible": true,
+        "bannerText": "",
+        "retryVisible": false,
+        "errorText": null,
+        "primaryDisabled": false,
+        "graphNodeCount": 15,
+        "nodeOverlapArea": 0
       },
       "violations": [],
       "expectedViolations": [],
       "note": "选中的非 current 节点（只读动作/证据）"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/stale-light-1440x1000.png",
+      "sha256": "54a5d997f5b5f027114a265579b4cab56f71ab750c9ade4c7e22f496530a07b3",
+      "viewport": "1440x1000",
+      "theme": "light",
+      "themeApplied": true,
+      "scenario": "stale",
+      "capturedAt": "2026-11-04T19:08:40.135Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "canvas": {
+          "width": 1160,
+          "height": 940
+        },
+        "nodeTotal": 15,
+        "nodeVisible": 15,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.24868672046955245,
+        "bboxWidthRatio": 0.7689655172413793,
+        "bboxHeightRatio": 0.32340425531914896,
+        "bboxAreaRatio": 0.24868672046955245,
+        "shellWidth": 1160,
+        "shellHeight": 1000,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 10,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              233,
+              236,
+              242
+            ],
+            "ratio": 15.97,
+            "status": "sampled"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              255,
+              255,
+              255
+            ],
+            "bg": [
+              15,
+              17,
+              21
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "fg": [
+              38.172048228330475,
+              122.0741187839774,
+              66.83931374824422
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.31,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          }
+        ],
+        "contrast": {
+          "textMin": 5.8,
+          "nonTextMin": 5.31,
+          "textStatus": "sampled",
+          "nonTextStatus": "sampled",
+          "violations": []
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "data-testid=primary",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "提交讨论"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": true,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 1,
+        "viewportHint": false,
+        "themeSource": "light",
+        "bodyBackground": "rgb(255, 255, 255)",
+        "pageScrollHeight": 1000
+      },
+      "sceneMetrics": {
+        "shellScene": "running",
+        "shellMode": "run",
+        "runbarText": "Praxis\n证据截图 · frozen\n预注册已冻结\nv3\n3/10\n运行\n蓝图\n收起面板\n更多\n▾",
+        "progress": "3/10",
+        "progressDone": 3,
+        "progressTotal": 10,
+        "worldScale": "1.000",
+        "selectedNodeId": "n_prereg",
+        "selectedRect": {
+          "x": 1150,
+          "y": 378,
+          "w": 156,
+          "h": 64
+        },
+        "inspectorRect": {
+          "x": 1068,
+          "y": 72,
+          "w": 360,
+          "h": 916
+        },
+        "selectedOverlapArea": 9984,
+        "inspectorVisible": true,
+        "bannerText": "",
+        "retryVisible": false,
+        "errorText": null,
+        "primaryDisabled": false,
+        "graphNodeCount": 15,
+        "nodeOverlapArea": 0
+      },
+      "violations": [],
+      "expectedViolations": [],
+      "note": "409 CONFLICT（fetch 注入）→ stale 横幅（数据已更新/未提交）+ 推进按钮禁用"
+    },
+    {
+      "file": "docs/praxis/screenshots/v2/variant-engineering-11-light-1440x1000.png",
+      "sha256": "f62b8e870856028d127dbf67329ff43251ff3013c55d6c3305739cedf1a946b7",
+      "viewport": "1440x1000",
+      "theme": "light",
+      "themeApplied": true,
+      "scenario": "variant-engineering-11",
+      "capturedAt": "2026-11-04T19:08:47.093Z",
+      "metrics": {
+        "available": true,
+        "scenario": null,
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "canvas": {
+          "width": 1160,
+          "height": 940
+        },
+        "nodeTotal": 11,
+        "nodeVisible": 11,
+        "visibleNodeRatio": 1,
+        "contentBBoxRatio": 0.1973881144534116,
+        "bboxWidthRatio": 0.6103448275862069,
+        "bboxHeightRatio": 0.32340425531914896,
+        "bboxAreaRatio": 0.1973881144534116,
+        "shellWidth": 1160,
+        "shellHeight": 1000,
+        "shellOverflow": 0,
+        "fontSizeMinRaw": 10,
+        "fontSizeMin": 10,
+        "contrastPairs": [
+          {
+            "name": "node.title",
+            "selector": ".px-node-title",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.sub",
+            "selector": ".px-node-sub",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chip",
+            "selector": ".px-node-chip",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "lane.label",
+            "selector": ".px-lane-label",
+            "kind": "text",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          },
+          {
+            "name": "runbar.text",
+            "selector": ".px-runbar",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "inspector.body",
+            "selector": ".px-inspector-body",
+            "kind": "text",
+            "fg": [
+              15,
+              17,
+              21
+            ],
+            "bg": [
+              233,
+              236,
+              242
+            ],
+            "ratio": 15.97,
+            "status": "sampled"
+          },
+          {
+            "name": "primary.text",
+            "selector": ".px-btn.primary, [data-testid=\"primary\"]",
+            "kind": "text",
+            "fg": [
+              255,
+              255,
+              255
+            ],
+            "bg": [
+              15,
+              17,
+              21
+            ],
+            "ratio": 18.9,
+            "status": "sampled"
+          },
+          {
+            "name": "node.glyph",
+            "selector": ".px-node-glyph",
+            "kind": "nonText",
+            "fg": [
+              38.172048228330475,
+              122.0741187839774,
+              66.83931374824422
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.31,
+            "status": "sampled"
+          },
+          {
+            "name": "node.chipBorder",
+            "selector": ".px-node-chip",
+            "kind": "nonText",
+            "fg": [
+              97,
+              102,
+              107
+            ],
+            "bg": [
+              255,
+              255,
+              255
+            ],
+            "ratio": 5.8,
+            "status": "sampled"
+          }
+        ],
+        "contrast": {
+          "textMin": 5.8,
+          "nonTextMin": 5.31,
+          "textStatus": "sampled",
+          "nonTextStatus": "sampled",
+          "violations": []
+        },
+        "drawerPrimaryCount": 0,
+        "primarySelector": "data-testid=primary",
+        "primaryCount": 1,
+        "primaryTexts": [
+          "提交讨论"
+        ],
+        "primaryClassNames": [
+          "px-btn primary"
+        ],
+        "contractPrimaryClassPresent": true,
+        "internalCodeCount": 0,
+        "destructiveControlCount": 0,
+        "horizontalOverflow": 0,
+        "worldScale": 1,
+        "viewportHint": false,
+        "themeSource": "light",
+        "bodyBackground": "rgb(255, 255, 255)",
+        "pageScrollHeight": 1000
+      },
+      "sceneMetrics": {
+        "shellScene": "running",
+        "shellMode": "run",
+        "runbarText": "Praxis\nvariant engineering 11\n预注册已冻结\nv3\n3/10\n运行\n蓝图\n收起面板\n更多\n▾",
+        "progress": "3/10",
+        "progressDone": 3,
+        "progressTotal": 10,
+        "worldScale": "1.000",
+        "selectedNodeId": "n_prereg",
+        "selectedRect": {
+          "x": 896,
+          "y": 378,
+          "w": 156,
+          "h": 64
+        },
+        "inspectorRect": {
+          "x": 1068,
+          "y": 72,
+          "w": 360,
+          "h": 916
+        },
+        "selectedOverlapArea": 0,
+        "inspectorVisible": true,
+        "bannerText": "",
+        "retryVisible": false,
+        "errorText": null,
+        "primaryDisabled": false,
+        "graphNodeCount": 11,
+        "nodeOverlapArea": 0
+      },
+      "violations": [],
+      "expectedViolations": [],
+      "note": "variant：engineering-release 11 节点（非 15；非 14 的诚实替代）"
     }
   ],
-  "metricViolations": [],
+  "metricViolations": [
+    {
+      "file": "scene-consistency",
+      "violations": [
+        {
+          "metric": "sceneProgressMismatch",
+          "expected": 1,
+          "actual": [
+            "3/10",
+            "1/10"
+          ]
+        }
+      ]
+    }
+  ],
   "warnings": [],
   "errors": [],
-  "ok": true,
+  "ok": false,
   "stateRevision": 0,
   "fixture": {
-    "runId": "run_a9e63f99",
+    "runId": "run_78c5ff29",
     "state": "PREREG_FROZEN",
     "scenario": "frozen"
   },
@@ -5149,18 +5881,22 @@
   ],
   "unverifiedScenes": [
     {
-      "scene": "error",
-      "reason": "需注入接口 500/断网；当前 capture 未实现"
-    },
-    {
       "scene": "stale",
-      "reason": "需客户端 StoreSend 触发 409；当前 capture 未实现"
-    },
-    {
-      "scene": "14-nodes",
-      "reason": "受保护节点约束下尚未定义合法 14 节点自定义图；待 Lead 提供夹具"
+      "reason": "stale banner/disabled primary incomplete: {\"banner\":\"\",\"disabled\":false}"
     }
   ],
+  "variants": [
+    {
+      "scene": "variant-engineering-11",
+      "nodes": 11,
+      "note": "engineering-release 11 节点；非 14，按 Lead 建议诚实替代"
+    }
+  ],
+  "errorScene": {
+    "scene": "error",
+    "retryVisible": true,
+    "text": "无法连接 Praxis 服务\n\nFailed to fetch\n\n重试"
+  },
   "themes": {
     "light": {
       "themeRequested": "light",
@@ -5168,9 +5904,9 @@
       "buildHash": "17dc23af5f2e0a614662a5e269dd5f3d21e0c0bd29fe208e5392f842e0c061f6",
       "bundleSha256": "17dc23af5f2e0a614662a5e269dd5f3d21e0c0bd29fe208e5392f842e0c061f6",
       "server": {
-        "port": 33557,
-        "statePath": "/tmp/praxis-acceptance/state-capture-156799-33557.json",
-        "pid": 156819
+        "port": 39099,
+        "statePath": "/tmp/praxis-acceptance/state-capture-159608-39099.json",
+        "pid": 159628
       },
       "screenshots": [
         "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
@@ -5180,12 +5916,15 @@
         "docs/praxis/screenshots/v2/empty-light-1024x900.png",
         "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
         "docs/praxis/screenshots/v2/empty-light-700x600.png",
+        "docs/praxis/screenshots/v2/error-light-1440x1000.png",
         "docs/praxis/screenshots/v2/loading-light-1440x1000.png",
         "docs/praxis/screenshots/v2/running-light-1024x900.png",
         "docs/praxis/screenshots/v2/running-light-1440x1000.png",
         "docs/praxis/screenshots/v2/running-light-700x600.png",
         "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png"
+        "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/stale-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/variant-engineering-11-light-1440x1000.png"
       ],
       "scenarios": [
         "blueprint:frozen",
@@ -5195,12 +5934,15 @@
         "empty",
         "empty",
         "empty",
+        "error",
         "loading",
         "running:frozen",
         "running:frozen",
         "running:frozen",
         "selected:frozen",
-        "selected-noncurrent:frozen"
+        "selected-noncurrent:frozen",
+        "stale",
+        "variant-engineering-11"
       ]
     },
     "dark": {
@@ -5243,11 +5985,12 @@
       ]
     }
   },
-  "unexpectedMetricViolations": 0,
+  "unexpectedMetricViolations": 1,
   "expectedMetricViolations": 2,
   "sceneConsistency": {
     "progressValues": [
-      "3/10"
+      "3/10",
+      "1/10"
     ]
   },
   "signoff": {
@@ -5326,6 +6069,12 @@
         "status": "compat-not-signed"
       },
       {
+        "scene": "error-light-1440x1000",
+        "viewport": "1440x1000",
+        "theme": "light",
+        "status": "compat-not-signed"
+      },
+      {
         "scene": "loading-dark-1440x1000",
         "viewport": "1440x1000",
         "theme": "dark",
@@ -5360,20 +6109,24 @@
         "viewport": "700x600",
         "theme": "light",
         "status": "compat-not-signed"
+      },
+      {
+        "scene": "stale-light-1440x1000",
+        "viewport": "1440x1000",
+        "theme": "light",
+        "status": "compat-not-signed"
+      },
+      {
+        "scene": "variant-engineering-11-light-1440x1000",
+        "viewport": "1440x1000",
+        "theme": "light",
+        "status": "compat-not-signed"
       }
     ],
     "unverified": [
       {
-        "scene": "error",
-        "reason": "需注入接口 500/断网；当前 capture 未实现"
-      },
-      {
         "scene": "stale",
-        "reason": "需客户端 StoreSend 触发 409；当前 capture 未实现"
-      },
-      {
-        "scene": "14-nodes",
-        "reason": "受保护节点约束下尚未定义合法 14 节点自定义图；待 Lead 提供夹具"
+        "reason": "stale banner/disabled primary incomplete: {\"banner\":\"\",\"disabled\":false}"
       }
     ]
   },
@@ -5381,8 +6134,8 @@
     "light": {
       "textMin": 5.8,
       "nonTextMin": 5.31,
-      "pairsSampled": 80,
-      "pairsMissing": 37
+      "pairsSampled": 99,
+      "pairsMissing": 45
     },
     "dark": {
       "textMin": 5.55,
@@ -5392,137 +6145,6 @@
     }
   },
   "captures": [
-    {
-      "at": "2026-11-04T18:34:13.331Z",
-      "theme": "light",
-      "scenarios": [
-        "empty",
-        "frozen"
-      ],
-      "buildHash": "e616ce5110d23bd1a997c4978c94252d8fa176b33cd39fa9ef38cef577e1dec3",
-      "buildChecked": true,
-      "screenshots": [
-        "docs/praxis/screenshots/v2/blueprint-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/blueprint-light-1024x900.png",
-        "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/drawer-source-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/drawer-source-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/empty-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/empty-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/empty-dark-700x600.png",
-        "docs/praxis/screenshots/v2/empty-light-1024x900.png",
-        "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/empty-light-700x600.png",
-        "docs/praxis/screenshots/v2/loading-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/loading-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/running-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/running-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/running-dark-700x600.png",
-        "docs/praxis/screenshots/v2/running-light-1024x900.png",
-        "docs/praxis/screenshots/v2/running-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/running-light-700x600.png",
-        "docs/praxis/screenshots/v2/selected-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-light-1024x900.png",
-        "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-noncurrent-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png"
-      ],
-      "errors": [
-        "loading skeleton not verified: data-scene=null"
-      ],
-      "ok": false
-    },
-    {
-      "at": "2026-11-04T18:36:26.663Z",
-      "theme": "light",
-      "scenarios": [
-        "empty",
-        "frozen"
-      ],
-      "buildHash": "e616ce5110d23bd1a997c4978c94252d8fa176b33cd39fa9ef38cef577e1dec3",
-      "buildChecked": true,
-      "screenshots": [
-        "docs/praxis/screenshots/v2/blueprint-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/blueprint-light-1024x900.png",
-        "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/drawer-source-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/drawer-source-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/empty-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/empty-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/empty-dark-700x600.png",
-        "docs/praxis/screenshots/v2/empty-light-1024x900.png",
-        "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/empty-light-700x600.png",
-        "docs/praxis/screenshots/v2/loading-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/loading-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/running-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/running-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/running-dark-700x600.png",
-        "docs/praxis/screenshots/v2/running-light-1024x900.png",
-        "docs/praxis/screenshots/v2/running-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/running-light-700x600.png",
-        "docs/praxis/screenshots/v2/selected-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-light-1024x900.png",
-        "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-noncurrent-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png"
-      ],
-      "errors": [],
-      "ok": true
-    },
-    {
-      "at": "2026-11-04T18:38:04.947Z",
-      "theme": "light",
-      "scenarios": [
-        "empty",
-        "frozen"
-      ],
-      "buildHash": "e616ce5110d23bd1a997c4978c94252d8fa176b33cd39fa9ef38cef577e1dec3",
-      "buildChecked": true,
-      "screenshots": [
-        "docs/praxis/screenshots/v2/blueprint-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/blueprint-light-1024x900.png",
-        "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/drawer-source-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/drawer-source-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/empty-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/empty-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/empty-dark-700x600.png",
-        "docs/praxis/screenshots/v2/empty-light-1024x900.png",
-        "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/empty-light-700x600.png",
-        "docs/praxis/screenshots/v2/loading-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/loading-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/running-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/running-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/running-dark-700x600.png",
-        "docs/praxis/screenshots/v2/running-light-1024x900.png",
-        "docs/praxis/screenshots/v2/running-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/running-light-700x600.png",
-        "docs/praxis/screenshots/v2/selected-dark-1024x900.png",
-        "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-light-1024x900.png",
-        "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-noncurrent-dark-1440x1000.png",
-        "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png"
-      ],
-      "errors": [],
-      "ok": true
-    },
     {
       "at": "2026-11-04T18:39:00.023Z",
       "theme": "dark",
@@ -5796,6 +6418,130 @@
         "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
         "docs/praxis/screenshots/v2/selected-noncurrent-dark-1440x1000.png",
         "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png"
+      ],
+      "errors": [],
+      "ok": true
+    },
+    {
+      "at": "2026-11-04T19:04:07.032Z",
+      "theme": "light",
+      "scenarios": [
+        "empty",
+        "frozen"
+      ],
+      "buildHash": "17dc23af5f2e0a614662a5e269dd5f3d21e0c0bd29fe208e5392f842e0c061f6",
+      "buildChecked": true,
+      "screenshots": [
+        "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/drawer-source-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/drawer-source-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-dark-700x600.png",
+        "docs/praxis/screenshots/v2/empty-light-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-light-700x600.png",
+        "docs/praxis/screenshots/v2/error-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/loading-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/loading-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/running-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-dark-700x600.png",
+        "docs/praxis/screenshots/v2/running-light-1024x900.png",
+        "docs/praxis/screenshots/v2/running-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-light-700x600.png",
+        "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-noncurrent-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/variant-engineering-11-light-1440x1000.png"
+      ],
+      "errors": [],
+      "ok": true
+    },
+    {
+      "at": "2026-11-04T19:05:44.040Z",
+      "theme": "light",
+      "scenarios": [
+        "empty",
+        "frozen"
+      ],
+      "buildHash": "17dc23af5f2e0a614662a5e269dd5f3d21e0c0bd29fe208e5392f842e0c061f6",
+      "buildChecked": true,
+      "screenshots": [
+        "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/drawer-source-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/drawer-source-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-dark-700x600.png",
+        "docs/praxis/screenshots/v2/empty-light-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-light-700x600.png",
+        "docs/praxis/screenshots/v2/error-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/loading-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/loading-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/running-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-dark-700x600.png",
+        "docs/praxis/screenshots/v2/running-light-1024x900.png",
+        "docs/praxis/screenshots/v2/running-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-light-700x600.png",
+        "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-noncurrent-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/variant-engineering-11-light-1440x1000.png"
+      ],
+      "errors": [],
+      "ok": true
+    },
+    {
+      "at": "2026-11-04T19:08:47.308Z",
+      "theme": "light",
+      "scenarios": [
+        "empty",
+        "frozen"
+      ],
+      "buildHash": "17dc23af5f2e0a614662a5e269dd5f3d21e0c0bd29fe208e5392f842e0c061f6",
+      "buildChecked": true,
+      "screenshots": [
+        "docs/praxis/screenshots/v2/blueprint-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/blueprint-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/clean-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/cognitive-map-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/drawer-source-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/drawer-source-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-dark-700x600.png",
+        "docs/praxis/screenshots/v2/empty-light-1024x900.png",
+        "docs/praxis/screenshots/v2/empty-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/empty-light-700x600.png",
+        "docs/praxis/screenshots/v2/error-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/loading-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/loading-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-dark-1024x900.png",
+        "docs/praxis/screenshots/v2/running-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-dark-700x600.png",
+        "docs/praxis/screenshots/v2/running-light-1024x900.png",
+        "docs/praxis/screenshots/v2/running-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/running-light-700x600.png",
+        "docs/praxis/screenshots/v2/selected-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-noncurrent-dark-1440x1000.png",
+        "docs/praxis/screenshots/v2/selected-noncurrent-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/stale-light-1440x1000.png",
+        "docs/praxis/screenshots/v2/variant-engineering-11-light-1440x1000.png"
       ],
       "errors": [],
       "ok": true
