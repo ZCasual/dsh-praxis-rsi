@@ -357,6 +357,14 @@ export function createEngine(options = {}) {
     }
     const denied = checkTransition(run, command.action);
     if (denied) return remember(command, denied);
+    if (command.actor?.delegatedBy) {
+      append(run, 'actor.delegated', {
+        action: command.action,
+        kind: command.actor.kind,
+        actorId: command.actor.id,
+        delegatedBy: command.actor.delegatedBy,
+      });
+    }
     return remember(command, dispatch(run, command));
   }
 

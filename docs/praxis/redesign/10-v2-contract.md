@@ -199,6 +199,8 @@ catalog = {
 
 **T8.6** `GET /praxis/api/graph?runId=` → 同 `view.graph`；`POST /praxis/api/graph` 保存必须带 `expectedRevision`，冲突返回 409 + 当前图。
 
+**T8.7a 角色委托（delegated actor）**：`eval_report` 只允许 `evaluator`，`memory_propose` 只允许 `root`；UI 以 `user` 身份提交时必须显式携带 `payload.delegatedActor: 'evaluator' | 'root'`，Host 将其映射为 `{kind, id:'delegated:owner', delegatedBy:'owner'}` 并写入 `actor.delegated` 审计事件。未携带或值非法一律 422 `FORBIDDEN_ACTOR`。UI 必须在提交前用必选复选框取得用户明确同意（不可默认勾选）。
+
 **T8.7** `GET /praxis/api/evidence` → `{ evidence: { runs:[{id,state,version,receipts,events}], audit } }`，供审计抽屉与浏览器测试断言。
 
 ---

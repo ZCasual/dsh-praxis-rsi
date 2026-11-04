@@ -20,6 +20,17 @@ export function createHost(options = {}) {
     return { kind: 'root', id: 'agent' };
   }
 
+  /**
+   * Explicit delegation from the UI: the owner asks Praxis to record an action under a
+   * different role (evaluator / agent). Only two mappings exist, and every use is audited.
+   */
+  function delegatedActor(input) {
+    const flag = input?.payload?.delegatedActor;
+    if (flag === 'evaluator') return { kind: 'evaluator', id: 'delegated:owner', delegatedBy: 'owner' };
+    if (flag === 'root') return { kind: 'root', id: 'delegated:owner', delegatedBy: 'owner' };
+    return null;
+  }
+
   function persist() {
     if (!store) return pending;
     pending = pending
@@ -83,7 +94,7 @@ export function createHost(options = {}) {
     }
     const command = {
       commandId: input.commandId ?? `${action}-${Date.now()}`,
-      actor: input.actor ?? actorFor(source),
+      actor: input.actor ?? delegatedActor(input) ?? actorFor(source),
       action,
       runId: action === 'start' ? input.runId : (input.runId ?? current.runId ?? undefined),
       expectedDomainVersion: input.expectedDomainVersion,

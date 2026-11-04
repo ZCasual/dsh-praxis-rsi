@@ -44,7 +44,7 @@ function parseArgs(argv) {
     profileDir: join('/tmp/praxis-acceptance', `chrome-profile-capture-${process.pid}`),
     outDir: join(ROOT, 'docs/praxis/screenshots/v2'),
     manifest: MANIFEST_PATH,
-    scenarios: ['frozen'],
+    scenarios: ['empty', 'frozen'],
     theme: 'light',
     viewport: '1440x1000',
     serverLog: null,
@@ -269,6 +269,21 @@ async function applyTheme(browser, theme) {
   };
 }
 
+function splitViolations(metrics, expectedMetrics, scenario) {
+  const all = checkMetrics(metrics, expectedMetrics ?? {});
+  const expected = [];
+  const unexpected = [];
+  for (const violation of all) {
+    const isExpected =
+      (!metrics.available && /^loading/.test(String(scenario)))
+      || (/^map:/.test(String(scenario)) && violation.metric === 'primaryCount')
+      || (expectedMetrics?.allowUnavailable && violation.metric === 'available');
+    if (isExpected) expected.push({ ...violation, reason: /^loading/.test(String(scenario)) ? 'loading 无 .px-shell 是预期' : (/^map:/.test(String(scenario)) ? 'B-V03 抽屉/地图规则：drawer 内 primary 不计' : '允许不可用') });
+    else unexpected.push(violation);
+  }
+  return { expected, unexpected };
+}
+
 function registerShot(manifest, { file, viewport, theme, scenario, metrics, themeApplied, note, expectedMetrics = null }) {
   const absolute = resolve(file);
   const relativePath = relative(ROOT, absolute);
@@ -282,7 +297,10 @@ function registerShot(manifest, { file, viewport, theme, scenario, metrics, them
     scenario,
     capturedAt: new Date().toISOString(),
     metrics,
-    metricsViolations: checkMetrics(metrics, expectedMetrics ?? {}),
+    ...(() => {
+      const split = splitViolations(metrics, expectedMetrics, scenario);
+      return { violations: split.unexpected, expectedViolations: split.expected };
+    })(),
     note: note ?? null,
   };
   manifest.screenshots = [...(manifest.screenshots ?? []).filter((item) => item.file !== relativePath), entry];
@@ -307,13 +325,15 @@ async function captureAt(browser, options, target, manifest, context) {
     note,
     expectedMetrics: target.expectedMetrics ?? null,
   });
-  const violations = entry.metricsViolations.filter((item) => !(expectedMetrics?.allowUnavailable && !metrics.available));
-  entry.metricsViolations = violations;
+  const violations = entry.violations;
   process.stdout.write(
     `shot ${relative(ROOT, file)} sha256=${entry.sha256.slice(0, 12)} visible=${metrics.available ? `${metrics.nodeVisible}/${metrics.nodeTotal}` : 'n/a'} primary=${metrics.available ? metrics.primaryCount : 'n/a'} violations=${violations.length}\n`,
   );
   if (violations.length > 0) {
     manifest.metricViolations = [...(manifest.metricViolations ?? []), { file: entry.file, violations }];
+  }
+  if (entry.expectedViolations.length > 0) {
+    manifest.expectedViolations = [...(manifest.expectedViolations ?? []), { file: entry.file, violations: entry.expectedViolations }];
   }
   return entry;
 }
@@ -557,8 +577,8 @@ async function main(argv = process.argv.slice(2)) {
       // designer canonical：干净 1440 light，无抽屉/无选中污染
       try {
         await browser.setViewport(viewport);
+        if (!(await browser.evaluate('!!document.querySelector(".px-shell")'))) await openPraxis(browser, options.timeoutMs);
         if (options.theme === 'light') {
-          await browser.press('Escape').catch(() => {});
           try {
             const corner = await browser.evaluate(`(() => { const c = document.querySelector('.px-canvas'); const r = c.getBoundingClientRect(); return { x: r.left + 20, y: r.top + 20 }; })()`);
             await browser.clickAt(corner.x, corner.y);
@@ -673,10 +693,27 @@ async function main(argv = process.argv.slice(2)) {
     }
 
     // 合并历史截图：亮/暗、不同场景的多次 capture 累加到同一 manifest。
+    const INAPPLICABLE_700 = /(selected|blueprint)-[^/]*700x600\.png$/;
     for (const [file, entry] of previousShots) {
+      if (INAPPLICABLE_700.test(entry.file)) {
+        try { unlinkSync(resolve(ROOT, entry.file)); } catch {}
+        continue;
+      }
       if (!manifest.screenshots.some((item) => item.file === file)) manifest.screenshots.push(entry);
     }
     manifest.screenshots.sort((a, b) => String(a.file).localeCompare(String(b.file)));
+    manifest.themes = { ...(previousManifest?.themes ?? {}) };
+    manifest.themes[options.theme] = {
+      themeRequested: options.theme,
+      themeApplied: manifest.theme?.applied ?? null,
+      buildHash: manifest.buildHash,
+      bundleSha256: manifest.bundleSha256,
+      server: manifest.server ? { port: manifest.server.port, statePath: manifest.server.statePath, pid: manifest.server.pid } : null,
+      screenshots: manifest.screenshots.filter((item) => item.theme === options.theme).map((item) => item.file),
+      scenarios: manifest.screenshots.filter((item) => item.theme === options.theme).map((item) => item.scenario),
+    };
+    manifest.unexpectedMetricViolations = (manifest.metricViolations ?? []).reduce((sum, item) => sum + item.violations.length, 0);
+    manifest.expectedMetricViolations = (manifest.expectedViolations ?? []).reduce((sum, item) => sum + item.violations.length, 0);
     manifest.captures = [
       ...(previousManifest?.captures ?? []),
       {
@@ -699,6 +736,7 @@ async function main(argv = process.argv.slice(2)) {
     manifest.requiredShots = requiredShots.length;
     manifest.ok = manifest.errors.length === 0
       && requiredShots.length >= 8
+      && manifest.unexpectedMetricViolations === 0
       && !(manifest.theme && !manifest.theme.applied);
     mkdirSync(dirname(options.manifest), { recursive: true });
     writeFileSync(options.manifest, `${JSON.stringify(manifest, null, 2)}\n`);

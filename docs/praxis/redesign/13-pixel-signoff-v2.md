@@ -98,3 +98,13 @@
 9. metrics 增补：有效字号（×scale）、对比度逐对 ratio、遮挡检测、build hash + 截图 sha256 manifest。
 
 修完 S1-A/S1-B 并补齐上述 1–4 项后，可重新提交像素签收。
+
+---
+
+## Revision 2 输入（2026-11-05 02:10）：S1 修复后的新证据
+
+- build sha256 `7b286197f246`（`build-client.mjs --check` 通过），manifest：`docs/praxis/evidence/manifest-light.json`（14 张）、`manifest-dark.json`（13 张），`ok=true`。
+- S1-A 已修：1440 打开检查器后，选中/当前节点与 inspector 交集 = 0（gap 16px），zoom 100% 不变，只做水平平移；1024 底部 sheet 下交集 = 0（垂直 89px 间距）。
+- S1-B 已修：选中非当前/非归属节点时，检查器只显示只读块（`action-readonly`）且 primary=0，运行条保留唯一 primary；选中 current 节点时 inspector primary=1。
+- 横幅改为画布内浮层（不推布局）；泳道为纸面导轨；`viewport-hint` 触发条件 `raw<0.75 || canvas<900 || worldScale<0.85`。
+- 待 designer 复核的关键文件：`docs/praxis/screenshots/v2/clean-light-1440x1000.png`、`selected-light-1440x1000.png`、`selected-noncurrent-light-1440x1000.png`、`running-dark-1440x1000.png`、`blueprint-light-1440x1000.png`。

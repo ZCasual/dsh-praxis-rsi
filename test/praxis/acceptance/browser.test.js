@@ -279,7 +279,7 @@ test('browser §5.3/D5: 暗色主题由独立 dark 实例验证（同实例不�
   const source = await browser.evaluate('document.documentElement.getAttribute("data-ds-theme-source")');
   if (requestedTheme !== 'dark') {
     assert.equal(source, 'light', `scenario=theme-light actual=${source}`);
-    t.skip('需要独立暗色实例：用 capture.mjs --theme dark --manage-server（patch ui-theme.preference=dark）生成证据，再以 PRAXIS_THEME=dark 跑本用例');
+    t.skip('暗色由 capture.mjs 独立实例生成证据（manifest.themes.dark.themeApplied=true）；browser.test.js 不在同实例断言暗色');
     return;
   }
   assert.equal(source, 'dark', `scenario=theme-dark actual=${source}；独立暗色实例未生效`);
