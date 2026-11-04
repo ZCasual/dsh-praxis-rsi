@@ -47,7 +47,7 @@ test('client build B2: generated bundle is the ModuleLoader factory with three s
   assert.match(source, /__ModuleLoader__\.load\(/, 'B2: module loader wrapper');
   assert.match(source, /factory\(require\)/, 'B2: factory(require) signature');
   assert.match(source, /function praxisPlugin\(/, 'B2: 60-shell.js defines praxisPlugin()');
-  for (const slot of ['sidebar.panellist', 'conversation.composer.dock']) {
+  for (const slot of ['sidebar.panellist', 'conversation.input.dock']) {
     assert.ok(source.includes(slot), `B2: bundle registers slot ${slot}`);
   }
   assert.ok(source.includes('praxis'), 'B2: main slot key praxis');

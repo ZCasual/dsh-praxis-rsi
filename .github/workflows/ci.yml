@@ -1,0 +1,26 @@
+name: praxis
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Client bundle is current
+        run: node plugins/dsh-praxis/build-client.mjs --check
+      - name: Contract and invariant tests
+        run: node --test test/praxis/*.test.js
+      - name: Source syntax
+        run: |
+          for f in plugins/dsh-praxis/index.js plugins/dsh-praxis/src/*.js tools/evidence/*.mjs tools/dev/*.mjs; do
+            node --check "$f"
+          done
+      - name: Evidence manifest gate
+        run: node tools/evidence/verify-manifest.mjs

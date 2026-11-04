@@ -241,7 +241,7 @@ window.__ModuleLoader__.load({
 
 **B1**：所有 part 共享同一作用域，顶层标识符必须带模块前缀：`Prim*` / `Store*` / `Layout*` / `Canvas*` / `Inspect*` / `Panel*` / `Shell*`。禁止 `var`。
 
-**B2**：`60-shell.js` 定义 `function praxisPlugin()`，返回 `{ inject:['slots'], apply(ctx){...} }`，注册三个 slot：`sidebar.panellist`、`main`（key `praxis`）、`conversation.composer.dock`。
+**B2**：`60-shell.js` 定义 `function praxisPlugin()`，返回 `{ inject:['slots'], apply(ctx){...} }`，注册三个 slot：`sidebar.panellist`、`main`（key `praxis`）、`conversation.input.dock`（输入框上方一行状态 chip；`composer.dock` 在无会话时不可见，故改用 input.dock）。
 
 ### 4.2 模块导出（函数签名冻结）
 

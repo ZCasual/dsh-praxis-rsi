@@ -5,7 +5,7 @@ Praxis 是 DeepSeek Harness（DSH）的科研工作流引擎与观测台插件�
 - 插件包：`@local/dsh-praxis`（Host bundle + Observatory Client）
 - 模型工具：`rsi_run`（22 个动作，含 `question`）
 - 命令：`/praxis status | start <playbook> | gate | map`
-- 主界面：`sidebar.panellist` → `main[praxis]`；输入框 dock 显示当前阶段与下一步动作
+- 主界面：`sidebar.panellist` → `main[praxis]`；输入框上方 dock 显示当前阶段与下一步动作
 - 契约测试：`node --test test/praxis/*.test.js` → **140 pass / 0 fail**
 - 浏览器验收：`node --test test/praxis/acceptance/*.test.js`（真实 Chrome + CDP，零 npm 依赖；含全生命周期到 DECISION）
 
@@ -22,7 +22,7 @@ Praxis v3 的界面只有三个区域：**运行条（60px）**、**泳道画布
 | 节点 | 三行：中文名 + 执行状态（等待/进行中/已完成/被阻断/需核对）+ 条件（缺失/已满足/继承待确认）。不显示内部码 |
 | 检查器 | 选中节点或点主按钮后从右侧滑出（360px），显示双轴状态、阻塞原因、当前唯一动作表单 |
 | 抽屉 | 源码 / 运行列表 / 认知地图 / 证据链 / 审计 / 超参数，480px 浮层，同一时刻只开一个 |
-| Dock | 一个 chip：`预注册已冻结 · 提交讨论` 或 `预注册已冻结 · 阻塞 1` |
+| Dock | 输入框上方一行 chip：`预注册已冻结 · 提交讨论`（有阻塞时 `… · 阻塞 N`），title 显示 Run 与版本 |
 
 ### 1.1 两个模态，不是两套真相
 

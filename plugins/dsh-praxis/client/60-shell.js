@@ -685,8 +685,8 @@ function praxisPlugin() {
       ctx.slots.inject('main', () => ctx.slots.register({
         name: 'main', key: 'praxis',
       }, ShellApp));
-      ctx.slots.inject('conversation.composer.dock', () => ctx.slots.register({
-        name: 'conversation.composer.dock', id: 'praxis', order: 40, label: 'Praxis',
+      ctx.slots.inject('conversation.input.dock', () => ctx.slots.register({
+        name: 'conversation.input.dock', id: 'praxis', order: 40, label: 'Praxis',
       }, ShellDock));
     },
   };
