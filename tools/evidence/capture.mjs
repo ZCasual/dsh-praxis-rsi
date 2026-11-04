@@ -369,7 +369,8 @@ async function collectSceneMetrics(browser, selectedNodeId = null) {
       inspectorRect,
       selectedOverlapArea: intersectionArea,
       inspectorVisible: !!inspector,
-      bannerText: (document.querySelector('[data-testid="banner"], .px-banner-slot') || {}).innerText ? document.querySelector('[data-testid="banner"], .px-banner-slot').innerText.slice(0, 300) : '',
+      bannerText: (() => { const banner = document.querySelector('[data-testid="banner"]'); return banner ? banner.innerText.slice(0, 300) : ''; })(),
+      bannerButtons: (() => { const banner = document.querySelector('[data-testid="banner"]'); return banner ? [...banner.querySelectorAll('button')].map((button) => (button.textContent || '').trim()).slice(0, 6) : []; })(),
       retryVisible: [...document.querySelectorAll('button')].some((button) => /重试/.test(button.textContent || '')),
       errorText: shell && shell.getAttribute('data-scene') === 'error' ? shell.innerText.slice(0, 300) : null,
       primaryDisabled: (() => {
@@ -614,6 +615,18 @@ async function main(argv = process.argv.slice(2)) {
         state: fixtureState.json?.view?.active?.state ?? null,
         scenario: mainScenario,
       };
+      // 等客户端轮询把新夹具（PREREG_FROZEN）投影到画布，避免截到上一帧 1/10。
+      const expectedCurrent = {
+        INTAKE: 'n_intake', QUESTION: 'n_question', PREREG_FROZEN: 'n_prereg',
+        DISCUSSION: 'n_discussion', EXECUTING: 'n_experiment', REVIEW: 'n_review',
+        STAGE4: 'n_stage4', EVAL: 'n_eval', MEMORY: 'n_memory', DECISION: 'n_decision',
+      }[manifest.fixture.state] ?? null;
+      if (expectedCurrent) {
+        await browser.waitFor(
+          `document.querySelector('[data-current="true"]')?.getAttribute('data-node-id') === ${JSON.stringify(expectedCurrent)}`,
+          { timeout: 15000, label: `fixture projected: ${expectedCurrent}` },
+        ).catch(() => null);
+      }
       // 客户端 4s 轮询：等真实 Run 投影到画布后再截图，避免拍到上一帧/空态。
       try {
         await browser.waitFor('document.querySelectorAll(".px-node").length > 0', { timeout: 15000, label: 'seed projected to canvas' });
@@ -882,70 +895,71 @@ async function main(argv = process.argv.slice(2)) {
         try { await browser.send('Fetch.disable'); } catch {}
       }
 
-      // stale/409 场景：新文档内 monkeypatch fetch，对 POST /praxis/api/command 伪造 409 CONFLICT + 真实 view
+      // stale/409 场景（确定性）：服务端先前进到 v4，再用 __praxisDebug.send 以旧 revision 提交 → 409 CONFLICT
       try {
         await recover();
-        const realState = await browser.api('/praxis/api/state');
-        const realView = realState.status === 200 ? realState.json.view : null;
-        if (!realView) throw new Error('no real view for stale fixture');
-        const conflictPayload = {
-          error: '版本已过期，请刷新后重试',
-          code: 'CONFLICT',
-          receipt: { status: 'rejected', reasonCode: 'CONFLICT', retry: 'manual' },
-          view: realView,
-        };
-        const injection = await browser.send('Page.addScriptToEvaluateOnNewDocument', {
-          source: `(() => {
-            const original = window.fetch;
-            const payload = ${JSON.stringify(JSON.stringify(conflictPayload))};
-            window.fetch = (input, init) => {
-              const url = input && input.url ? input.url : String(input);
-              const method = String(init?.method ?? (input && input.method) ?? 'GET').toUpperCase();
-              if (method === 'POST' && url.includes('/praxis/api/command')) {
-                return Promise.resolve(new Response(payload, { status: 409, headers: { 'content-type': 'application/json' } }));
-              }
-              return original(input, init);
-            };
-          })();`,
-        });
-        await browser.navigate(tokenUrl);
-        await openPraxis(browser, options.timeoutMs);
+        await browser.waitFor('!!window.__praxisDebug && typeof window.__praxisDebug.send === "function"', { timeout: 10000, label: 'praxis debug seam' });
         await browser.waitFor('document.querySelectorAll(".px-node").length > 0', { timeout: 15000, label: 'stale fixture mounted' }).catch(() => null);
-        // 先关检查器/抽屉，确保 runbar 的 primary（无 data-primary-scope）可见。
-        try {
-          await browser.clickText('收起面板', { timeout: 2500, selector: 'button' });
-        } catch {
+        const packages = [
+          { persona: 'theorist', claim: '结构可提取', assumptions: ['信号存在'], evidence: ['d:1'], style: 'theoretical', minority: true, retained: true },
+          { persona: 'empiricist', claim: '只有均值回归', assumptions: ['噪声解释'], evidence: ['d:2'], style: 'empirical', minority: false, retained: true },
+        ];
+        const oldRevision = await browser.evaluate('window.__praxisDebug.revision()');
+        // 1) 绕过客户端 store 直接前进服务端版本（期望成功）
+        const advance = await browser.evaluate(`(async () => {
+          const response = await fetch('/praxis/api/command', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json', 'x-praxis-request': '1' },
+            body: JSON.stringify({ command: {
+              commandId: 'stale-advance-' + Date.now(),
+              action: 'discussion',
+              expectedDomainVersion: ${JSON.stringify(oldRevision)},
+              payload: { round: 1, packages: ${JSON.stringify(packages)} },
+            } }),
+          });
+          let json = null; try { json = await response.json(); } catch {}
+          return { status: response.status, code: json && json.code, state: json && json.view && json.view.active && json.view.active.state };
+        })()`);
+        if (advance.status !== 200) throw new Error(`server advance failed: ${advance.status} ${JSON.stringify(advance)}`);
+        // 2) 用旧 revision 走客户端同权 StoreSend → 409 CONFLICT
+        const stale = await browser.evaluate(`(async () => {
           try {
-            const corner = await browser.evaluate(`(() => { const c = document.querySelector('.px-canvas'); const r = c.getBoundingClientRect(); return { x: r.left + 20, y: r.top + 20 }; })()`);
-            await browser.clickAt(corner.x, corner.y);
-          } catch {}
-        }
-        await new Promise((resolvePromise) => setTimeout(resolvePromise, 250));
-        const runbarPrimary = '[data-testid="primary"]:not([data-primary-scope])';
-        await browser.waitFor(`!!document.querySelector(${JSON.stringify(runbarPrimary)})`, { timeout: 5000, label: 'runbar primary' });
-        await browser.evaluate(`document.querySelector(${JSON.stringify(runbarPrimary)}).click(); true`);
-        await browser.waitFor(`(() => { const banner = document.querySelector('[data-testid="banner"]'); return Boolean(banner && /数据已更新|未提交|版本已过期/.test(banner.innerText)); })()`, { timeout: 8000, label: 'stale banner' }).catch(() => null);
-        await new Promise((resolvePromise) => setTimeout(resolvePromise, 350));
+            const receipt = await window.__praxisDebug.send('discussion', { round: 1, packages: ${JSON.stringify(packages)} }, { expectedDomainVersion: ${JSON.stringify(oldRevision)} });
+            return { receiptStatus: receipt && receipt.status, receiptCode: receipt && receipt.reasonCode };
+          } catch (error) {
+            return { error: String(error) };
+          }
+        })()`);
+        await browser.waitFor(`(() => { const banner = document.querySelector('[data-testid="banner"]'); return Boolean(banner && /数据已更新|未提交/.test(banner.innerText)); })()`, { timeout: 8000, label: 'stale banner' }).catch(() => null);
+        await new Promise((resolvePromise) => setTimeout(resolvePromise, 800));
         const staleEntry = await captureAt(browser, options, {
           name: `stale-${options.theme}-1440x1000`,
           scenario: 'stale',
           viewport,
           theme: options.theme,
-          note: '409 CONFLICT（fetch 注入）→ stale 横幅（数据已更新/未提交）+ 推进按钮禁用',
+          note: '确定性 409 CONFLICT（__praxisDebug.send 旧 revision）→ sticky stale 横幅 + 推进按钮禁用',
           expectedMetrics: { visibleNodeRatio: 1, bboxWidthRatio: 0, bboxHeightRatio: 0, bboxAreaRatio: 0, primaryCount: 1, internalCodeCount: 0, destructiveControlCount: 0, horizontalOverflow: 0 },
         }, manifest, context);
         const staleInfo = staleEntry.sceneMetrics ?? {};
-        const staleVerified = /数据已更新|未提交|版本已过期/.test(staleInfo.bannerText ?? '') && staleInfo.primaryDisabled === true;
+        const bannerOk = /数据已更新|未提交/.test(staleInfo.bannerText ?? '');
+        const hasRefresh = (staleInfo.bannerButtons ?? []).some((text) => /刷新/.test(text));
+        const hasClose = (staleInfo.bannerButtons ?? []).some((text) => /关闭|×/.test(text));
+        const staleVerified = bannerOk
+          && hasRefresh && hasClose
+          && staleInfo.primaryDisabled === true
+          && stale.receiptStatus === 'rejected'
+          && stale.receiptCode === 'CONFLICT';
         if (!staleVerified) {
-          manifest.unverifiedScenes.push({ scene: 'stale', reason: `capture 无法可靠伪造 409 触发 stale 横幅（fetch monkeypatch 未命中：banner=${JSON.stringify(staleInfo.bannerText)}, disabled=${staleInfo.primaryDisabled}）` });
+          manifest.unverifiedScenes.push({ scene: 'stale', reason: `deterministic 409 seam incomplete: ${JSON.stringify({ seam: stale, banner: staleInfo.bannerText, buttons: staleInfo.bannerButtons, disabled: staleInfo.primaryDisabled })}` });
         } else {
-          manifest.staleScene = { banner: staleInfo.bannerText.slice(0, 160), primaryDisabled: staleInfo.primaryDisabled };
+          manifest.staleScene = {
+            seam: { oldRevision, advancedState: advance.state, receiptStatus: stale.receiptStatus, receiptCode: stale.receiptCode },
+            ui: { bannerPresent: true, banner: staleInfo.bannerText.slice(0, 200), primaryDisabled: staleInfo.primaryDisabled, buttons: staleInfo.bannerButtons },
+          };
         }
-        await browser.send('Page.removeScriptToEvaluateOnNewDocument', { identifier: injection.identifier }).catch(() => {});
         await recover();
       } catch (error) {
-        manifest.unverifiedScenes.push({ scene: 'stale', reason: error instanceof Error ? error.message : String(error) });
-        try { await browser.send('Fetch.disable'); } catch {}
+        manifest.unverifiedScenes.push({ scene: 'stale', reason: `deterministic 409 seam failed: ${error instanceof Error ? error.message : String(error)}` });
       }
 
       // variant-engineering-11：非 15 节点（engineering-release 11 节点）布局/检查器覆盖

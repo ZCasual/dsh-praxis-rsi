@@ -55,7 +55,7 @@ node --test test/praxis/acceptance/*.test.js
 - 亮色实例：`tests 8 / pass 7 / fail 0 / skip 1`（skip 项为暗色，由独立实例证据覆盖）
 - 暗色实例：`tests 8 / pass 8 / fail 0 / skip 0`
 
-证据 manifest（`docs/praxis/evidence/manifest.json`）：`ok=true`、`buildChecked=true`、25 张截图（light 13 / dark 12，均 `themeApplied`）、`unexpectedMetricViolations=0`、`expectedMetricViolations=2`（drawer primary 规则）、`signoff.signed=7`、`compat=12`、`unverified=3`。
+证据 manifest（`docs/praxis/evidence/manifest.json`）：`ok=true`、`buildChecked=true`、31 张截图（light 16 / dark 15，均 `themeApplied`）、`unexpectedMetricViolations=0`、`expectedMetricViolations=2`（drawer primary 规则）、`signoff.signed=7`、`compat=18`、**`unverified=0`**。
 逐对 WCAG：light 正文最小 5.8:1、非文本最小 5.31:1；dark 正文 5.55:1、非文本 9.47:1。选中节点与检查器交集 0（gap 16px）。700×600：`worldScale=0.686`、15/15 可见、页面横向溢出 0。
 
 ## 3. 手工端到端场景（CDP 脚本，可复跑）
@@ -114,7 +114,8 @@ Host：/praxis/api/state 200，wireVersion 2
 |---|---|---|
 | Dock chip 的视觉验证 | `conversation.composer.dock` 作用域是 `session`，无活动会话时不渲染；headless 新 profile 没有会话 | 已确认 slot 注册代码存在；需在有会话的实例里人工确认 |
 | 1024 全应用下的有效字号下限 | 宿主侧栏 280px 使画布只有 744×840、world scale 0.798（r7 后）；64px 冻结节点高放不下达标字号 | 按 D5-1 记为“不可判定”；插件根 1024×840 下 scale=1.0 且全部达标 |
-| `error` / `stale` / 14 节点场景 | 需要 500 注入、409 触发与合法 14 节点夹具；capture 未实现 | manifest `unverifiedScenes` 如实登记，不记为通过 |
+| 14 节点场景 | 需要合法的 14 节点图夹具 | 用 engineering-release 11 节点作为“非 15 节点”覆盖（`variant-engineering-11`，诚实标注非 14） |
+| error / stale 场景 | 需要 500 注入与 409 触发 | 已验证：error 用请求失败注入；stale 用页面内 `__praxisDebug` 以旧 revision 提交，触发真实 409 与粘滞横幅 |
 | 暗色主题浏览器断言 | 主题由 profile patch 固定，运行时不可切换 | 由独立暗色实例验证（`capture.mjs` 管理实例）；同实例测试显式 skip |
 | 运行中 Playbook 迁移 | 当前策略是 Run 固定原 revision，不做自动迁移 | 设计决策，非缺陷 |
 | 真实 DSH 会话内 `rsi_run` 的工具调用 | 工具只在**新会话**出现；本轮未在对话中实际调用 | 需新会话人工验证 |
@@ -129,8 +130,8 @@ Host：/praxis/api/state 200，wireVersion 2
 | selected-light 1440（3/10 current `n_prereg`，与 inspector gap≈16px，zoom 100%） | 通过 |
 | running-dark / selected-dark 1440 | 通过 |
 | 1024 全应用 / 700×600 | compat 通过（不套字号/面积） |
-| loading | compat-not-signed：截图未稳定捕获 Praxis 骨架，见 §7 |
-| error / variant-engineering-11 | 证据已生成，归 compat |
+| loading | compat：骨架 + “正在连接 Praxis 服务…” 文案已验证（暂停 `/state` 后截图） |
+| error / stale / variant-engineering-11 | 证据已生成，归 compat（stale 用旧 revision 触发真实 409） |
 
 ## 8. 证据清单
 

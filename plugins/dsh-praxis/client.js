@@ -365,9 +365,24 @@ function StoreUse() {
   const [, force] = useReducer((value) => value + 1, 0);
   useEffect(() => {
     StoreStart();
+    StoreInstallDebugSeam();
     return StoreSubscribe(() => force());
   }, []);
   return StoreSingleton;
+}
+
+/** Test/debug seam: exposes the same commands the UI uses (no extra privileges). */
+function StoreInstallDebugSeam() {
+  if (typeof window === 'undefined') return;
+  if (window.__praxisDebug) return;
+  window.__praxisDebug = {
+    store: StoreSingleton,
+    snapshot: () => StoreSingleton.snapshot,
+    revision: () => StoreSingleton.revision,
+    refresh: () => StoreRefresh(),
+    send: (action, payload, options) => StoreSend(action, payload, options ?? {}),
+    dismissConflict: () => StoreDismissConflict(),
+  };
 }
 
 /** Read the latest graph projection without polling. */

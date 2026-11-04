@@ -127,7 +127,7 @@ Edge  = { id, from, to, port: 'contract'|'artifact'|'evidence'|'veto' }
 |---|---|---|
 | 契约测试 | `node --test test/praxis/*.test.js` | 领域状态机、图模型与不变量、fork/迁移、wire 契约、store、HTTP、模块构建 |
 | 浏览器验收 | `node --test test/praxis/acceptance/*.test.js` | 真实 Chrome：可见节点比例、内容占比、唯一主按钮、内部码为 0、破坏性控件为 0、横向溢出为 0；全生命周期 start→…→DECISION 含角色委托审计 |
-| 证据采集 | `node tools/evidence/capture.mjs --manage-server --theme light|dark` | 25 张截图 + `docs/praxis/evidence/manifest.json`：`ok=true`、`unexpectedMetricViolations=0`、逐对 WCAG 对比度（light text 5.8 / non-text 5.31；dark 5.55 / 9.47）、`signoff.signed/compat/unverified` 分级 |
+| 证据采集 | `node tools/evidence/capture.mjs --manage-server --theme light|dark` | 31 张截图 + `docs/praxis/evidence/manifest.json`：`ok=true`、`unexpectedMetricViolations=0`、逐对 WCAG 对比度（light text 5.8 / non-text 5.31；dark 5.55 / 9.47）、`signoff.signed=7 / compat=18 / unverified=0` |
 
 浏览器测试使用独立 profile 与独立 `statePath`（`/tmp/praxis-acceptance/`），不写用户的 `~/.dsh/praxis/state.json`。
 
