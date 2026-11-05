@@ -847,7 +847,18 @@ function InspectCloseButton({ onClose }) {
 function InspectBranchAction(branch) {
   const status = branch?.status;
   if (status === 'proposed') return { id: 'branch_activate', label: '启用分支', form: 'none', payload: { branchId: branch?.id } };
-  if (status === 'active') return { id: 'branch_evidence', label: '记录证据', form: 'branch_evidence', payload: { branchId: branch?.id } };
+  if (status === 'active') {
+    return {
+      id: 'branch_evidence',
+      label: '记录证据',
+      form: 'branch_evidence',
+      payload: { branchId: branch?.id },
+      alternates: [
+        { id: 'branch_verdict', label: '给出结论', form: 'branch_verdict' },
+        { id: 'branch_drop', label: '放弃分支', form: 'branch_drop' },
+      ],
+    };
+  }
   if (status === 'supported' || status === 'refuted' || status === 'inconclusive') {
     return { id: 'branch_merge', label: '合流到研究结论', form: 'branch_merge', payload: { branchId: branch?.id } };
   }
@@ -998,9 +1009,19 @@ function InspectSubmitArea({ action, onAction, run, branch, catalog }) {
   const [values, setValues] = useState({});
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
-  const kind = action?.form ?? 'none';
+  const [altId, setAltId] = useState('');
+  const alternates = action?.alternates ?? [];
+  const alt = alternates.find((item) => item.id === altId) ?? null;
+  const activeAction = alt ? { ...action, id: alt.id, label: alt.label, form: alt.form } : action;
+  const kind = activeAction?.form ?? 'none';
 
   function build() {
+    if (kind === 'branch_verdict') {
+      return { branchId: action.payload?.branchId, verdict: values.verdict ?? 'supported', reason: String(values.reason ?? '').trim() || '证据一致' };
+    }
+    if (kind === 'branch_drop') {
+      return { branchId: action.payload?.branchId, reason: String(values.dropReason ?? '').trim() || '方向不再优先' };
+    }
     if (kind === 'branch_evidence') {
       return {
         branchId: action.payload?.branchId,
@@ -1013,6 +1034,7 @@ function InspectSubmitArea({ action, onAction, run, branch, catalog }) {
     if (kind === 'branch_merge') {
       return { branchId: action.payload?.branchId, into: values.into ?? 'b_main' };
     }
+    if (kind === 'branch_activate') return { branchId: action.payload?.branchId };
     if (kind === 'question') {
       return { question: { text: String(values.text ?? '').trim(), hypothesis: String(values.hypothesis ?? '').trim(), unknowns: String(values.unknowns ?? '').split(/[,\n]/).map((x) => x.trim()).filter(Boolean) } };
     }
@@ -1048,6 +1070,9 @@ function InspectSubmitArea({ action, onAction, run, branch, catalog }) {
     if (kind === 'branch_evidence') {
       if (!String(values.ref ?? '').trim()) return '证据引用不能为空（文件、链接或实验产物 id）';
     }
+    if (kind === 'branch_verdict') {
+      if (!String(values.reason ?? '').trim()) return '给出结论必须写理由：哪条证据支持这个判断';
+    }
     if (kind === 'question') {
       if (String(values.text ?? '').trim().length < 4) return '研究问题至少 4 个字符';
       if (String(values.hypothesis ?? '').trim().length < 4) return '假设至少 4 个字符';
@@ -1067,7 +1092,7 @@ function InspectSubmitArea({ action, onAction, run, branch, catalog }) {
     setError('');
     setPending(true);
     try {
-      const receipt = await onAction?.(action.id, build());
+      const receipt = await onAction?.(activeAction.id, build());
       if (!receipt || receipt.status === 'rejected') {
         const code = receipt?.reasonCode ?? 'REJECTED';
         setError(`提交被拒绝：${code}`);
@@ -1091,6 +1116,18 @@ function InspectSubmitArea({ action, onAction, run, branch, catalog }) {
           h(PrimSelect, { value: values.supports ?? 'support', onChange: set('supports'), options: [['support', '支持本分支'], ['contradict', '反驳本分支']] })),
         h(PrimField, { label: '备注', hint: '可选' },
           h(PrimArea, { value: values.note ?? '', rows: 2, onChange: set('note') })));
+    }
+    if (kind === 'branch_verdict') {
+      return h('div', { className: 'px-v4-form', 'data-testid': 'branch-verdict-form' },
+        h(PrimField, { label: '结论' },
+          h(PrimSelect, { value: values.verdict ?? 'supported', onChange: set('verdict'), options: [['supported', '支持本分支'], ['refuted', '否定本分支'], ['inconclusive', '证据不足']] })),
+        h(PrimField, { label: '理由' },
+          h(PrimArea, { value: values.reason ?? '', rows: 3, placeholder: '哪条证据支持这个判断', onChange: set('reason') })));
+    }
+    if (kind === 'branch_drop') {
+      return h('div', { className: 'px-v4-form' },
+        h(PrimField, { label: '放弃理由' },
+          h(PrimInput, { value: values.dropReason ?? '', onChange: set('dropReason') })));
     }
     if (kind === 'branch_merge') {
       return h('div', { className: 'px-v4-form' },
@@ -1140,16 +1177,27 @@ function InspectSubmitArea({ action, onAction, run, branch, catalog }) {
   })();
 
   return h('div', { className: 'px-v4-submit' },
+    alternates.length
+      ? h('div', { className: 'px-v4-alt-actions' },
+        alternates.map((item) => h('button', {
+          key: item.id,
+          type: 'button',
+          className: `px-v4-alt${altId === item.id ? ' is-on' : ''}`,
+          'data-testid': 'alternate-action',
+          'data-action': item.id,
+          onClick: () => { setAltId(altId === item.id ? '' : item.id); setError(''); },
+        }, altId === item.id ? `返回${action?.label ?? '主操作'}` : item.label)))
+      : null,
     form,
     error ? h('p', { className: 'px-v4-form-error', 'data-testid': 'action-error', role: 'alert' }, error) : null,
     h('button', {
       type: 'button',
       className: 'px-btn primary px-v4-inspect-primary',
       'data-testid': 'primary',
-      'data-action': action?.id ?? '',
+      'data-action': activeAction?.id ?? '',
       disabled: pending,
       onClick: submit,
-    }, pending ? '提交中…' : action?.label ?? '提交'));
+    }, pending ? '提交中…' : activeAction?.label ?? '提交'));
 }
 
 function InspectPanel({ selection, run, branch, member, evidenceRow, catalog, onAction, onClose }) {
@@ -1207,6 +1255,10 @@ const InspectCss = `
 .px-v4-submit { display:grid; gap:10px; }
 .px-v4-form { display:grid; gap:8px; }
 .px-v4-form-error { margin:0; color:var(--dsw-alias-state-error-primary); font-size:var(--px-fs-3); }
+.px-v4-alt-actions { display:flex; gap:6px; flex-wrap:wrap; }
+.px-v4-alt { border:1px solid var(--dsw-alias-border-l1); background:transparent; color:var(--dsw-alias-label-secondary); border-radius:999px; padding:3px 10px; font:inherit; font-size:var(--px-fs-3); cursor:pointer; }
+.px-v4-alt:hover { color:var(--dsw-alias-label-primary); border-color:var(--dsw-alias-border-l2); }
+.px-v4-alt.is-on { color:var(--dsw-alias-brand-primary); border-color:var(--dsw-alias-brand-primary); }
 @media (max-width:1180px) { .px-v4-inspector { top:auto; left:0; width:100%; max-height:46vh; } }
 `;
 
@@ -1659,6 +1711,7 @@ function ShellApp() {
     'data-praxis': 'app',
     'data-testid': 'praxis-shell',
     'data-scene': active ? 'run' : 'empty',
+    'data-inspector': selection ? 'true' : 'false',
   },
   h('style', null, CssText),
   h(ShellRunBar, {
@@ -2040,6 +2093,8 @@ const CssBase = `
   position: absolute; right: 0; top: 0; bottom: 0; width: 360px; z-index: 12;
 }
 .px-v4-band { flex: 0 0 148px; border-top: 1px solid var(--dsw-alias-border-l1); overflow: auto; }
+.px-shell[data-inspector="true"] .px-v4-board,
+.px-shell[data-inspector="true"] .px-v4-band { padding-right: 372px; }
 .px-rail-empty { padding: 16px; font-size: var(--px-fs-2); color: var(--dsw-alias-label-secondary); }
 .px-empty-stage { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; }
 

@@ -242,6 +242,7 @@ function ShellApp() {
     'data-praxis': 'app',
     'data-testid': 'praxis-shell',
     'data-scene': active ? 'run' : 'empty',
+    'data-inspector': selection ? 'true' : 'false',
   },
   h('style', null, CssText),
   h(ShellRunBar, {

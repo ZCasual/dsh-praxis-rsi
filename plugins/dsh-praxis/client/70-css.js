@@ -164,6 +164,8 @@ const CssBase = `
   position: absolute; right: 0; top: 0; bottom: 0; width: 360px; z-index: 12;
 }
 .px-v4-band { flex: 0 0 148px; border-top: 1px solid var(--dsw-alias-border-l1); overflow: auto; }
+.px-shell[data-inspector="true"] .px-v4-board,
+.px-shell[data-inspector="true"] .px-v4-band { padding-right: 372px; }
 .px-rail-empty { padding: 16px; font-size: var(--px-fs-2); color: var(--dsw-alias-label-secondary); }
 .px-empty-stage { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; }
 
