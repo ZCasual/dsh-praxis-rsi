@@ -62,14 +62,21 @@ function ShellRunBar(props) {
       h('span', { className: 'px-team-dot', 'data-running': running > 0 ? 'true' : 'false', 'aria-hidden': true }),
       h('span', null, teamText))),
     h('div', { className: 'px-runbar-right' },
-      overlayOpen ? null : active ? h(PrimBtn, {
-        tone: 'primary',
-        'data-testid': 'primary',
-        'data-action-id': actionId ?? '',
-        disabled: store.busy > 0 || degraded,
-        title: degraded ? '数据过期或服务不可用，先处理提示' : `执行：${label}`,
-        onClick: () => onPrimary(actionId),
-      }, label) : null,
+      overlayOpen ? null
+        : active ? h(PrimBtn, {
+          tone: 'primary',
+          'data-testid': 'primary',
+          'data-action-id': actionId ?? '',
+          disabled: store.busy > 0 || degraded,
+          title: degraded ? '数据过期或服务不可用，先处理提示' : `执行：${label}`,
+          onClick: () => onPrimary(actionId),
+        }, label)
+        : h(PrimBtn, {
+          tone: 'primary',
+          'data-testid': 'primary',
+          'data-action-id': 'start',
+          onClick: onNewRun,
+        }, '新建研究运行'),
       h(PrimMenu, {
         label: '更多',
         items: [
@@ -255,9 +262,7 @@ function ShellApp() {
   banner ? h('div', { className: 'px-banner-slot', 'data-testid': 'banner' }, banner) : null,
   h('div', { className: 'px-cockpit' },
     h('aside', { className: 'px-v4-rail', 'aria-label': '门禁' },
-      active
-        ? h(CanvasGateRail, { gates, currentStage: active.state, onSelect: () => {} })
-        : h('div', { className: 'px-rail-empty' }, '运行建立后显示门禁')),
+      h(CanvasGateRail, { gates, currentStage: active?.state ?? null, onSelect: () => {} })),
     h('main', { className: 'px-v4-board', 'aria-label': '探究分支' },
       active
         ? h(CanvasBranchBoard, {
@@ -272,15 +277,18 @@ function ShellApp() {
           timeline: snapshot?.timeline ?? active?.events ?? [],
         })
         : h('div', { className: 'px-empty-stage', 'data-testid': 'empty' },
-          h(PrimEmpty, {
-            title: '还没有研究运行',
-            hint: '新建运行后，把假设拆成并行分支，交给团队成员各自推进。',
-            action: h(PrimBtn, {
+          h('div', { className: 'px-v4-empty-card' },
+            h('p', { className: 'px-v4-kicker' }, '开始一次研究'),
+            h('h2', null, '还没有研究运行'),
+            h('ol', { className: 'px-v4-empty-steps' },
+              h('li', null, h('strong', null, '① 建运行'), h('span', null, '写研究问题，冻结可证伪的预注册。')),
+              h('li', null, h('strong', null, '② 拆分支'), h('span', null, '把一个大问题拆成并行、可各自证伪的探究线。')),
+              h('li', null, h('strong', null, '③ 派团队'), h('span', null, '把分支指派给团队成员，证据与结论按分支归档。'))),
+            h(PrimBtn, {
               tone: 'primary',
               'data-testid': 'empty-primary',
               onClick: () => setNewRun({ title: '', playbookId: snapshot?.playbooks?.[0]?.id ?? 'scientific-loop' }),
-            }, '新建研究运行'),
-          }))),
+            }, '新建研究运行')))),
     selection && (selectedBranch || selectedMember || selectedEvidence)
       ? h(InspectPanel, {
         selection,

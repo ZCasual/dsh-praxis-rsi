@@ -190,6 +190,9 @@ const GATE_DEFS = [
 ];
 
 function buildGates(run) {
+  if (!run) {
+    return GATE_DEFS.map((gate) => ({ id: gate.id, label: gate.label, role: gate.role, status: 'future', missing: [], index: gate.after }));
+  }
   const states = buildCatalog().states ?? [];
   const index = Math.max(0, states.findIndex((item) => item.id === run.state));
   const blockers = run.blockers ?? [];
@@ -264,7 +267,7 @@ function buildEvidenceRows(run) {
       design: 'Cockpit',
       branches,
       team: team ? team.project(branches) : emptyTeam('no-ctx'),
-      gates: active ? buildGates(active) : [],
+      gates: buildGates(active),
       evidenceRows: active ? buildEvidenceRows(active) : [],
       serverTime: new Date().toISOString(),
       revision: active?.version ?? 0,

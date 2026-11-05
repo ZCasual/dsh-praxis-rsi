@@ -1,16 +1,16 @@
 {
   "suite": "v4-cockpit",
-  "generatedAt": "2026-11-05T02:17:13.353Z",
-  "gitCommit": "0f7faef",
+  "generatedAt": "2026-11-05T02:28:32.798Z",
+  "gitCommit": "f732e50",
   "packageVersion": "0.3.0",
   "node": "v25.2.0",
   "buildChecked": true,
-  "buildHash": "69431bb0d343602152c67b6c0089608ee1cf5ca3c8ea25d92989400feda6a506",
+  "buildHash": "b8cf5921065595ebf9a4e73aaa3ef3e14c25c14f66335fbbacb06e2eb7c46ec8",
   "errors": [],
   "themes": {
     "light": {
       "applied": true,
-      "port": 39753,
+      "port": 40085,
       "screenshots": [
         "docs/praxis/screenshots/v4/empty-light-1440x1000.png",
         "docs/praxis/screenshots/v4/running-light-1440x1000.png",
@@ -18,7 +18,7 @@
         "docs/praxis/screenshots/v4/branch-inspector-light-1440x1000.png",
         "docs/praxis/screenshots/v4/team-drawer-light-1440x1000.png"
       ],
-      "runId": "run_a5a2f7f0",
+      "runId": "run_8da4583f",
       "branches": [
         "b_main:proposed",
         "b_1:active",
@@ -26,11 +26,11 @@
         "b_3:active"
       ],
       "activeBranches": 2,
-      "serverLog": "/tmp/praxis-acceptance/v4-server-light-39753.log"
+      "serverLog": "/tmp/praxis-acceptance/v4-server-light-40085.log"
     },
     "dark": {
       "applied": true,
-      "port": 44693,
+      "port": 46319,
       "screenshots": [
         "docs/praxis/screenshots/v4/empty-dark-1440x1000.png",
         "docs/praxis/screenshots/v4/running-dark-1440x1000.png",
@@ -38,7 +38,7 @@
         "docs/praxis/screenshots/v4/branch-inspector-dark-1440x1000.png",
         "docs/praxis/screenshots/v4/team-drawer-dark-1440x1000.png"
       ],
-      "runId": "run_3015c01a",
+      "runId": "run_848b009c",
       "branches": [
         "b_main:proposed",
         "b_1:active",
@@ -46,24 +46,24 @@
         "b_3:active"
       ],
       "activeBranches": 2,
-      "serverLog": "/tmp/praxis-acceptance/v4-server-dark-44693.log"
+      "serverLog": "/tmp/praxis-acceptance/v4-server-dark-46319.log"
     }
   },
   "screenshots": [
     {
       "file": "docs/praxis/screenshots/v4/empty-light-1440x1000.png",
-      "sha256": "6fd5abf1f05a1c878459085e9a92c0059d9880a7ae70f37616c62105a1696c26",
+      "sha256": "df6f1df8462fd186e81503c09d90ca681af95af01bf536ad67eafc2d03aa6b3a",
       "viewport": "1440x1000",
       "theme": "light",
       "scenario": "empty",
-      "capturedAt": "2026-11-05T02:17:46.062Z",
+      "capturedAt": "2026-11-05T02:29:03.553Z",
       "sceneMetrics": {
         "branchCards": 0,
         "visibleCards": 0,
-        "gateRows": 0,
-        "gateRail": false,
+        "gateRows": 10,
+        "gateRail": true,
         "evidenceBand": true,
-        "primaryCount": 0,
+        "primaryCount": 1,
         "teamChip": true,
         "teamSource": "none",
         "inspectorVisible": false,
@@ -78,11 +78,11 @@
     },
     {
       "file": "docs/praxis/screenshots/v4/running-light-1440x1000.png",
-      "sha256": "b3dfd735626375e28dc5978507502cbac51d17e288164eba65be23eca2389be6",
+      "sha256": "c440116708ff6b368c8894c73b1bb8d6791f1d6b97ee4ecd6b17d86f19094ca1",
       "viewport": "1440x1000",
       "theme": "light",
       "scenario": "running",
-      "capturedAt": "2026-11-05T02:17:54.565Z",
+      "capturedAt": "2026-11-05T02:29:11.804Z",
       "sceneMetrics": {
         "branchCards": 3,
         "visibleCards": 3,
@@ -104,11 +104,11 @@
     },
     {
       "file": "docs/praxis/screenshots/v4/running-light-1024x900.png",
-      "sha256": "c68b87a7490bd111014827c3b75f8ce7f7e9bb266a813e8c6753ca238abe2b9c",
+      "sha256": "be99a94b4a9e2ad8185b3aac945abc46e2c672e3506ef4edc8cb44859241594f",
       "viewport": "1024x900",
       "theme": "light",
       "scenario": "running",
-      "capturedAt": "2026-11-05T02:17:54.971Z",
+      "capturedAt": "2026-11-05T02:29:12.213Z",
       "sceneMetrics": {
         "branchCards": 3,
         "visibleCards": 3,
@@ -130,11 +130,11 @@
     },
     {
       "file": "docs/praxis/screenshots/v4/branch-inspector-light-1440x1000.png",
-      "sha256": "fd88fd3c2108b2505318e0c87c1ad6416bc7ed5201503e66637cf6b1617dce57",
+      "sha256": "d2648d18f2e81fe1254426ed9ac9718b807bb640cc5f0d58e40c0a740ebf4ced",
       "viewport": "1440x1000",
       "theme": "light",
       "scenario": "branch-inspector",
-      "capturedAt": "2026-11-05T02:17:55.631Z",
+      "capturedAt": "2026-11-05T02:29:12.867Z",
       "sceneMetrics": {
         "branchCards": 3,
         "visibleCards": 3,
@@ -156,11 +156,11 @@
     },
     {
       "file": "docs/praxis/screenshots/v4/team-drawer-light-1440x1000.png",
-      "sha256": "d83573312dd5412a43ffd3eb2ecc2ee8420dd4c2684c5cdc006402574e0849b1",
+      "sha256": "6eb4800171d831ef051d3e8f1b64241626b5b7b300df7f550d3d297c054db35b",
       "viewport": "1440x1000",
       "theme": "light",
       "scenario": "team-drawer",
-      "capturedAt": "2026-11-05T02:17:55.964Z",
+      "capturedAt": "2026-11-05T02:29:13.212Z",
       "sceneMetrics": {
         "branchCards": 3,
         "visibleCards": 3,
@@ -182,18 +182,18 @@
     },
     {
       "file": "docs/praxis/screenshots/v4/empty-dark-1440x1000.png",
-      "sha256": "0cf15a4f4e19aa1ab01f63805e94a498792d12d427124bba039b3d4e46f3d0c8",
+      "sha256": "47231ea0b0bfb5fed8a6b4ac97c593f888a50a194d9cd9841c55b5e0534c97ed",
       "viewport": "1440x1000",
       "theme": "dark",
       "scenario": "empty",
-      "capturedAt": "2026-11-05T02:18:26.897Z",
+      "capturedAt": "2026-11-05T02:29:44.202Z",
       "sceneMetrics": {
         "branchCards": 0,
         "visibleCards": 0,
-        "gateRows": 0,
-        "gateRail": false,
+        "gateRows": 10,
+        "gateRail": true,
         "evidenceBand": true,
-        "primaryCount": 0,
+        "primaryCount": 1,
         "teamChip": true,
         "teamSource": "none",
         "inspectorVisible": false,
@@ -208,11 +208,11 @@
     },
     {
       "file": "docs/praxis/screenshots/v4/running-dark-1440x1000.png",
-      "sha256": "75545fc7984412569f1a01af04691e9eda5fe811d6f5938429ff2b782f0677f0",
+      "sha256": "d30762e0fef5aa556c931a803bcb6420b7243e4f5bac92f64fe82965e9d83476",
       "viewport": "1440x1000",
       "theme": "dark",
       "scenario": "running",
-      "capturedAt": "2026-11-05T02:18:36.020Z",
+      "capturedAt": "2026-11-05T02:29:52.352Z",
       "sceneMetrics": {
         "branchCards": 3,
         "visibleCards": 3,
@@ -234,11 +234,11 @@
     },
     {
       "file": "docs/praxis/screenshots/v4/running-dark-1024x900.png",
-      "sha256": "d1d1de5f745301e06ac404cf7f319e689c9993fa9643214bac0a6c4b0a454be0",
+      "sha256": "a916534b6de58f79205a7e5e72691b07e5d06e104a1d254d07ff5a12e891f652",
       "viewport": "1024x900",
       "theme": "dark",
       "scenario": "running",
-      "capturedAt": "2026-11-05T02:18:36.429Z",
+      "capturedAt": "2026-11-05T02:29:52.754Z",
       "sceneMetrics": {
         "branchCards": 3,
         "visibleCards": 3,
@@ -260,11 +260,11 @@
     },
     {
       "file": "docs/praxis/screenshots/v4/branch-inspector-dark-1440x1000.png",
-      "sha256": "1be354cd979da1f1322eddf9c67ccc4d23afb4ee9383aadcd15af84c65321c4d",
+      "sha256": "d48efb89d0a9aa97218dc5ac4541f36fd1a8da0c153636a01dffa94ebbaeaa30",
       "viewport": "1440x1000",
       "theme": "dark",
       "scenario": "branch-inspector",
-      "capturedAt": "2026-11-05T02:18:37.756Z",
+      "capturedAt": "2026-11-05T02:29:53.409Z",
       "sceneMetrics": {
         "branchCards": 3,
         "visibleCards": 3,
@@ -286,11 +286,11 @@
     },
     {
       "file": "docs/praxis/screenshots/v4/team-drawer-dark-1440x1000.png",
-      "sha256": "6692746b7bdc1f84f37b7e541462bff4f3946e801e3e71d580e58397ad584199",
+      "sha256": "c48514291c92cccfdf72eb85ad31113bc03cfc5a6994092d33ac244997521e13",
       "viewport": "1440x1000",
       "theme": "dark",
       "scenario": "team-drawer",
-      "capturedAt": "2026-11-05T02:18:38.094Z",
+      "capturedAt": "2026-11-05T02:29:53.759Z",
       "sceneMetrics": {
         "branchCards": 3,
         "visibleCards": 3,
@@ -323,6 +323,6 @@
     "branch-inspector-dark-1440x1000.png",
     "team-drawer-dark-1440x1000.png"
   ],
-  "bundleSha256": "69431bb0d343602152c67b6c0089608ee1cf5ca3c8ea25d92989400feda6a506",
+  "bundleSha256": "b8cf5921065595ebf9a4e73aaa3ef3e14c25c14f66335fbbacb06e2eb7c46ec8",
   "ok": true
 }

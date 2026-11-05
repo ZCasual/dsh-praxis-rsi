@@ -167,6 +167,12 @@ const CssBase = `
 .px-shell[data-inspector="true"] .px-v4-board,
 .px-shell[data-inspector="true"] .px-v4-band { padding-right: 372px; }
 .px-rail-empty { padding: 16px; font-size: var(--px-fs-2); color: var(--dsw-alias-label-secondary); }
+.px-v4-empty-card { display: grid; gap: 12px; padding: 22px 24px; max-width: 520px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 10px; background: var(--dsw-alias-bg-base); }
+.px-v4-empty-card h2 { margin: 0; font-size: 15px; font-weight: 600; }
+.px-v4-empty-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.px-v4-empty-steps li { display: grid; gap: 3px; padding-left: 12px; border-left: 2px solid var(--dsw-alias-border-l2); }
+.px-v4-empty-steps strong { font-size: var(--px-fs-2); font-weight: 600; }
+.px-v4-empty-steps span { font-size: var(--px-fs-2); color: var(--dsw-alias-label-secondary); line-height: 1.5; }
 .px-empty-stage { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; }
 
 /* run bar team chip */
