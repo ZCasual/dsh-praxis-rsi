@@ -78,7 +78,7 @@ async function startFrozen(route) {
   return runId;
 }
 
-test('无 run：wireVersion=3，branches=[]、team.source=none、gates=[]、evidenceRows=[]', async () => {
+test('无 run：wireVersion=3，branches=[]、team.source=none、gates 为 10 条未到骨架、evidenceRows=[]', async () => {
   const { route } = mount(createHost());
   const { status, json } = await getState(route);
   assert.equal(status, 200);
@@ -88,7 +88,9 @@ test('无 run：wireVersion=3，branches=[]、team.source=none、gates=[]、evid
   assert.deepEqual(json.view.branches, []);
   assert.equal(json.view.team.source, 'none');
   assert.deepEqual(json.view.team.members, []);
-  assert.deepEqual(json.view.gates, []);
+  // 空态也显示治理骨架（10 道门，全部 future），不是空列。
+  assert.equal(json.view.gates.length, 10);
+  assert.ok(json.view.gates.every((gate) => gate.status === 'future'), '无 run 时门禁全部为 future');
   assert.deepEqual(json.view.evidenceRows, []);
 });
 
