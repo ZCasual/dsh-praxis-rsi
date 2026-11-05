@@ -1,0 +1,43 @@
+{
+  "at": "2026-11-05T01:44:54.462Z",
+  "shots": [
+    {
+      "name": "cockpit-1440-light",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "metrics": {
+        "cards": 1,
+        "gates": 10,
+        "evidence": 0,
+        "timeline": 1,
+        "primary": 1,
+        "teamSource": "live",
+        "overflowX": 0,
+        "dark": "rgb(255, 255, 255)"
+      },
+      "sha256": "be225088db087117c8805cf707275868763d6728ec093a7e16261bd7c80248b7",
+      "bytes": 81044
+    },
+    {
+      "name": "cockpit-1440-light-inspector",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "metrics": {
+        "cards": 1,
+        "gates": 10,
+        "evidence": 0,
+        "timeline": 1,
+        "primary": 1,
+        "teamSource": "live",
+        "overflowX": 0,
+        "dark": "rgb(255, 255, 255)"
+      },
+      "sha256": "25e9e2be5684d67fa391efe27dfa3653cbb58b46f54d2051aa83b2dc99bbeb00",
+      "bytes": 94332
+    }
+  ]
+}

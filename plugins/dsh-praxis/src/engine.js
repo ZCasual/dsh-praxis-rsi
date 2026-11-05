@@ -3,6 +3,12 @@ import {
   STATE_ORDER as GRAPH_STATE_ORDER, buildDefaultGraph, validateGraph, graphStates,
   cloneGraph, migrateLayout, protectedNodeIds, stateIndex, LAYOUT_VERSION,
 } from './graph.js';
+import {
+  BRANCH_STATUS, BRANCH_EVENTS, BRANCH_MAIN_ID, branchView, branchInvariants,
+  appendBranch, mainBranchDraft,
+} from './branch.js';
+
+export { BRANCH_STATUS, BRANCH_EVENTS, branchView, branchInvariants, appendBranch };
 
 /** Contract §1.1: the run state machine has exactly one definition (graph.js);
  *  engine.js is its public home. */
@@ -74,15 +80,21 @@ export const PLAYBOOKS = {
   },
 };
 
+const BRANCH_ACTIONS = [
+  'branch_propose', 'branch_assign', 'branch_activate', 'branch_evidence',
+  'branch_verdict', 'branch_merge', 'branch_drop',
+];
+
 const ALLOWED = {
   user: ['start', 'question', 'prereg_freeze', 'discussion', 'pin_persona', 'experiment', 'review', 'stage4',
-    'eval_read', 'memory_commit', 'map_claim', 'map_edge', 'decision', 'promote', 'set_knobs'],
+    'eval_read', 'memory_commit', 'map_claim', 'map_edge', 'decision', 'promote', 'set_knobs', ...BRANCH_ACTIONS],
   root: ['start', 'question', 'prereg_freeze', 'discussion', 'pin_persona', 'experiment', 'review', 'stage4',
-    'eval_read', 'memory_propose', 'memory_commit', 'map_claim', 'map_edge', 'decision', 'promote', 'set_knobs'],
+    'eval_read', 'memory_propose', 'memory_commit', 'map_claim', 'map_edge', 'decision', 'promote', 'set_knobs',
+    ...BRANCH_ACTIONS],
   coding: ['experiment'],
   worker: ['experiment'],
   reviewer: ['review'],
-  evaluator: ['eval_report'],
+  evaluator: ['eval_report', 'branch_evidence'],
 };
 
 /**
@@ -104,6 +116,12 @@ const LEGAL_START = Object.freeze({
   memory_commit: stateIndex('MEMORY'),
   decision: stateIndex('MEMORY'),
   pin_persona: stateIndex('PREREG_FROZEN'),
+  branch_assign: stateIndex('PREREG_FROZEN'),
+  branch_activate: stateIndex('PREREG_FROZEN'),
+  branch_evidence: stateIndex('PREREG_FROZEN'),
+  branch_verdict: stateIndex('PREREG_FROZEN'),
+  branch_merge: stateIndex('PREREG_FROZEN'),
+  branch_drop: stateIndex('PREREG_FROZEN'),
 });
 
 /** Actions that are only legal in exactly one state. */
@@ -278,7 +296,8 @@ export function createEngine(options = {}) {
   }
 
   function append(run, type, data = {}, options = {}) {
-    seq += 1;
+    // branch.js appends its own events, so advance past whatever the run already holds.
+    seq = Math.max(seq, run.events.at?.(-1)?.seq ?? 0) + 1;
     if (options.bumpVersion !== false) run.version += 1;
     run.updatedAt = nowIso();
     run.events.push({ seq, type, at: run.updatedAt, data, ...(options.extra ?? {}) });
@@ -398,6 +417,7 @@ export function createEngine(options = {}) {
       stage4: null,
       eval: { reportHash: null, verdict: null, readAt: null, readBy: null, seeds: null },
       memory: { proposals: [], commits: [] },
+      branches: [],
       decision: null,
       ambition: null,
       nextAction: 'question',
@@ -406,6 +426,12 @@ export function createEngine(options = {}) {
     };
     runs.set(id, run);
     append(run, 'run.started', { playbookId: playbook.id, title: run.title, knobHash: run.knobHash });
+    // v4: every run opens with the main proposition as a branch (§2.1).
+    appendBranch(run, {
+      type: 'branch.proposed',
+      actor: command.actor ?? null,
+      data: { id: BRANCH_MAIN_ID, title: '主命题', hypothesis: '待补', falsifiable: '待补' },
+    });
     return { status: 'committed', runId: id, state: run.state, version: run.version, retry: 'none' };
   }
 
@@ -427,6 +453,13 @@ export function createEngine(options = {}) {
       case 'decision': return decision(run, command);
       case 'promote': return promote(run, command);
       case 'set_knobs': return setKnobs(run, command);
+      case 'branch_propose': return branchPropose(run, command);
+      case 'branch_assign': return branchEvent(run, command, 'branch.assigned');
+      case 'branch_activate': return branchEvent(run, command, 'branch.activated');
+      case 'branch_evidence': return branchEvidence(run, command);
+      case 'branch_verdict': return branchEvent(run, command, 'branch.verdict');
+      case 'branch_merge': return branchEvent(run, command, 'branch.merged');
+      case 'branch_drop': return branchEvent(run, command, 'branch.dropped');
       default: return receipt({ reasonCode: 'UNKNOWN_ACTION', runId: run.id });
     }
   }
@@ -722,6 +755,91 @@ export function createEngine(options = {}) {
     return { status: 'committed', runId: run.id, version: run.version, retry: 'none' };
   }
 
+  /* ---------------------------------------------------------------- branches */
+
+  function branchReceipt(run, branch) {
+    const view = branchView(run).find((item) => item.id === branch.id) ?? null;
+    return {
+      status: 'committed', runId: run.id, state: run.state, version: run.version,
+      branchId: branch.id, branch: view, retry: 'none',
+    };
+  }
+
+  function branchFailure(run, command, error) {
+    const code = typeof error?.code === 'string' && error.code.startsWith('BRANCH_')
+      ? error.code
+      : 'BRANCH_EVENT_INVALID';
+    return receipt({
+      reasonCode: code,
+      runId: run.id,
+      branchId: error?.branchId ?? command.payload?.branchId ?? null,
+      message: error?.message ?? String(error),
+      ...(Array.isArray(error?.violations) ? { violations: error.violations } : {}),
+      retry: 'none',
+    });
+  }
+
+  /** One appendBranch + one version bump per successful branch command. */
+  function branchEvent(run, command, type, data = null) {
+    const payload = data ?? command.payload ?? {};
+    try {
+      const { branch } = appendBranch(run, {
+        type,
+        actor: command.actor ?? null,
+        data: { ...payload },
+      });
+      run.version += 1;
+      return branchReceipt(run, branch);
+    } catch (error) {
+      return branchFailure(run, command, error);
+    }
+  }
+
+  function branchPropose(run, command) {
+    const payload = command.payload ?? {};
+    try {
+      const { branch } = appendBranch(run, {
+        type: 'branch.proposed',
+        actor: command.actor ?? null,
+        data: {
+          title: payload.title,
+          hypothesis: payload.hypothesis,
+          falsifiable: payload.falsifiable,
+        },
+      });
+      if (payload.ownerId != null && String(payload.ownerId).trim()) {
+        // B5: setting an owner at proposal time still leaves the assigned record.
+        appendBranch(run, {
+          type: 'branch.assigned',
+          actor: command.actor ?? null,
+          data: { branchId: branch.id, ownerId: payload.ownerId },
+        });
+      }
+      run.version += 1;
+      return branchReceipt(run, branch);
+    } catch (error) {
+      return branchFailure(run, command, error);
+    }
+  }
+
+  function branchEvidence(run, command) {
+    const payload = command.payload ?? {};
+    if (command.actor?.kind === 'evaluator' && String(payload.kind ?? '').trim() !== 'eval') {
+      return receipt({
+        reasonCode: 'FORBIDDEN_ACTOR', runId: run.id,
+        branchId: payload.branchId ?? null,
+        message: 'evaluator 只能提交 kind=eval 的证据', retry: 'none',
+      });
+    }
+    return branchEvent(run, command, 'branch.evidence', {
+      branchId: payload.branchId,
+      kind: payload.kind,
+      ref: payload.ref,
+      supports: payload.supports === true,
+      note: payload.note,
+    });
+  }
+
   function setKnobs(run, command) {
     if (command.actor?.kind !== 'user') return receipt({ reasonCode: 'USER_ONLY', runId: run.id });
     const next = { ...run.knobs, ...(command.payload?.knobs ?? {}) };
@@ -742,6 +860,7 @@ export function createEngine(options = {}) {
       prereg: run.prereg?.contract
         ? { hash: null, frozen: false, inheritedFrom: run.id, contract: structuredClone(run.prereg.contract) }
         : null,
+      branches: [mainBranchDraft()],
       inheritedArtifacts,
       events: [],
       createdAt: nowIso(),
@@ -818,6 +937,8 @@ export function createEngine(options = {}) {
       claims: run.claims,
       edges: run.edges,
       contradictions: run.contradictions,
+      branches: branchView(run),
+      branchInvariants: branchInvariants(run),
       lineage: { parentId: run.parentId, children: lineageChildren(run.id) },
     };
   }
@@ -1018,6 +1139,14 @@ export function createEngine(options = {}) {
       }
     }
     if (!Array.isArray(run.inheritedArtifacts)) run.inheritedArtifacts = [];
+    if (!Array.isArray(run.branches)) {
+      // v4 migration: old dumps predate branches; materialise b_main without an
+      // event so replay trails of past runs are not rewritten.
+      const main = mainBranchDraft();
+      main.createdAt = run.createdAt ?? main.createdAt;
+      main.updatedAt = run.updatedAt ?? main.updatedAt;
+      run.branches = [main];
+    }
     return run;
   }
 

@@ -1,5 +1,42 @@
 # Changelog
 
+## 0.3.0 — 2026-11-05
+
+v4 重写：产品从"流程图观测台"改为"团队研究驾驶舱"。v3 的 15 节点画布与蓝图编辑整体移除。
+
+### 为什么重写
+
+v3 被判"极差"：主视图是静态流程盒子，团队不在界面里，证据藏在抽屉，用代理指标（对比度、测试数、截图数）替代产品判断。
+
+### 一等对象
+
+- **Branch 并行分支**：`branch_propose/assign/activate/evidence/verdict/merge/drop` 七个动作；同一 Run 允许多条 active 分支（B2）；B1–B5 不变量。
+- **Team 真实团队**：`src/team.js` 读运行时 `agents.roots()` / `agentTeams.listMembers|listTasks`；`source: live|none`；`none` 时成员必须为空，界面显示"尚未组建团队"。
+- **Evidence 证据**：分支证据带 kind（experiment/external/review/eval）与 ref，界面逐条显示，时间线可追溯。
+- **Gate 门禁轨**：10 道治理门，已过/阻塞/未到，阻塞显示缺失项。
+
+### 界面
+
+- 运行条：Run、阶段 n/10、团队人数与运行中人数、唯一主按钮。
+- 左：门禁轨 200px；中：并行分支板（每分支一列，含负责人状态点与证据日志）+ 研究时间线；右：检查器（分支/成员/证据/运行下一步，各带唯一动作与就地校验）。
+- 下：证据带（主张 · 支持/反驳 · 最新证据）。
+- 运行态无连线端口、拖拽、拓扑删除。
+
+### Wire
+
+- `wireVersion: 3`；`/state` 新增 `branches`、`team`、`gates`、`evidenceRows`；catalog 增加分支动作与阻塞标签。
+
+### 验收
+
+- 契约测试 162 条（新增 team 7 / branch 10 / wire-v4 5）。
+- 浏览器验收 `acceptance/cockpit.test.js`：并行分支同屏 ≥2、门禁 10 行、primary=1、无横向溢出、无拓扑控件。
+- 证据 `manifest-v4.json`：10 张截图（light/dark × empty/running 1440/1024/inspector/team），逐图 sha256 与场景指标；`tools/evidence/verify-manifest.mjs` 作为发布门禁。
+
+## 0.2.0 — 2026-11-05
+
+（v3 工作台：双轴真值模型、泳道画布、wire v2。已被 v4 取代。）
+
+
 ## 0.2.0 — 2026-11-05
 
 Praxis v3：工作台重做，真值模型与 wire 契约升级，验收进入可复现证据阶段。

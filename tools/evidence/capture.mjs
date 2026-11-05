@@ -21,7 +21,7 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:net';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { CDP } from './cdp.mjs';
 import { buildDefaultGraph } from '../../plugins/dsh-praxis/src/graph.js';
@@ -56,6 +56,9 @@ function parseArgs(argv) {
     restart: false,
     keepServer: false,
     buildChecked: false,
+    v4: false,
+    v4OutDir: join(ROOT, 'docs/praxis/screenshots/v4'),
+    v4Manifest: join(EVIDENCE_DIR, 'manifest-v4.json'),
   };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -78,6 +81,7 @@ function parseArgs(argv) {
     else if (arg === '--restart') options.restart = true;
     else if (arg === '--keep-server') options.keepServer = true;
     else if (arg === '--all') options.all = true;
+    else if (arg === '--v4') options.v4 = true;
     else if (arg === '--help') { options.help = true; }
   }
   return options;
@@ -444,8 +448,223 @@ async function captureAt(browser, options, target, manifest, context) {
   return entry;
 }
 
+async function captureV4(options) {
+  const v4 = {
+    suite: 'v4-cockpit',
+    generatedAt: new Date().toISOString(),
+    gitCommit: gitCommit(),
+    packageVersion: packageVersion(),
+    node: process.version,
+    buildChecked: false,
+    buildHash: null,
+    errors: [],
+    themes: {},
+    screenshots: [],
+    required: [],
+  };
+  const bundle = join(PLUGIN, 'client.js');
+  if (existsSync(bundle)) {
+    v4.bundleSha256 = sha256File(bundle);
+    v4.buildHash = v4.bundleSha256;
+  }
+  const check = spawnSync(process.execPath, ['plugins/dsh-praxis/build-client.mjs', '--check'], { cwd: ROOT, encoding: 'utf8' });
+  v4.buildChecked = check.status === 0;
+  if (check.status !== 0) {
+    v4.errors.push(`client.js build check failed: ${(check.stdout || check.stderr || '').trim()}`);
+  }
+  const requiredNames = (theme) => [
+    `empty-${theme}-1440x1000.png`,
+    `running-${theme}-1440x1000.png`,
+    `running-${theme}-1024x900.png`,
+    `branch-inspector-${theme}-1440x1000.png`,
+    `team-drawer-${theme}-1440x1000.png`,
+  ];
+  v4.required = ['light', 'dark'].flatMap(requiredNames);
+  mkdirSync(options.v4OutDir, { recursive: true });
+
+  for (const theme of ['light', 'dark']) {
+    const statePath = join('/tmp/praxis-acceptance', `state-v4-${theme}-${process.pid}.json`);
+    try { unlinkSync(statePath); } catch {}
+    const themeOptions = {
+      ...options,
+      port: 0,
+      theme,
+      statePath,
+      profileDir: join('/tmp/praxis-acceptance', `chrome-v4-${theme}-${process.pid}`),
+      reuse: false,
+      manageServer: true,
+      token: null,
+      serverLog: null,
+    };
+    themeOptions.port = await pickFreePort();
+    const logPath = join('/tmp/praxis-acceptance', `v4-server-${theme}-${themeOptions.port}.log`);
+    const server = startServer(themeOptions, logPath);
+    let browser = null;
+    const themeEntry = { applied: false, port: themeOptions.port, screenshots: [] };
+    try {
+      const baseUrl = `http://127.0.0.1:${themeOptions.port}`;
+      await waitForServer(baseUrl, null, options.timeoutMs);
+      const token = await waitForLogToken(server, options.timeoutMs);
+      browser = await CDP.launch({
+        chromePath: options.chrome,
+        userDataDir: themeOptions.profileDir,
+        viewport: { width: 1440, height: 1000 },
+        headless: true,
+      });
+      const tokenUrl = `${baseUrl}/?token=${token}`;
+      await browser.navigate(tokenUrl);
+      await openPraxis(browser, options.timeoutMs);
+      const themeApplied = await applyTheme(browser, theme);
+      themeEntry.applied = themeApplied.applied;
+      if (!themeApplied.applied) v4.errors.push(`theme ${theme} not applied: ${themeApplied.mechanism}`);
+
+      const snapV4 = async (name, scenario, viewport) => {
+        const relativePath = join('docs/praxis/screenshots/v4', `${name}.png`);
+        const absolutePath = join(ROOT, relativePath);
+        await browser.screenshot(absolutePath);
+        const sceneMetrics = await browser.evaluate(`(() => {
+          const qa = (selector) => [...document.querySelectorAll(selector)];
+          const root = document.documentElement;
+          const cards = qa('[data-testid="branch-card"]');
+          return {
+            branchCards: cards.length,
+            visibleCards: cards.filter((el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth; }).length,
+            gateRows: qa('[data-testid="gate-row"]').length,
+            gateRail: !!document.querySelector('[data-testid="gate-rail"]'),
+            evidenceBand: !!document.querySelector('[data-testid="evidence-band"]'),
+            primaryCount: qa('[data-testid="primary"]').length,
+            teamChip: !!document.querySelector('[data-testid="team-chip"]'),
+            teamSource: document.querySelector('[data-testid="team-chip"]')?.getAttribute('data-source') ?? null,
+            inspectorVisible: !!document.querySelector('[data-testid="inspector"]'),
+            inspectorPrimary: document.querySelector('[data-testid="inspector"]')?.querySelectorAll('[data-testid="primary"]').length ?? null,
+            drawerVisible: !!document.querySelector('[data-testid="drawer"]'),
+            teamPanelText: document.querySelector('[data-testid="team-panel"]')?.innerText?.slice(0, 200) ?? null,
+            progress: document.querySelector('[data-testid="progress"]')?.innerText ?? null,
+            nodes: qa('[data-testid="node"]').length,
+            ports: qa('.px-port').length,
+            horizontalOverflow: root.scrollWidth - root.clientWidth,
+          };
+        })()`);
+        const entry = {
+          file: relativePath,
+          sha256: sha256File(absolutePath),
+          viewport,
+          theme,
+          scenario,
+          capturedAt: new Date().toISOString(),
+          sceneMetrics,
+        };
+        v4.screenshots.push(entry);
+        themeEntry.screenshots.push(entry.file);
+        process.stdout.write(`v4 shot ${relativePath} sha256=${entry.sha256.slice(0, 12)}
+`);
+        return entry;
+      };
+
+      // 1) empty（全新 statePath，无 Run）
+      await snapV4(`empty-${theme}-1440x1000`, 'empty', '1440x1000');
+
+      // 2) seed v4 cockpit 数据
+      const seeded = await seedV4(browser);
+      themeEntry.runId = seeded.runId;
+      await browser.navigate(tokenUrl);
+      await openPraxis(browser, options.timeoutMs);
+      await browser.waitFor("!!document.querySelector('[data-testid=\"branch-board\"]')", { timeout: 20000, label: 'v4 branch-board' }).catch(() => null);
+      const stateV4 = await browser.api('/praxis/api/state');
+      themeEntry.branches = stateV4.json?.view?.branches?.map((branch) => `${branch.id}:${branch.status}`) ?? [];
+      themeEntry.activeBranches = stateV4.json?.view?.branches?.filter((branch) => branch.status === 'active').length ?? 0;
+
+      // 3) running 1440
+      await snapV4(`running-${theme}-1440x1000`, 'running', '1440x1000');
+      // 4) running 1024
+      await browser.setViewport({ width: 1024, height: 900 });
+      await new Promise((resolvePromise) => setTimeout(resolvePromise, 350));
+      await snapV4(`running-${theme}-1024x900`, 'running', '1024x900');
+      // 5) branch-inspector 1440
+      await browser.setViewport({ width: 1440, height: 1000 });
+      await new Promise((resolvePromise) => setTimeout(resolvePromise, 300));
+      await browser.click('[data-testid="branch-card"]');
+      await browser.waitFor("!!document.querySelector('[data-testid=\"inspector\"]')", { timeout: 10000, label: 'v4 inspector' });
+      await new Promise((resolvePromise) => setTimeout(resolvePromise, 250));
+      await snapV4(`branch-inspector-${theme}-1440x1000`, 'branch-inspector', '1440x1000');
+      await browser.press('Escape').catch(() => {});
+      // 6) team-drawer
+      await browser.click('[data-testid="team-chip"]');
+      await browser.waitFor("!!document.querySelector('[data-testid=\"team-panel\"]')", { timeout: 10000, label: 'v4 team panel' });
+      await new Promise((resolvePromise) => setTimeout(resolvePromise, 250));
+      await snapV4(`team-drawer-${theme}-1440x1000`, 'team-drawer', '1440x1000');
+      await browser.press('Escape').catch(() => {});
+    } catch (error) {
+      v4.errors.push(`${theme}: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      try { await browser?.close({ kill: true }); } catch {}
+      try { server.stop(); } catch {}
+      themeEntry.serverLog = logPath;
+      v4.themes[theme] = themeEntry;
+    }
+  }
+
+  const present = new Set(v4.screenshots.map((item) => item.file.split('/').pop()));
+  const missing = v4.required.filter((name) => !present.has(name));
+  if (missing.length) v4.errors.push(`missing required v4 screenshots: ${missing.join(', ')}`);
+  v4.ok = v4.errors.length === 0 && v4.buildChecked && missing.length === 0;
+  writeFileSync(options.v4Manifest, `${JSON.stringify(v4, null, 2)}
+`);
+  process.stdout.write(`v4 manifest ${relative(ROOT, options.v4Manifest)} ok=${v4.ok} shots=${v4.screenshots.length} errors=${v4.errors.length}
+`);
+  for (const error of v4.errors) process.stdout.write(`v4 error: ${error}
+`);
+}
+
+async function seedV4(browser) {
+  const command = async (action, payload = {}, runId = undefined) => {
+    const response = await browser.api('/praxis/api/command', {
+      method: 'POST',
+      body: { command: { commandId: `v4-${action}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, action, runId, payload } },
+    });
+    if (response.status !== 200) throw new Error(`v4 ${action} failed: ${response.status} ${JSON.stringify(response.json)}`);
+    return response.json;
+  };
+  const started = await command('start', { title: '结构增益的因果分离实验', playbookId: 'scientific-loop' });
+  const runId = started.receipt.runId;
+  const prereg = {
+    question: '结构增益是否来自算子结构，而非容量匹配？',
+    prediction: '打乱结构后主指标下降 ≥0.08。',
+    acceptance: '主指标超过基线 0.08 且对照被破坏时通过。',
+    acceptableFailure: '对照无效则接受假设不成立。',
+    controls: ['shuffle', 'label-shuffle'],
+    metrics: { primary: 'separation', threshold: 0.08 },
+    input: { source: 'declared-corpus' },
+    budget: { wallMin: 30 },
+    stop: { sameConclusion: 2 },
+  };
+  await command('question', { question: { text: '结构增益是否来自结构？', hypothesis: '若来自结构，打乱结构后增益消失。', unknowns: ['容量是否匹配', 'held-out 是否独立'] } }, runId);
+  await command('prereg_freeze', { prereg }, runId);
+  const propose = async (title, hypothesis, falsifiable, ownerId) => {
+    const result = await command('branch_propose', { title, hypothesis, falsifiable, ownerId }, runId);
+    return result.receipt.branchId ?? result.receipt.branch?.id;
+  };
+  const b1 = await propose('结构消融（主假设）', '打乱结构会破坏增益', '打乱结构后 separation 下降 ≥0.08', 'agent-alpha');
+  const b2 = await propose('容量匹配对照', '增益来自容量差异', '容量匹配后增益降到 0.02 以内', 'agent-beta');
+  const b3 = await propose('跨语料泛化', '增益只在声明语料成立', '换语料后增益消失', 'agent-gamma');
+  for (const id of [b1, b2, b3]) await command('branch_activate', { branchId: id }, runId);
+  await command('branch_evidence', { branchId: b1, kind: 'experiment', ref: 'run/seeds-1-3.json', supports: true, note: '打乱结构后 separation 0.31→0.08' }, runId);
+  await command('branch_evidence', { branchId: b1, kind: 'review', ref: 'review/r-12.md', supports: true }, runId);
+  await command('branch_evidence', { branchId: b1, kind: 'external', ref: 'arxiv:2601.00001', supports: false, note: '另一样本上结论不显著' }, runId);
+  await command('branch_evidence', { branchId: b2, kind: 'experiment', ref: 'run/capacity-matched.json', supports: true, note: '容量匹配后增益 0.04' }, runId);
+  await command('branch_evidence', { branchId: b3, kind: 'experiment', ref: 'run/corpus-b.json', supports: false }, runId);
+  await command('branch_verdict', { branchId: b2, verdict: 'refuted', reason: '容量匹配无法解释 0.08 的差距' }, runId);
+  await command('map_claim', { claim: '结构增益与容量无关', evidenceRefs: ['run/seeds-1-3.json', 'review/r-12.md'], status: 'supported' }, runId);
+  await command('map_claim', { claim: '增益只在声明语料成立', evidenceRefs: ['run/corpus-b.json'], status: 'unverified' }, runId);
+  return { runId };
+}
+
 async function main(argv = process.argv.slice(2)) {
   const options = parseArgs(argv);
+  if (options.v4) {
+    await captureV4(options);
+    return;
+  }
   if (options.help) {
     process.stdout.write('usage: node tools/evidence/capture.mjs [--port 3081] [--reuse] [--manage-server] [--theme light|dark] [--scenario fresh,frozen,blocked] [--out dir] [--manifest path]\n');
     return 0;

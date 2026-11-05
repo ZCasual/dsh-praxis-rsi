@@ -27,3 +27,10 @@ port, masked token URL, statePath, viewport, theme, scenario and time. `violatio
 and `expectedViolations` (documented allowances such as loading having no `.px-shell`, or the
 drawer/map rule where drawer primaries are excluded) are reported separately; `ok` is true only
 when there are no errors, no unexpected metric violations, and at least 8 required scene shots.
+
+**v4 cockpit.** `node --test test/praxis/acceptance/cockpit.test.js` 自管 309x 空闲端口实例与独立 Chrome profile，
+自动 seed 3 条并行分支并断言 1440 驾驶舱（branch-board / ≥2 可见 branch-card / gate-rail 10 / evidence-band /
+primary=1 / 无溢出 / inspector / team-chip / 无 node+port 拖拽）。v4 证据用
+`node tools/evidence/capture.mjs --v4` 生成 `docs/praxis/screenshots/v4/` 与
+`docs/praxis/evidence/manifest-v4.json`（buildHash + sha256 + sceneMetrics；light/dark 各 empty/running 1440/
+running 1024/branch-inspector/team-drawer）。v3 的 `browser.test.js` 是 15 节点画布验收，v4 下已过时，等 Lead 决定退役。

@@ -10,6 +10,8 @@ const ACTIONS = [
   'stage4', 'eval_report', 'eval_read', 'memory_propose', 'memory_commit',
   'map_claim', 'map_edge', 'decision', 'promote', 'set_knobs', 'gate', 'map', 'snapshot', 'activate',
   'graph', 'graph_save', 'layout_save',
+  'branch_propose', 'branch_assign', 'branch_activate', 'branch_evidence',
+  'branch_verdict', 'branch_merge', 'branch_drop',
 ];
 
 const PARAMETERS = {
@@ -70,6 +72,7 @@ export async function apply(ctx, config = {}) {
   const host = createHost({
     knobs,
     store,
+    ctx,
     log: (format, value) => ctx.logger?.warn?.(format, value),
   });
   if (restored) {

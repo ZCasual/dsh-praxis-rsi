@@ -113,10 +113,10 @@ test('http: GET state returns 200 with the contract state envelope', async () =>
   const { status, json } = await call(route, fakeReq());
   assert.equal(status, 200);
   assert.equal(json.product, 'Praxis');
-  // v2 T8.1/T8.4：wireVersion 2 与 {...view, view, serverTime, revision} 信封。
-  assert.equal(json.wireVersion, 2);
+  // v4 A1/A7：wireVersion 3 与 {...view, view, serverTime, revision} 信封。
+  assert.equal(json.wireVersion, 3);
   assert.ok(json.view && typeof json.view === 'object', 'state envelope carries view');
-  assert.equal(json.view.wireVersion, 2);
+  assert.equal(json.view.wireVersion, 3);
   assert.ok(json.catalog && typeof json.catalog === 'object', 'state envelope carries catalog');
   assert.ok(!Number.isNaN(Date.parse(json.serverTime)), 'serverTime is an ISO timestamp');
   assert.equal(typeof json.revision, 'number');

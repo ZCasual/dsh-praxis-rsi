@@ -174,6 +174,26 @@ graphStates(run, graph)                  // -> { states: { [nodeId]: 'pending'|'
 - 持久化：`engine.dump()` 增加 `graphs: { [playbookId]: Graph }`，`load()` 恢复；layout 合并进 Graph 的 `position` 后随图落盘（不另存表）；图保存写 `graph.saved` 事件（meta）。
 - `POST /graph` 成功后返回 `{graph, receipt}`，`receipt.status === 'committed'`，`graph.contentHash` 非空。
 
+
+## v4 驾驶舱测试（2026-11-05，build 58e97c88da0d）
+
+v4 判据见 `docs/praxis/redesign/20-rewrite-brief.md` §2/§3/§5；v3 的 15 节点画布/拓扑编辑已被移除。
+
+| 文件 | 覆盖 | 关键断言 |
+|---|---|---|
+| `team.test.js` | §3 团队投影 | live 时 members 与 `listMembers` 一致；kind=lead/teammate/subagent；status busy/idle/starting/error→running/inactive/provisioning/failed/unknown；currentTask 归属与 counts；branchIds 由 ownerId 反查；**无服务/无 membership 时 source='none' 且 members=[]**（安全底线） |
+| `branch.test.js` | §2.2/§2.3 分支状态机 | start 自动建 b_main(proposed)；冻结前 activate→INVALID_TRANSITION；propose→assign→activate 可**多 active（B2）**；证据 2 支持/1 反驳计数；verdict→merge 记录 mergedInto（B3）；B1 unfalsifiable 拒 verdict；B4 非法 kind/空 ref 拒证据；evaluator 仅 eval、coding 无 branch_activate；dump/load 保留 |
+| `wire-v4.test.js` | §8 Wire | `GET /state` wireVersion=3；无 run 时 branches/team/gates 空且不伪造；有 run 时 branches 非空、gates=10、evidenceRows 数组；PREREG_FROZEN 门禁 question/prereg=passed、discussion=blocked；HTTP 分支命令与 evidenceRows 投影 |
+| `acceptance/cockpit.test.js` | §4/§5 A2/A3/A4/A6 | 自管实例 + 真实 Chrome：1440 驾驶舱 branch-board、branch-card≥2、同屏可见≥2、gate-rail 10 行、evidence-band、primary=1、无横向溢出；点分支→inspector 出现且 primary≤1；team-chip data-source∈{live,none}，none 时抽屉含“尚未组建团队”；无 node/.px-port/拖拽 |
+
+当前结果（build `58e97c88da0d`，client.js `--check` 通过）：
+
+- `node --test test/praxis/*.test.js`：**162 tests / 162 pass / 0 fail / 0 skip**（含新增 team 7、branch 10、wire-v4 5）
+- `node --test test/praxis/acceptance/cockpit.test.js`：**1 pass / 0 fail**
+- 证据：`node tools/evidence/capture.mjs --v4` → `docs/praxis/screenshots/v4/` 10 张、`docs/praxis/evidence/manifest-v4.json`（`ok=true`，buildHash、sha256、sceneMetrics）
+- 已知实现偏差：运行条仍显示 `3/10`（brief §4.1 写 `n/12`）；catalog 仍为 10 阶段。测试只断言阶段计数存在，偏差上报 Lead。
+- 旧 `acceptance/browser.test.js` 是 v3 节点画布验收，v4 下 5 条红（节点/画布已删除），待 Lead 确认后退役或改写；新驾驶舱验收以 `cockpit.test.js` 为准。
+
 ## 约定
 
 - 测试只读实现，不修改 `src/*`；失败清单按 `文件:用例:期望 vs 实际` 交回 Lead/实现方。

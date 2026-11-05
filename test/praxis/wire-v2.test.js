@@ -7,7 +7,7 @@ import * as Engine from '../../plugins/dsh-praxis/src/engine.js';
 
 /**
  * Praxis v2 契约红测：Wire（docs/praxis/redesign/10-v2-contract.md §3）
- *   T8.1 wireVersion=2 / T8.2 catalog / T8.3 view.graph 形状 / T8.4 state 信封
+ *   T8.1 wireVersion=3 (v4) / T8.2 catalog / T8.3 view.graph 形状 / T8.4 state 信封
  *   T8.5 command 200/409/422 / T8.6 graph 读取与 expectedRevision 保存 / T8.7 evidence
  *
  * 断言只来自契约条文；实现未就绪时必须红。
@@ -93,13 +93,13 @@ async function startRun(route) {
 // T8.1 / T8.2 catalog
 // ---------------------------------------------------------------------------
 
-test('wire T8.1/T8.2: state carries wireVersion=2 and a complete catalog', async () => {
+test('wire T8.1/T8.2: state carries wireVersion=3 and a complete catalog', async () => {
   const { route } = mount(createHost());
   const { status, json } = await getState(route);
   assert.equal(status, 200);
-  assert.equal(json.wireVersion, 2, 'T8.1');
+  assert.equal(json.wireVersion, 3, 'v4 wireVersion');
   assert.ok(json.view, 'T8.4 envelope carries view');
-  assert.equal(json.view.wireVersion, 2);
+  assert.equal(json.view.wireVersion, 3);
   const catalog = json.catalog ?? json.view.catalog;
   assert.ok(catalog && typeof catalog === 'object', 'T8.2 catalog');
 

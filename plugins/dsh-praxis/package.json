@@ -1,9 +1,9 @@
 {
   "name": "@local/dsh-praxis",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
-  "description": "Praxis Observatory: a governed research-playbook engine with a cognitive map, frozen contracts, independent evaluation, and anti-mean-reversion checks.",
+  "description": "Praxis Cockpit: an RSI research cockpit for DSH with parallel inquiry branches, live agent-team projection, governance gates, and an evidence ledger.",
   "exports": {
     ".": "./index.js",
     "./client": "./client.js",

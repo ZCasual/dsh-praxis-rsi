@@ -88,7 +88,10 @@ writeFileSync(logPath, serverLog);
 if (!token) throw new Error(`no auth token in server log:\n${serverLog.slice(-1500)}`);
 
 // 4. seed
-if (scenario !== 'empty') {
+if (args.includes('--v4')) {
+  const v4 = run('node', ['/tmp/seed-v4.mjs'], { cwd: root, allowFail: true });
+  writeFileSync(join(outDir, 'seed-v4.json'), `${v4.stdout}${v4.stderr}`);
+} else if (scenario !== 'empty') {
   const seeded = run('node', [join(root, 'tools/dev/seed.mjs'), String(port), scenario], { cwd: root, allowFail: true });
   writeFileSync(join(outDir, `seed-${scenario}.json`), `${seeded.stdout}${seeded.stderr}`);
   if (seeded.status !== 0) process.stderr.write(`seed failed: ${seeded.stderr}\n`);

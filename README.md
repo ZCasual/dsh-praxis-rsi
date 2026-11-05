@@ -1,176 +1,159 @@
 # Praxis
 
-Praxis 是 DeepSeek Harness（DSH）的科研工作流引擎与观测台插件。它把一个研究问题从立项推进到可审计决策：记录问题 → 冻结可证伪的预注册 → 讨论 → 实验 → 复核 → 独立评估 → 记忆 → 决策。每个状态变化都有 receipt，每次图修改都有 revision。
+Praxis 是 DeepSeek Harness（DSH）的 RSI 研究驾驶舱：把一次研究运行呈现成**并行探究分支 + 真实 agent 团队 + 治理门禁 + 证据带**。它不画流程图，它管研究。
 
-- 插件包：`@local/dsh-praxis`（Host bundle + Observatory Client）
-- 模型工具：`rsi_run`（22 个动作，含 `question`）
+- 插件包：`@local/dsh-praxis`（Host bundle + Client 驾驶舱）
+- 模型工具：`rsi_run`（29 个动作，含 7 个分支动作）
 - 命令：`/praxis status | start <playbook> | gate | map`
-- 主界面：`sidebar.panellist` → `main[praxis]`；输入框上方 dock 显示当前阶段与下一步动作
-- 契约测试：`node --test test/praxis/*.test.js` → **140 pass / 0 fail**
-- 浏览器验收：`node --test test/praxis/acceptance/*.test.js`（真实 Chrome + CDP，零 npm 依赖；含全生命周期到 DECISION）
+- 主界面：`sidebar.panellist` → `main[praxis]`；输入框上方 dock 显示运行状态
+- 契约测试：`node --test test/praxis/*.test.js` → **162 pass / 0 fail**
+- 浏览器验收：`node --test test/praxis/acceptance/cockpit.test.js`（真实 Chrome + CDP，零依赖）
 
-![Praxis 运行视图](docs/praxis/screenshots/v2/clean-light-1440x1000.png)
+![Praxis 驾驶舱](docs/praxis/screenshots/v4/running-light-1440x1000.png)
 
-## 1. 界面
+## 1. 产品对象
 
-Praxis v3 的界面只有三个区域：**运行条（60px）**、**泳道画布**、**按需滑出的检查器/抽屉**。
-
-| 区域 | 规则 |
-|---|---|
-| 运行条 | 左：产品名 + Run 标题 + 阶段 chip + 版本；中：阶段进度 `n/10` + `运行 / 蓝图` 双模态；右：**全屏唯一主按钮** + 更多菜单 |
-| 画布 | 三条语义泳道（定义问题 / 探索与执行 / 证据与决策），15 个节点在 1440×1000 下一屏可见，0 裁切 |
-| 节点 | 三行：中文名 + 执行状态（等待/进行中/已完成/被阻断/需核对）+ 条件（缺失/已满足/继承待确认）。不显示内部码 |
-| 检查器 | 选中节点或点主按钮后从右侧滑出（360px），显示双轴状态、阻塞原因、当前唯一动作表单 |
-| 抽屉 | 源码 / 运行列表 / 认知地图 / 证据链 / 审计 / 超参数，480px 浮层，同一时刻只开一个 |
-| Dock | 输入框上方一行 chip：`预注册已冻结 · 提交讨论`（有阻塞时 `… · 阻塞 N`），title 显示 Run 与版本 |
-
-### 1.1 两个模态，不是两套真相
-
-```text
-运行（默认，只读）   ── 选节点、看状态、提交当前动作、看证据
-蓝图（显式进入）     ── 拖节点、连线、删除非保护节点；保存前必须确认 diff
+```mermaid
+flowchart LR
+  Run[Run 研究运行] --> Branch[Branch 并行分支]
+  Run --> Team[Team 团队]
+  Branch --> Evidence[Evidence 证据]
+  Branch --> Claim[Claim 主张]
+  Team --> Member[Member 成员]
+  Member -->|owns| Branch
 ```
 
-运行态**没有**连线端口、删除按钮、拖拽或 actor 选择器。拓扑修改只能进入蓝图态；保存请求带 `expectedRevision`，冲突返回 409 并保留草稿。离开蓝图且草稿未保存时弹出确认。
+| 对象 | 说明 | 真相源 |
+|---|---|---|
+| Run | 一次研究：预注册、阶段、决策 | Host 事件账本 |
+| Branch | 一条并行探究线：可证伪陈述、负责人、证据、结论 | `run.branches[]` + branch 事件 |
+| Team | 参与本 Run 的 agent：Lead、teammates、subagents | 实时读 DSH `agentTeams` / `agents` |
+| Evidence | 分支上的证据：实验、外部来源、复核、评估 | `branch.evidence` 事件 |
 
-### 1.2 状态可视化
+**关键区别**：同一 Run 允许多条 active 分支。研究不是单轨推进，界面因此按列并排展示分支，而不是画一条链。
 
-| 通道 | current | selected | done | blocked | failed | pending |
-|---|---|---|---|---|---|---|
-| 形状 | 左 3px 竖条 + 实心点 | 虚线外环 | 实心勾 | 斜纹 + 三角 | 双线边 + 叉 | 空心圈 |
-| 颜色 | brand | label-secondary | success | warn | error | label-tertiary |
+## 2. 界面
 
-形状通道独立于颜色，灰度或色弱下仍可区分。
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ 运行条：Run 名 · 阶段 n/10 · 团队 N 人 · 运行中 M · 唯一主动作      │
+├───────────┬──────────────────────────────────────┬───────────────┤
+│ 门禁轨    │ 并行分支板（每分支一列）              │ 检查器 360px  │
+│ 200px     │ 状态 · 可证伪陈述 · 负责人 · 证据日志  │ 详情 + 动作   │
+│ 10 项     ├──────────────────────────────────────┤               │
+│           │ 研究时间线（真实事件流，按分支可点）   │               │
+├───────────┴──────────────────────────────────────┴───────────────┤
+│ 证据带：主张 · 支持/反驳计数 · 最新证据                            │
+└──────────────────────────────────────────────────────────────────┘
+```
 
-## 2. 领域模型
+| 区域 | 内容 |
+|---|---|
+| 运行条 | Run 名、阶段 chip、`n/10` 进度、团队人数与运行中人数（点击开团队抽屉）、唯一主按钮 |
+| 门禁轨 | 10 道治理门：已过 / 阻塞（红条 + 缺失项数）/ 未到 |
+| 分支板 | 每分支一列：状态色条、标题、可证伪陈述、负责人与状态点、支持/反驳计数、逐条证据日志、结论 |
+| 时间线 | 运行事件流（提出分支、指派、启用、记录证据、给出结论、合流、登记主张…），点击分支名跳转 |
+| 证据带 | 每条主张：支持数、反驳数、最新证据来源；矛盾并列不平均 |
+| 检查器 | 分支 / 成员 / 证据 / 运行下一步，各带唯一动作与就地校验 |
 
-### 2.1 状态机（唯一来源：`src/graph.js` 的 `STATE_ORDER`）
+运行态没有连线端口、节点拖拽、拓扑删除。分支是数据对象，不是画布图形。
+
+## 3. 团队是真实的
+
+Host 侧 `src/team.js` 直接读运行时：
+
+| 来源 | 用途 |
+|---|---|
+| `ctx.agents.roots()` | 找当前 root Agent |
+| `ctx.agentTeams.tryMembership/listMembers/listTasks` | Lead、teammates、任务板 |
+| `ctx.subagents.listDescendants` | subagent 树（按需） |
+
+```js
+view.team = {
+  source: 'live' | 'none',
+  lead: { id, name, status } | null,
+  members: [{ id, name, kind, status, model, currentTask, branchIds }],
+  tasks: [],
+  counts: { running, idle, tasksOpen, tasksDone },
+}
+```
+
+规则：`source === 'none'` 时 `members` 必须为空，界面显示“尚未组建团队”。界面不伪造成员。实测在真实 DSH 会话内 `source='live'`，运行条显示“团队 1 人 · 运行中 0”。
+
+## 4. 分支模型
 
 ```mermaid
 stateDiagram-v2
-  [*] --> INTAKE
-  INTAKE --> QUESTION: question
-  QUESTION --> PREREG_FROZEN: prereg_freeze
-  PREREG_FROZEN --> DISCUSSION: discussion
-  DISCUSSION --> EXECUTING: experiment
-  EXECUTING --> REVIEW: review
-  REVIEW --> STAGE4: stage4
-  STAGE4 --> EVAL: eval_report
-  EVAL --> MEMORY: eval_read
-  MEMORY --> DECISION: memory_propose / memory_commit
-  DECISION --> [*]: decision
+  [*] --> proposed
+  proposed --> active: branch_activate
+  active --> supported: branch_verdict
+  active --> refuted: branch_verdict
+  active --> inconclusive: branch_verdict
+  supported --> merged: branch_merge
+  refuted --> merged: branch_merge
+  active --> dropped: branch_drop
+  proposed --> dropped: branch_drop
 ```
-
-非法转移返回 `INVALID_TRANSITION`，不改 state、不改 version，并写入 `transition.denied` 事件。
-
-### 2.2 双轴节点状态
-
-每个节点同时有两个独立事实：
-
-- **execution**：`pending / active / done / blocked / failed`。只由状态游标与 receipt 决定。产物存在不等于走过此门。
-- **condition**：`missing / satisfied / stale / unknown`。只由产物决定。`stale` 表示产物来自父 Run 或旧版本。
-
-这样修复了上一版的经典倒挂：`INTAKE` 阶段不可能出现“下游门已完成”。
-
-### 2.3 图不变量（审计）
 
 | 码 | 不变量 |
 |---|---|
-| I1 | `done` 节点的所有前驱必须 `done` |
-| I2 | 同一连通分量内 `active` 节点 ≤ 1 |
-| I3 | gate `done` ⇒ condition ≠ `missing` |
-| I4 | gate `done` ⇒ 被守护 stage ∈ {`active`, `done`} |
-| I5 | 进度计数与节点状态一致 |
-| I6 | `done` 节点的阶段索引 ≤ 当前状态索引 |
+| B1 | 分支必须有可证伪陈述（≥8 字符）才能给结论 |
+| B2 | 允许多条 active 分支；active 必须有负责人 |
+| B3 | 合流必须记录 `mergedInto` |
+| B4 | 证据必须带 `kind`（experiment/external/review/eval）与 `ref` |
+| B5 | 换负责人必须留 `branch.assigned` 事件 |
 
-审计失败时 `view.graph.audit.ok = false`，界面显示“状态不一致，需要核对”，并停用推进动作。
+动作：`branch_propose` `branch_assign` `branch_activate` `branch_evidence` `branch_verdict` `branch_merge` `branch_drop`。PREREG_FROZEN 之前只能 propose。evaluator 只能记录 `kind='eval'` 的证据。
 
-### 2.4 fork 纯净性
+## 5. 治理门禁
 
-`set_knobs` 派生新 Run 时：新 Run 回到 `INTAKE`，`preregHash` 清空，父契约作为草稿保留（`prereg.inheritedFrom` / `prereg.inheritedHash`），研究产物标记为继承。子 Run 必须重新冻结契约，`gate('experiment')` 才会打开。
+| 区间 | 门 |
+|---|---|
+| 立项 → 研究问题 → 预注册冻结 | 无冻结预注册不能进执行 |
+| 讨论 → 实验 → 复核 → 阶段四 | 缺结果或复核不能进阶段四 |
+| 独立评估 → 评估已读 → 记忆 → 决策 | 无独立评估与读取回执不能决策 |
 
-旧数据在 `load` 时自动迁移（幂等）：`INTAKE + preregHash` 的脏记录会被对账，写入 `migration.reconciled` 事件。
+非法转移返回 `INVALID_TRANSITION`，不改 state、不改 version，写 `transition.denied`。角色隔离：`eval_report` 需 evaluator，`memory_propose` 需 root；界面用显式委托复选框提交，写 `actor.delegated` 审计事件。
 
-## 3. 图模型
-
-```js
-Graph = { id, playbookId, revision, layoutVersion: 2, name, nodes[], edges[] }
-Node  = { id, type: 'start'|'stage'|'gate'|'actor'|'end', label, stage?, config{action, gate, guards}, position{x,y}, protected? }
-Edge  = { id, from, to, port: 'contract'|'artifact'|'evidence'|'veto' }
-```
-
-- **布局是图的一部分**：`layoutVersion: 2` 使用三条泳道，节点 156×64、列距 28、泳道间距 120。
-- **保护节点**：`start`、`end`、以及所有 playbook 阶段/门节点不可删除（`PROTECTED_NODE` / `V10`）。
-- **端口推导**：gate → `contract`，指向 gate → `evidence`，其余 → `artifact`（`derivePort`，`V11` 校验）。
-- **revision**：每次保存递增；保存请求必须带 `expectedRevision`，否则 428，过期则 409。
-
-## 4. API（`/praxis/api`）
+## 6. API（`/praxis/api`，wire v4）
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| GET | `/state` | `{...view, view, serverTime, revision}`；`wireVersion: 2`，含 `catalog` |
-| GET | `/graph?runId=` | 扁平图投影：`{id, playbookId, revision, nodes, edges, states, current, progress, audit}` |
-| POST | `/graph` | 保存蓝图；body 需 `expectedRevision`；成功返回新 revision |
-| POST | `/layout` | 只更新节点坐标 |
+| GET | `/state` | `wireVersion: 3`，含 `active`、`branches`、`team`、`gates`、`evidenceRows`、`catalog` |
+| GET | `/graph` | 图与审计（保留，供门禁与不变量检查） |
+| POST | `/command` | 200 成功 / 409 CONFLICT / 422 拒绝 / 428 缺 revision |
 | GET | `/evidence` | 运行、事件、receipt、图审计 |
-| POST | `/command` | `{command:{commandId, action, runId?, expectedDomainVersion?, payload?}}` |
 
-命令结果：成功 200 `{receipt, view}`；版本冲突 409 `CONFLICT`（带当前 view）；其它拒绝 422（带 `receipt / nextAction / blockers / view`）。同一 `commandId` 重放返回 `replayed`，不重复副作用。
+`view.catalog` 是 UI 文案唯一来源（阶段、动作、阻塞、原因、事件名）。
 
-`catalog` 是 UI 文案的唯一来源：状态、动作、节点执行/条件、原因码、阻塞码、事件名全部由 Host 下发中文标签。
-
-## 5. 测试与证据
-
-设计签收：`docs/praxis/redesign/13-pixel-signoff-v2.md` revision 3 — **PASS**（7 个场景：clean/running/selected/empty/blueprint 亮色 + running/selected 暗色），build `17dc23af5f2e`。
+## 7. 验证
 
 | 层 | 命令 | 覆盖 |
 |---|---|---|
-| 契约测试 | `node --test test/praxis/*.test.js` | 领域状态机、图模型与不变量、fork/迁移、wire 契约、store、HTTP、模块构建 |
-| 浏览器验收 | `node --test test/praxis/acceptance/*.test.js` | 真实 Chrome：可见节点比例、内容占比、唯一主按钮、内部码为 0、破坏性控件为 0、横向溢出为 0；全生命周期 start→…→DECISION 含角色委托审计 |
-| 证据采集 | `node tools/evidence/capture.mjs --manage-server --theme light|dark` | 31 张截图 + `docs/praxis/evidence/manifest.json`：`ok=true`、`unexpectedMetricViolations=0`、逐对 WCAG 对比度（light text 5.8 / non-text 5.31；dark 5.55 / 9.47）、`signoff.signed=7 / compat=18 / unverified=0` |
+| 契约 | `node --test test/praxis/*.test.js` | 162 条：状态机、分支、团队投影、wire v4、图不变量、构建一致性 |
+| 浏览器 | `node --test test/praxis/acceptance/cockpit.test.js` | 真实 Chrome：并行分支同屏 ≥2、门禁 10 行、证据带、primary=1、无横向溢出、无拓扑控件 |
+| 证据 | `node tools/evidence/capture.mjs --v4 --manage-server` | 10 张截图（light/dark × empty/running 1440/1024/inspector/team）+ `docs/praxis/evidence/manifest-v4.json` |
 
-浏览器测试使用独立 profile 与独立 `statePath`（`/tmp/praxis-acceptance/`），不写用户的 `~/.dsh/praxis/state.json`。
-
-### 5.1 客户端构建
-
-`client.js` 是生成文件，来源是 `plugins/dsh-praxis/client/*.js`：
+## 8. 构建
 
 ```bash
 node plugins/dsh-praxis/build-client.mjs          # 生成 client.js
-node plugins/dsh-praxis/build-client.mjs --check  # 校验是否最新（测试会跑）
+node plugins/dsh-praxis/build-client.mjs --check  # 校验是否最新（CI 会跑）
 ```
 
-## 6. 已验证行为
+`client.js` 是生成文件，来源 `plugins/dsh-praxis/client/*.js`（00 原语 / 10 store / 20 布局 / 30 驾驶舱 / 40 检查器 / 50 抽屉 / 60 shell / 70 样式）。改源码后必须重建；DSH 需重启才会重新加载 Client bundle。
 
-| 场景 | 结果 |
-|---|---|
-| 冷启动：空态 → 新建运行 → 填写研究问题 → 提交 | INTAKE → QUESTION，进度 1/10 → 2/10，banner 回报 |
-| 完整研究闭环：立项→问题→预注册→人格→讨论→实验→复核→阶段四→独立评估→读评估→记忆提议/提交→决策 | 13 步全部 committed，终态 DECISION，`actor.delegated` 审计 2 条 |
-| 独立评估角色委托（UI） | 未勾选“以独立评估者身份提交”时按钮禁用；勾选后提交成功，记录 `actor.delegated` |
-| 认知地图登记（UI） | 地图抽屉登记主张后 `claims=1`，状态配色与证据计数正确 |
-| 运行推进：冻结预注册 → 提交讨论 | PREREG_FROZEN → DISCUSSION，v3 → v4 |
-| 门状态真值 | `INTAKE` 下游门显示“等待/缺失”，不再出现 DONE 倒挂 |
-| fork | 子 Run 回到 INTAKE、`preregHash=null`、`gate('experiment').allow=false` |
-| 旧数据迁移 | v1 布局与脏 fork 记录自动对账，幂等 |
-| 图保存冲突 | 过期 `expectedRevision` → 409 + 当前图 |
-| 蓝图层保护 | 删除 `start/end/stage/gate` → `PROTECTED_NODE` |
-| 亮/暗主题 | 两套主题下节点、泳道、检查器、抽屉均正常；正文对比度 ≥5.55:1、非文本指示 ≥5.31:1 |
-| 1024 全应用（compat） | 744×840、无页面横向溢出、15/15 可见、显示“视口不足”提示 |
-| 700×600（compat） | canvas 644×540、`world scale=0.686`、15/15 完全可见、横向溢出 0 |
-
-未验证项写入 `docs/praxis/verification.md`，不在此处冒充通过。
-
-## 7. 安装
+## 9. 安装
 
 ```bash
-# 在 DSH 中（需要 danger-full-access 或审批）
 plugin_manager action=install_bundle target=/绝对路径/plugins/dsh-praxis
 ```
 
-安装后需要新会话或重启，Host 工具才会出现。详细验证流程见 `docs/praxis/verification.md`。
+安装后需新会话或重启，Host 工具才会出现。
 
-## 8. 已知限制
+## 10. 已知限制
 
-- 1024 全应用（宿主侧栏展开）时画布 744×840、world scale 0.762，节点正文字号低于设计下限；折叠宿主侧栏或使用插件根 1024 宽时达标。这是宿主布局约束，已记录为不可判定项。
-- 认知地图目前只读展示 claim/edge/frontier/blindSpot；在图上直接编辑主张走 `map_claim` / `map_edge` 命令。
-- 运行中修改 Playbook 会生成新 revision；现有 Run 固定原 revision，不自动迁移（迁移需要显式方案与批准）。
+- 团队投影依赖运行时存在 Agent Teams 会话；无会话时诚实显示 `none`。
+- 分支负责人未被当前 team 收录时显示“未连接”。
+- 1024 全应用（宿主侧栏展开）下分支列变窄；插件根 1024 宽正常。
+- 运行中修改 Playbook 不自动迁移已有 Run。

@@ -1,10 +1,13 @@
 import { createEngine, DEFAULT_KNOBS, PLAYBOOKS } from './engine.js';
+import { createTeamProjector, emptyTeam } from './team.js';
 
 const ACTIONS = [
   'start', 'question', 'prereg_freeze', 'discussion', 'pin_persona', 'experiment', 'review',
   'stage4', 'eval_report', 'eval_read', 'memory_propose', 'memory_commit',
   'map_claim', 'map_edge', 'decision', 'promote', 'set_knobs', 'gate', 'map', 'snapshot', 'activate',
   'graph', 'graph_save', 'layout_save',
+  'branch_propose', 'branch_assign', 'branch_activate', 'branch_evidence',
+  'branch_verdict', 'branch_merge', 'branch_drop',
 ];
 
 const READ_ONLY = new Set(['gate', 'map', 'snapshot']);
@@ -12,6 +15,7 @@ const READ_ONLY = new Set(['gate', 'map', 'snapshot']);
 export function createHost(options = {}) {
   const engine = options.engine ?? createEngine({ knobs: options.knobs });
   const store = options.store ?? null;
+  const team = options.team ?? (options.ctx ? createTeamProjector(options.ctx) : null);
   const current = { runId: null };
   let pending = Promise.resolve();
 
@@ -170,6 +174,60 @@ export function createHost(options = {}) {
     }
   }
 
+
+/** Gate rail: the governance skeleton, derived from the run state only. */
+const GATE_DEFS = [
+  { id: 'question', label: '研究问题', after: 0, role: '主代理' },
+  { id: 'prereg', label: '预注册冻结', after: 1, role: '主代理' },
+  { id: 'discussion', label: '讨论完成', after: 3, role: '团队' },
+  { id: 'experiment', label: '实验执行', after: 4, role: '执行代理' },
+  { id: 'review', label: '复核完成', after: 5, role: '复核代理' },
+  { id: 'stage4', label: '阶段四', after: 6, role: '主代理' },
+  { id: 'eval', label: '独立评估', after: 7, role: '评估代理' },
+  { id: 'eval_read', label: '评估已读', after: 8, role: '主代理' },
+  { id: 'memory', label: '记忆落库', after: 9, role: '主代理' },
+  { id: 'decision', label: '决策记录', after: 10, role: '主代理' },
+];
+
+function buildGates(run) {
+  const states = buildCatalog().states ?? [];
+  const index = Math.max(0, states.findIndex((item) => item.id === run.state));
+  const blockers = run.blockers ?? [];
+  const nextIndex = index;
+  return GATE_DEFS.map((gate) => {
+    const passed = index > gate.after;
+    const isNext = !passed && gate.after >= nextIndex && gate.after - nextIndex <= 1;
+    const status = passed ? 'passed' : (isNext ? 'blocked' : 'future');
+    return {
+      id: gate.id,
+      label: gate.label,
+      role: gate.role,
+      status,
+      missing: status === 'blocked' ? blockers.slice(0, 3) : [],
+      index: gate.after,
+    };
+  });
+}
+
+/** Evidence band rows: one per claim, with support/contradiction counts. */
+function buildEvidenceRows(run) {
+  const claims = run.claims ?? [];
+  const contradictions = run.contradictions ?? [];
+  return claims.map((claim) => {
+    const refs = claim.evidenceRefs ?? [];
+    const against = contradictions.filter((item) => item.right === claim.claim || item.left === claim.id).length;
+    return {
+      claimId: claim.id,
+      claim: claim.claim ?? claim.label ?? '',
+      status: claim.status ?? 'unverified',
+      supports: refs.length,
+      contradicts: against,
+      latestSource: refs.at(-1) ?? null,
+      latestAt: claim.at ?? null,
+    };
+  });
+}
+
   function catalog() {
     return buildCatalog();
   }
@@ -199,10 +257,15 @@ export function createHost(options = {}) {
     const snapshot = engine.snapshot();
     const activeId = current.runId ?? snapshot.runs.at(-1)?.id ?? null;
     const active = activeId ? runView(activeId) : null;
+    const branches = active?.branches ?? [];
     return {
       product: 'Praxis',
-      wireVersion: 2,
-      design: 'Observatory',
+      wireVersion: 3,
+      design: 'Cockpit',
+      branches,
+      team: team ? team.project(branches) : emptyTeam('no-ctx'),
+      gates: active ? buildGates(active) : [],
+      evidenceRows: active ? buildEvidenceRows(active) : [],
       serverTime: new Date().toISOString(),
       revision: active?.version ?? 0,
       activeRunId: activeId,
@@ -236,7 +299,7 @@ export function createHost(options = {}) {
     }
   }
 
-  return { execute, view, engine, store, map: mapView, runView, flush, load, evidence, catalog, graph: graphProjection };
+  return { execute, view, engine, store, map: mapView, runView, flush, load, evidence, catalog, graph: graphProjection, buildGates, buildEvidenceRows };
 }
 
 export function knobFields() {
@@ -348,6 +411,13 @@ export function buildCatalog() {
       { id: 'map_edge', label: '连接主张', scope: 'graph', primary: false },
       { id: 'promote', label: '晋升候选', scope: 'any', primary: false },
       { id: 'set_knobs', label: '修改超参数（fork）', scope: 'run', primary: false },
+      { id: 'branch_propose', label: '提出分支', scope: 'run', primary: false },
+      { id: 'branch_assign', label: '指派负责人', scope: 'run', primary: false },
+      { id: 'branch_activate', label: '启用分支', scope: 'run', primary: false },
+      { id: 'branch_evidence', label: '记录证据', scope: 'run', primary: false },
+      { id: 'branch_verdict', label: '给出结论', scope: 'run', primary: false },
+      { id: 'branch_merge', label: '合流分支', scope: 'run', primary: false },
+      { id: 'branch_drop', label: '放弃分支', scope: 'run', primary: false },
       { id: 'graph_save', label: '保存蓝图', scope: 'graph', primary: true },
       { id: 'layout_save', label: '保存布局', scope: 'graph', primary: false },
     ],
