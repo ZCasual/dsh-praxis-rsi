@@ -198,6 +198,34 @@ test('v4 cockpit：1440 驾驶舱 DOM 断言（A2/A3/A4/A6）', { timeout: 18000
     })()`);
     assert.ok(inspector.text.length > 0, '检查器有内容');
     assert.ok(inspector.primary <= 1, `检查器内 primary ≤1，实际 ${inspector.primary}`);
+
+    // 界面创建分支：必须打开专用表单，提交后卡片数增加（A2 的写路径）
+    const cardsBefore = await browser.evaluate(`document.querySelectorAll('[data-testid="branch-card"]').length`);
+    await browser.evaluate(`(() => {
+      const panel = document.querySelector('[data-testid="inspector"]');
+      panel?.querySelector('.px-icon-btn')?.click();
+      const btn = [...document.querySelectorAll('button')].find((x) => x.innerText.includes('新建分支'));
+      btn?.click();
+      return Boolean(btn);
+    })()`);
+    await browser.waitFor('document.querySelector(\'[data-testid="inspector"]\')?.getAttribute("data-selection-kind") === "branch-create"', { timeout: 10000, label: 'branch-create form' });
+    await browser.evaluate(`(() => {
+      const panel = document.querySelector('[data-testid="inspector"]');
+      const setVal = (el, value) => {
+        const proto = el.tagName === 'TEXTAREA' ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+        Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, value);
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+      };
+      const input = panel.querySelector('input');
+      const areas = [...panel.querySelectorAll('textarea')];
+      if (input) setVal(input, '验收：界面创建的分支');
+      if (areas[0]) setVal(areas[0], '换模型后增益消失即否定该分支');
+      return true;
+    })()`);
+    await browser.evaluate(`document.querySelector('[data-testid="inspector"] [data-testid="primary"]')?.click()`);
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    const cardsAfter = await browser.evaluate(`document.querySelectorAll('[data-testid="branch-card"]').length`);
+    assert.ok(cardsAfter > cardsBefore, `界面创建分支后卡片数应增加：before=${cardsBefore} after=${cardsAfter}`);
   } finally {
     try { await browser?.close({ kill: true }); } catch {}
     try { process.kill(-server.pid, 'SIGTERM'); } catch { try { server.kill('SIGTERM'); } catch {} }

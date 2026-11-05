@@ -90,6 +90,32 @@ function InspectKeyValue({ rows }) {
     h('dt', null, label), h('dd', null, value))));
 }
 
+function InspectBranchOwnerControl({ branch, team, onAction }) {
+  const members = (team?.members ?? []).filter((item) => item.kind !== 'lead');
+  const [ownerId, setOwnerId] = useState('');
+  const [pending, setPending] = useState(false);
+  const current = branch?.ownerId ?? '';
+  if (!members.length) {
+    return h('div', { className: 'px-v4-inspect-section' },
+      h('span', { className: 'px-v4-inspect-label' }, '负责人'),
+      h('p', { className: 'px-v4-inspect-claim' }, current || '未指派'),
+      h('p', { className: 'px-v4-inspect-note' }, '当前没有可指派的团队成员。'));
+  }
+  const options = [['', '选择成员']].concat(members.map((item) => [item.id, item.name]));
+  const assign = async () => {
+    if (!ownerId || pending) return;
+    setPending(true);
+    try { await onAction?.('branch_assign', { branchId: branch?.id, ownerId }); } finally { setPending(false); }
+  };
+  return h('div', { className: 'px-v4-inspect-section' },
+    h('span', { className: 'px-v4-inspect-label' }, '负责人'),
+    h('p', { className: 'px-v4-inspect-claim' }, current || '未指派'),
+    h('div', { className: 'px-v4-inspect-member-head' },
+      h(PrimSelect, { value: ownerId, options, onChange: (event) => setOwnerId(event.target.value) }),
+      h(PrimBtn, { onClick: assign, disabled: !ownerId || pending }, pending ? '指派中…' : '指派')),
+    h('p', { className: 'px-v4-inspect-note' }, '指派来自当前团队的真实成员；换人会写审计事件。'));
+}
+
 function InspectBranchBody({ branch, member }) {
   const status = branch?.status ?? 'proposed';
   const supports = InspectEvidenceCount(branch?.supports);
@@ -342,7 +368,9 @@ function InspectPanel({ selection, run, branch, member, evidenceRow, catalog, on
     : kind === 'member' ? InspectMemberAction(member, branch)
       : kind === 'run' ? InspectRunAction(run, catalog) : InspectEvidenceAction(evidenceRow);
   const body = kind === 'branch'
-    ? h(InspectBranchBody, { branch, member })
+    ? h('div', null,
+      h(InspectBranchBody, { branch, member }),
+      h(InspectBranchOwnerControl, { branch, team: run?.team, onAction }))
     : kind === 'member'
       ? h(InspectMemberBody, { member, team: run?.team })
       : kind === 'run'

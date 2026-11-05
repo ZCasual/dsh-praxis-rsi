@@ -83,6 +83,62 @@ function ShellRunBar(props) {
       })));
 }
 
+
+/* Branch creation: the only path that turns a hypothesis into a parallel inquiry line. */
+function ShellBranchCreate({ team, onAction, onClose }) {
+  const [title, setTitle] = useState('');
+  const [falsifiable, setFalsifiable] = useState('');
+  const [hypothesis, setHypothesis] = useState('');
+  const [ownerId, setOwnerId] = useState('');
+  const [error, setError] = useState('');
+  const [pending, setPending] = useState(false);
+  const members = (team?.members ?? []).filter((member) => member.kind !== 'lead');
+  const options = [['', '稍后指派']].concat(members.map((member) => [member.id, `${member.name}（${member.status === 'running' ? '运行中' : '空闲'}）`]));
+
+  async function submit() {
+    if (pending) return;
+    if (title.trim().length < 2) { setError('分支标题至少 2 个字符'); return; }
+    if (falsifiable.trim().length < 8) { setError('可证伪陈述至少 8 个字符：写清什么观测会否定这条分支'); return; }
+    setError('');
+    setPending(true);
+    try {
+      const receipt = await onAction('branch_propose', {
+        title: title.trim(),
+        hypothesis: hypothesis.trim() || falsifiable.trim(),
+        falsifiable: falsifiable.trim(),
+        ownerId: ownerId || undefined,
+      });
+      if (!receipt || receipt.status === 'rejected') setError(`提交被拒绝：${receipt?.reasonCode ?? 'REJECTED'}`);
+      else onClose?.();
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return h('aside', { className: 'px-v4-inspector', 'data-testid': 'inspector', 'data-selection-kind': 'branch-create', role: 'dialog', 'aria-label': '新建分支' },
+    h('header', { className: 'px-v4-inspect-head' },
+      h('div', null,
+        h('span', { className: 'px-v4-kicker' }, '并行探究'),
+        h('h2', null, '新建分支')),
+      h('button', { type: 'button', className: 'px-icon-btn', 'aria-label': '关闭', onClick: onClose }, '×')),
+    h('div', { className: 'px-v4-inspect-body' },
+      h(PrimField, { label: '分支标题' },
+        h(PrimInput, { value: title, autoFocus: true, placeholder: '例如：容量匹配对照', onChange: (event) => setTitle(event.target.value) })),
+      h(PrimField, { label: '可证伪陈述', hint: '什么观测会否定这条分支' },
+        h(PrimArea, { value: falsifiable, rows: 3, placeholder: '容量匹配后增益降到 0.02 以内', onChange: (event) => setFalsifiable(event.target.value) })),
+      h(PrimField, { label: '假设', hint: '可选' },
+        h(PrimArea, { value: hypothesis, rows: 2, onChange: (event) => setHypothesis(event.target.value) })),
+      h(PrimField, { label: '负责人', hint: members.length ? '来自当前团队' : '尚未组建团队，可稍后指派' },
+        h(PrimSelect, { value: ownerId, options, onChange: (event) => setOwnerId(event.target.value) })),
+      error ? h('p', { className: 'px-v4-form-error', 'data-testid': 'action-error', role: 'alert' }, error) : null),
+    h('footer', { className: 'px-v4-inspect-foot' },
+      h('button', {
+        type: 'button', className: 'px-btn primary px-v4-inspect-primary',
+        'data-testid': 'primary', 'data-action': 'branch_propose',
+        disabled: pending, onClick: submit,
+      }, pending ? '创建中…' : '创建分支')));
+}
+
 function ShellApp() {
   const store = StoreUse();
   const snapshot = store.snapshot;
@@ -210,7 +266,7 @@ function ShellApp() {
           selectedBranchId: selectedBranch?.id ?? null,
           onSelect: (branchId) => setSelection({ kind: 'branch', id: branchId }),
           onOpenBranch: (branchId) => setSelection({ kind: 'branch', id: branchId }),
-          onCreateBranch: () => setDrawer('action'),
+          onCreateBranch: () => openDrawer('branch-new'),
           onSelectBranch: (branchId) => setSelection({ kind: 'branch', id: branchId }),
           timeline: snapshot?.timeline ?? active?.events ?? [],
         })
@@ -302,6 +358,13 @@ function ShellDrawer(props) {
   if (id === 'evidence') return h(PanelEvidence, { rows: evidenceRows, onSelect: onClose, onClose });
   if (id === 'audit') return h(PanelAudit, { run: active, onClose });
   if (id === 'knobs') return h(PanelKnobs, { knobs: snapshot?.knobs, fields: snapshot?.knobFields, onFork, onClose });
+  if (id === 'branch-new') {
+    return h(ShellBranchCreate, {
+      team,
+      onAction,
+      onClose,
+    });
+  }
   if (id === 'action') {
     return h(InspectPanel, {
       selection: { kind: 'run', id: active?.id },

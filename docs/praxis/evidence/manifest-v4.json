@@ -1,16 +1,16 @@
 {
   "suite": "v4-cockpit",
-  "generatedAt": "2026-11-05T01:46:02.313Z",
-  "gitCommit": "3e0a5a3",
-  "packageVersion": "0.2.0",
+  "generatedAt": "2026-11-05T02:02:38.628Z",
+  "gitCommit": "ab9b816",
+  "packageVersion": "0.3.0",
   "node": "v25.2.0",
   "buildChecked": true,
-  "buildHash": "c6ff6808917294e7f9c3365baad923cf2d75d06daf56d7c155452d848a11f2b0",
+  "buildHash": "51a47141085f229a66af32d6346ed6ded5958e1f37682a8e4fb465952d0b327d",
   "errors": [],
   "themes": {
     "light": {
       "applied": true,
-      "port": 37835,
+      "port": 36209,
       "screenshots": [
         "docs/praxis/screenshots/v4/empty-light-1440x1000.png",
         "docs/praxis/screenshots/v4/running-light-1440x1000.png",
@@ -18,7 +18,7 @@
         "docs/praxis/screenshots/v4/branch-inspector-light-1440x1000.png",
         "docs/praxis/screenshots/v4/team-drawer-light-1440x1000.png"
       ],
-      "runId": "run_b38d6bd7",
+      "runId": "run_2b94d83c",
       "branches": [
         "b_main:proposed",
         "b_1:active",
@@ -26,11 +26,11 @@
         "b_3:active"
       ],
       "activeBranches": 2,
-      "serverLog": "/tmp/praxis-acceptance/v4-server-light-37835.log"
+      "serverLog": "/tmp/praxis-acceptance/v4-server-light-36209.log"
     },
     "dark": {
       "applied": true,
-      "port": 40003,
+      "port": 38141,
       "screenshots": [
         "docs/praxis/screenshots/v4/empty-dark-1440x1000.png",
         "docs/praxis/screenshots/v4/running-dark-1440x1000.png",
@@ -38,7 +38,7 @@
         "docs/praxis/screenshots/v4/branch-inspector-dark-1440x1000.png",
         "docs/praxis/screenshots/v4/team-drawer-dark-1440x1000.png"
       ],
-      "runId": "run_0eed782f",
+      "runId": "run_5256c5da",
       "branches": [
         "b_main:proposed",
         "b_1:active",
@@ -46,17 +46,17 @@
         "b_3:active"
       ],
       "activeBranches": 2,
-      "serverLog": "/tmp/praxis-acceptance/v4-server-dark-40003.log"
+      "serverLog": "/tmp/praxis-acceptance/v4-server-dark-38141.log"
     }
   },
   "screenshots": [
     {
       "file": "docs/praxis/screenshots/v4/empty-light-1440x1000.png",
-      "sha256": "c40a4c6f8edaaa637c74b3828b4c8a8d95d966cc25a0b7fa6924517ea82fb58f",
+      "sha256": "54636cf7273cb69fb8e0f40c14fb220abd271fdb4428efd2061c6609baf221f3",
       "viewport": "1440x1000",
       "theme": "light",
       "scenario": "empty",
-      "capturedAt": "2026-11-05T01:46:33.033Z",
+      "capturedAt": "2026-11-05T02:03:11.506Z",
       "sceneMetrics": {
         "branchCards": 0,
         "visibleCards": 0,
@@ -78,11 +78,11 @@
     },
     {
       "file": "docs/praxis/screenshots/v4/running-light-1440x1000.png",
-      "sha256": "68b0cf844a60a7a83ef623a1ea8a6520c2c76807b852cfb7fa31a827e7cdef5b",
+      "sha256": "7ac35f894aff0845c8b5b47136390b97d76344765b5c3951079499ca0730a9dd",
       "viewport": "1440x1000",
       "theme": "light",
       "scenario": "running",
-      "capturedAt": "2026-11-05T01:46:41.491Z",
+      "capturedAt": "2026-11-05T02:03:19.743Z",
       "sceneMetrics": {
         "branchCards": 3,
         "visibleCards": 3,
@@ -104,11 +104,11 @@
     },
     {
       "file": "docs/praxis/screenshots/v4/running-light-1024x900.png",
-      "sha256": "e214d2568ebe86ecb342509d9d9bd22f6ef97f1f42cf483f2caaf9d2c217b805",
+      "sha256": "024e51fed8754d67314d6e4e909e04f6c00184fa5281cae5b473da4b36f3847a",
       "viewport": "1024x900",
       "theme": "light",
       "scenario": "running",
-      "capturedAt": "2026-11-05T01:46:41.907Z",
+      "capturedAt": "2026-11-05T02:03:20.153Z",
       "sceneMetrics": {
         "branchCards": 3,
         "visibleCards": 3,
@@ -130,11 +130,11 @@
     },
     {
       "file": "docs/praxis/screenshots/v4/branch-inspector-light-1440x1000.png",
-      "sha256": "3b7e736a133252dc6971dc7322427aa31a3e57850b08530d00fc4f26465fc94c",
+      "sha256": "71a65687324182d5af33452ef74583ffed94429e22fcc513261531641417239f",
       "viewport": "1440x1000",
       "theme": "light",
       "scenario": "branch-inspector",
-      "capturedAt": "2026-11-05T01:46:42.554Z",
+      "capturedAt": "2026-11-05T02:03:20.810Z",
       "sceneMetrics": {
         "branchCards": 3,
         "visibleCards": 3,
@@ -156,11 +156,11 @@
     },
     {
       "file": "docs/praxis/screenshots/v4/team-drawer-light-1440x1000.png",
-      "sha256": "3e185f8c3d3beaf4a1313da5dbae3854ca7fec4e4e024ed3c4547ba3a15dfbb1",
+      "sha256": "ab6489d50f694f13c9c3adba32937b960372e1424b8c4675faaefe6a64fdd9c4",
       "viewport": "1440x1000",
       "theme": "light",
       "scenario": "team-drawer",
-      "capturedAt": "2026-11-05T01:46:42.893Z",
+      "capturedAt": "2026-11-05T02:03:21.151Z",
       "sceneMetrics": {
         "branchCards": 3,
         "visibleCards": 3,
@@ -182,11 +182,11 @@
     },
     {
       "file": "docs/praxis/screenshots/v4/empty-dark-1440x1000.png",
-      "sha256": "fa48fee5ca73e4b56e2e9f1f443c9e57977704a290f39d8bcd023bda937495ce",
+      "sha256": "0cf15a4f4e19aa1ab01f63805e94a498792d12d427124bba039b3d4e46f3d0c8",
       "viewport": "1440x1000",
       "theme": "dark",
       "scenario": "empty",
-      "capturedAt": "2026-11-05T01:47:14.516Z",
+      "capturedAt": "2026-11-05T02:03:27.470Z",
       "sceneMetrics": {
         "branchCards": 0,
         "visibleCards": 0,
@@ -208,11 +208,11 @@
     },
     {
       "file": "docs/praxis/screenshots/v4/running-dark-1440x1000.png",
-      "sha256": "2615ce6780271d9c69c52e841322199ebc354dbdfedd0db5b4b11f0f16fda6f7",
+      "sha256": "e5f8d9b24f5d765ad8df7dbc26ee1cc5734f5d07e85a868d6d7da61b609bb0bc",
       "viewport": "1440x1000",
       "theme": "dark",
       "scenario": "running",
-      "capturedAt": "2026-11-05T01:47:23.518Z",
+      "capturedAt": "2026-11-05T02:03:35.409Z",
       "sceneMetrics": {
         "branchCards": 3,
         "visibleCards": 3,
@@ -234,11 +234,11 @@
     },
     {
       "file": "docs/praxis/screenshots/v4/running-dark-1024x900.png",
-      "sha256": "7394194ad1bc305cd49f0b9110462cbcf0d8c38c4175e64d20acec8cf8e8c0cc",
+      "sha256": "6c11de69a250c647b05afc7107d26e7add2da9ba1a22f74ca2ea8d5f0562fdeb",
       "viewport": "1024x900",
       "theme": "dark",
       "scenario": "running",
-      "capturedAt": "2026-11-05T01:47:23.938Z",
+      "capturedAt": "2026-11-05T02:03:35.822Z",
       "sceneMetrics": {
         "branchCards": 3,
         "visibleCards": 3,
@@ -260,11 +260,11 @@
     },
     {
       "file": "docs/praxis/screenshots/v4/branch-inspector-dark-1440x1000.png",
-      "sha256": "69729dfb6600017162795dbf41887216ab2e5cee2fd0c5227eeb68c071125bad",
+      "sha256": "dc778c87afef9caced9565ae2c4bf437179f65afe50a55a5286e28c10446a3f0",
       "viewport": "1440x1000",
       "theme": "dark",
       "scenario": "branch-inspector",
-      "capturedAt": "2026-11-05T01:47:24.594Z",
+      "capturedAt": "2026-11-05T02:03:36.475Z",
       "sceneMetrics": {
         "branchCards": 3,
         "visibleCards": 3,
@@ -286,11 +286,11 @@
     },
     {
       "file": "docs/praxis/screenshots/v4/team-drawer-dark-1440x1000.png",
-      "sha256": "e56e3da8fab894ef339100709d265a0b1ecdd9a114a1ac92f63cd150123807a3",
+      "sha256": "18c2971e9630a8353a99262085f6aff486c0e43ab704bf2656062bf23d21b47a",
       "viewport": "1440x1000",
       "theme": "dark",
       "scenario": "team-drawer",
-      "capturedAt": "2026-11-05T01:47:24.934Z",
+      "capturedAt": "2026-11-05T02:03:36.822Z",
       "sceneMetrics": {
         "branchCards": 3,
         "visibleCards": 3,
@@ -323,6 +323,6 @@
     "branch-inspector-dark-1440x1000.png",
     "team-drawer-dark-1440x1000.png"
   ],
-  "bundleSha256": "c6ff6808917294e7f9c3365baad923cf2d75d06daf56d7c155452d848a11f2b0",
+  "bundleSha256": "51a47141085f229a66af32d6346ed6ded5958e1f37682a8e4fb465952d0b327d",
   "ok": true
 }
